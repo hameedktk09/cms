@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>E-Certificates Generator - ASU CLFS 2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+        body { font-family: 'Montserrat', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+        .builder-card { background: white; padding: 30px; border-radius: 12px; max-width: 900px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 8px solid #1a3a82; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header img { max-height: 80px; margin-bottom: 10px; }
+        .row { display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; }
+        .col { flex: 1; }
+        .role-label { font-weight: bold; color: #1a3a82; margin-bottom: 10px; display: block; border-left: 4px solid #f5a623; padding-left: 10px; font-size: 0.9em; }
+        label { display: block; font-size: 0.75em; margin-bottom: 5px; color: #666; font-weight: bold; text-transform: uppercase; }
+        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background: white; font-size: 0.85em; }
+        .btn-build { background: #1a3a82; color: white; border: none; padding: 18px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1.1em; transition: 0.3s; margin-top: 20px; box-shadow: 0 4px 10px rgba(26, 58, 130, 0.3); }
+        .btn-build:hover { background: #f5a623; color: #1a3a82; transform: translateY(-2px); }
+        .status { font-size: 0.75em; margin-top: 5px; color: #28a745; font-weight: bold; }
+        .instructions { font-size: 0.85em; color: #555; background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #ffc107; }
+    </style>
+</head>
+<body>
+
+<div class="builder-card">
+    <div class="header">
+        <img src="https://www.asu.edu.om/wp-content/uploads/2023/05/Logo.png" alt="ASU Logo">
+        <h2>E-Certificates Generator</h2>
+        <p>Unified Management Portal for Participants, Organizers, and Speakers</p>
+    </div>
+
+    <div class="instructions">
+        <strong>Persistence Mode:</strong> Data is saved automatically. You only need to re-upload if your list or template changes.
+    </div>
+
+    <div class="row">
+        <div class="col" style="flex: 0.3;"><span class="role-label">PARTICIPANTS</span></div>
+        <div class="col">
+            <label>PDF Template</label>
+            <input type="file" id="pdfP" accept="application/pdf">
+            <div id="pdfStatP" class="status"></div>
+        </div>
+        <div class="col">
+            <label>Excel List</label>
+            <input type="file" id="xlsxP" accept=".xlsx, .xls, .csv">
+            <div id="statP" class="status"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col" style="flex: 0.3;"><span class="role-label">ORGANIZERS</span></div>
+        <div class="col">
+            <label>PDF Template</label>
+            <input type="file" id="pdfO" accept="application/pdf">
+            <div id="pdfStatO" class="status"></div>
+        </div>
+        <div class="col">
+            <label>Excel List</label>
+            <input type="file" id="xlsxO" accept=".xlsx, .xls, .csv">
+            <div id="statO" class="status"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col" style="flex: 0.3;"><span class="role-label">SPEAKERS</span></div>
+        <div class="col">
+            <label>PDF Template</label>
+            <input type="file" id="pdfS" accept="application/pdf">
+            <div id="pdfStatS" class="status"></div>
+        </div>
+        <div class="col">
+            <label>Excel List</label>
+            <input type="file" id="xlsxS" accept=".xlsx, .xls, .csv">
+            <div id="statS" class="status"></div>
+        </div>
+    </div>
+
+    <button class="btn-build" onclick="buildMasterPortal()">CREATE MASTER PORTAL FILE</button>
+    <button onclick="clearStorage()" style="background:none; border:none; color: #999; cursor:pointer; font-size:10px; margin-top:10px; width:100%;">Clear Saved Data</button>
+</div>
+
+<script>
+    // Initialize store from LocalStorage or use empty defaults
+    let store = JSON.parse(localStorage.getItem('certStore')) || {
+        Participant: { pdf: "", data: [] },
+        Organizer: { pdf: "", data: [] },
+        Speaker: { pdf: "", data: [] }
+    };
+
+    // Update UI on load to show what's already saved
+    window.onload = () => {
+        updateUIStatus('Participant', 'statP', 'pdfStatP');
+        updateUIStatus('Organizer', 'statO', 'pdfStatO');
+        updateUIStatus('Speaker', 'statS', 'pdfStatS');
+    };
+
+    function updateUIStatus(role, dataStatId, pdfStatId) {
+        if (store[role].data.length > 0) {
+            document.getElementById(dataStatId).innerText = "✓ " + store[role].data.length + " Names Saved";
+        }
+        if (store[role].pdf) {
+            document.getElementById(pdfStatId).innerText = "✓ Template Saved";
+        }
+    }
+
+    function saveToLocal() {
+        localStorage.setItem('certStore', JSON.stringify(store));
+    }
+
+    function clearStorage() {
+        if(confirm("Clear all saved data?")) {
+            localStorage.removeItem('certStore');
+            location.reload();
+        }
+    }
+
+    function bindFile(inputId, role, type, statusId) {
+        document.getElementById(inputId).onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+
+            if (type === 'pdf') {
+                reader.onload = () => {
+                    store[role].pdf = reader.result.split(',')[1];
+                    saveToLocal();
+                    document.getElementById(statusId || 'pdfStat'+role[0]).innerText = "✓ Template Updated";
+                };
+                reader.readAsDataURL(file);
+            } else {
+                reader.onload = (evt) => {
+                    const wb = XLSX.read(evt.target.result, {type: 'array'});
+                    store[role].data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(r => ({
+                        name: `${r.Title || r.title || ''} ${r["Full Name"] || r["full name"]}`.trim(),
+                        email: (r["Email Address"] || r["Email address"] || r["Email"] || "").toLowerCase().trim()
+                    })).filter(u => u.name && u.email);
+                    
+                    saveToLocal();
+                    document.getElementById(statusId).innerText = "✓ " + store[role].data.length + " Names Ready";
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        };
+    }
+
+    bindFile('pdfP', 'Participant', 'pdf', 'pdfStatP'); bindFile('xlsxP', 'Participant', 'xlsx', 'statP');
+    bindFile('pdfO', 'Organizer', 'pdf', 'pdfStatO');     bindFile('xlsxO', 'Organizer', 'xlsx', 'statO');
+    bindFile('pdfS', 'Speaker', 'pdf', 'pdfStatS');       bindFile('xlsxS', 'Speaker', 'xlsx', 'statS');
+
+    function buildMasterPortal() {
+        if(!store.Participant.pdf || store.Participant.data.length === 0) {
+            alert("Requirement: Please ensure at least Participant PDF and Excel are loaded.");
+            return;
+        }
+
+        // The generated portal code remains the same as your logic
+        const portalCode = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ASU CLFS 2026 - Certificate Portal</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"><\/script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+        body { font-family: 'Montserrat', sans-serif; background: #1a3a82; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 15px; text-align: center; width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .logo { max-height: 90px; margin-bottom: 20px; }
+        h3 { color: #1a3a82; margin: 0; font-size: 1.3em; border-bottom: 2px solid #f5a623; padding-bottom: 10px; display: inline-block; }
+        p { color: #555; font-size: 0.9em; margin: 20px 0; line-height: 1.5; }
+        input { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1em; text-align: center; outline: none; transition: 0.3s; }
+        input:focus { border-color: #1a3a82; box-shadow: 0 0 5px rgba(26,58,130,0.2); }
+        .btn { background: #f5a623; color: #1a3a82; border: none; padding: 16px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1em; transition: 0.3s; }
+        .btn:hover { background: #e0961f; transform: translateY(-2px); }
+        #msg { margin-top: 15px; font-size: 0.85em; font-weight: bold; min-height: 1.5em; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="https://www.asu.edu.om/wp-content/uploads/2023/05/Logo.png" class="logo">
+        <br>
+        <h3>Symposium 2026</h3>
+        <p>Please enter your <b>registered email address</b> to download your certificate.</p>
+        <input type="text" id="email" placeholder="Email Address">
+        <button class="btn" onclick="verifyAndDownload()">DOWNLOAD CERTIFICATE</button>
+        <div id="msg"></div>
+    </div>
+    <script>
+        const masterStore = ${JSON.stringify(store)};
+        async function verifyAndDownload() {
+            const input = document.getElementById('email').value.toLowerCase().trim();
+            const msg = document.getElementById('msg');
+            msg.style.color = "#666";
+            msg.innerText = "Searching...";
+
+            let userObj = null; let roleType = "";
+            for (const role in masterStore) {
+                const user = masterStore[role].data.find(u => u.email === input);
+                if (user) { userObj = user; roleType = role; break; }
+            }
+
+            if (!userObj) {
+                msg.style.color = "#d9534f";
+                msg.innerText = "Email not found.";
+                return;
+            }
+
+            try {
+                const { PDFDocument, rgb, StandardFonts } = PDFLib;
+                const pdfB64 = masterStore[roleType].pdf;
+                const doc = await PDFDocument.load(pdfB64);
+                const font = await doc.embedFont(StandardFonts.TimesRomanBoldItalic);
+                const page = doc.getPages()[0];
+                const nameText = userObj.name;
+                const fontSize = 34;
+                const textWidth = font.widthOfTextAtSize(nameText, fontSize);
+                
+                page.drawText(nameText, {
+                    x: (page.getSize().width / 2) - (textWidth / 2),
+                    y: 322,
+                    size: fontSize,
+                    font: font,
+                    color: rgb(0.1, 0.2, 0.5)
+                });
+
+                const bytes = await doc.save();
+                const blob = new Blob([bytes], {type: "application/pdf"});
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = userObj.name.replace(/\\s+/g, '_') + "_Certificate.pdf";
+                a.click();
+                msg.style.color = "green";
+                msg.innerText = "Downloaded!";
+            } catch (e) {
+                msg.innerText = "Error generating PDF.";
+            }
+        }
+    <\/script>
+</body>
+</html>`;
+
+        const blob = new Blob([portalCode], {type: 'text/html'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = "ASU_Symposium_Portal.html";
+        a.click();
+    }
+</script>
+</body>
+</html>
