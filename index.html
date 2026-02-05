@@ -34,6 +34,14 @@ body {
 .header-left { display: flex; align-items: center; gap: 15px; }
 .banner-img { height: 100px; } 
 
+/* NEW ANIMATION OVERLAY STYLES */
+#flowOverlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: white; z-index: 9999; display: none; overflow: hidden;
+}
+.flow-content { width: 100%; position: absolute; top: -100%; }
+.close-flow { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: var(--danger); color: white; border: none; cursor: pointer; z-index: 10000; border-radius: 5px; font-weight: bold; }
+
 .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 20px; background: #f1f5f9; }
 .dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; }
 .dot-online { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
@@ -44,9 +52,6 @@ body {
 .modal-content { background: white; padding: 25px; border-radius: 15px; text-align: center; max-width: 500px; width: 90%; }
 .modal-qr-container { width: 320px; height: 320px; margin: 0 auto 15px auto; transition: 0.5s; transform: scale(0); opacity:0; }
 .modal-qr-container.active { transform: scale(1); opacity:1; }
-
-#programFlowOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: none; z-index: 4000; overflow: hidden; }
-.close-flow { position: fixed; top: 20px; right: 20px; z-index: 4001; padding: 10px 20px; background: var(--danger); color: white; border: none; cursor: pointer; border-radius: 5px; }
 
 .controls { padding: 6px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
 .controls-grid { display: grid; grid-template-columns: 1fr 0.8fr 1.5fr; gap: 15px; align-items: start; }
@@ -77,10 +82,11 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 </head>
 <body>
 
-<div id="programFlowOverlay">
-    <div style="position: fixed; top: 10px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; font-size: 11px; z-index: 4002;">Auto-Scroll Active | Move mouse to exit</div>
-    <button class="close-flow" onclick="stopRollingFlow()">✖ Stop Rolling</button>
-    <iframe id="flowIframe" src="D:/Symposium-4 CLFS/4th Symposium Program Flow.pdf" style="width:100%; height:100%; border:none;"></iframe>
+<div id="flowOverlay">
+    <button class="close-flow" onclick="stopFlow()">✖ Close Animation</button>
+    <div id="scroller" class="flow-content" style="height: 2000px;">
+    <iframe src="4th Symposium Program Flow.pdf" style="width:100%; height:100%; border:none;"></iframe>
+</div>
 </div>
 
 <div class="container" id="mainDashboard">
@@ -94,7 +100,7 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
     </div>
     <div style="display: flex; gap: 5px; align-items: center;">
         <button class="btn btn-flow" onclick="toggleFullScreen()" style="background:#2d3436; color:white;">⛶ Fullscreen</button>
-        <button class="btn btn-flow" onclick="startRollingFlow()">▶ Play Flow</button>
+        <button class="btn btn-flow" onclick="startFlow()">▶ Play Flow</button>
         <button class="btn btn-geo" id="geoBtn" onclick="toggleGeoFence()">📍 Location: OFF</button>
         <div class="status-indicator" style="margin-left:8px;">
             <span class="dot" id="statusDot"></span>
@@ -206,9 +212,9 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 
 <script>
 let attendees = JSON.parse(localStorage.getItem('asuDashboardAttendees')) || [];
-let currentIdx = -1, rollingInterval, isGeoFenceEnabled = false;
-let qrExpiryInterval, idleTimer;
-let scrollPos = 0, myChart;
+let currentIdx = -1, isGeoFenceEnabled = false;
+let qrExpiryInterval, idleTimer, animId;
+let scrollPos = -2000, myChart;
 
 const modalQR = new QRCodeStyling({
     width: 320, height: 320,
@@ -243,17 +249,41 @@ function toggleFullScreen() {
     else if (document.exitFullscreen) document.exitFullscreen();
 }
 
+// RESET IDLE TIMER UPDATED TO CALL NEW FLOW
 function resetIdleTimer() {
-    if(document.getElementById('programFlowOverlay').style.display === 'block') stopRollingFlow();
+    if(document.getElementById('flowOverlay').style.display === 'block') stopFlow();
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-        if(document.getElementById('regModal').style.display !== 'flex') startRollingFlow();
+        if(document.getElementById('regModal').style.display !== 'flex') startFlow();
     }, 120000);
 }
 
 ['mousedown', 'mousemove', 'keypress', 'touchstart'].forEach(evt => {
     window.addEventListener(evt, resetIdleTimer, true);
 });
+
+// NEW FLOW ANIMATION FUNCTIONS
+function startFlow() {
+    document.getElementById('flowOverlay').style.display = 'block';
+    const scroller = document.getElementById('scroller');
+    scrollPos = -scroller.offsetHeight;
+    
+    function move() {
+        scrollPos += 3; // Speed - adjust as needed
+        scroller.style.top = scrollPos + 'px';
+        if (scrollPos > window.innerHeight) {
+            scrollPos = -scroller.offsetHeight;
+        }
+        animId = requestAnimationFrame(move);
+    }
+    move();
+}
+
+function stopFlow() {
+    document.getElementById('flowOverlay').style.display = 'none';
+    cancelAnimationFrame(animId);
+    resetIdleTimer();
+}
 
 async function syncAll() {
     const dot = document.getElementById('statusDot');
@@ -294,7 +324,6 @@ function processSyncData(csvText, isOnSite) {
             const institute = cols[7] ? cols[7].trim() : "ASU";
             const role = isOnSite ? "Participant (New)" : "Participant";
             
-            // Avoid duplicates
             if (!attendees.find(a => a.name === name)) {
                 attendees.push({
                     name: name,
@@ -366,25 +395,6 @@ function togglePresence() {
     localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
     selectUserByName(p.name);
     updateStats();
-}
-
-function startRollingFlow() {
-    const overlay = document.getElementById('programFlowOverlay');
-    overlay.style.display = 'block';
-    scrollPos = 0;
-    const iframe = document.getElementById('flowIframe');
-    clearInterval(rollingInterval);
-    rollingInterval = setInterval(() => {
-        scrollPos += 2;
-        iframe.contentWindow.scroll(0, scrollPos);
-        if(scrollPos > 4000) scrollPos = 0;
-    }, 50);
-}
-
-function stopRollingFlow() {
-    document.getElementById('programFlowOverlay').style.display='none';
-    clearInterval(rollingInterval);
-    resetIdleTimer();
 }
 
 function downloadReport() {
