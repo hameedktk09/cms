@@ -2,207 +2,174 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>E-Certificates Generator - ASU CLFS 2026</title>
+    <title>ASU CLFS 2026 - Master Certificate Builder</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-        body { font-family: 'Montserrat', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
-        .builder-card { background: white; padding: 30px; border-radius: 12px; max-width: 900px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 8px solid #1a3a82; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header img { max-height: 100px; margin-bottom: 10px; }
-        .row { display: flex; gap: 20px; align-items: center; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; }
-        .col { flex: 1; }
-        .role-label { font-weight: bold; color: #1a3a82; border-left: 4px solid #f5a623; padding-left: 10px; font-size: 0.9em; text-transform: uppercase; }
-        .status { font-size: 0.8em; color: #28a745; font-weight: bold; }
-        .instructions { font-size: 0.85em; color: #555; background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #ffc107; text-align: center;}
-        .btn-build { background: #1a3a82; color: white; border: none; padding: 18px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1.1em; transition: 0.3s; margin-top: 20px; box-shadow: 0 4px 10px rgba(26, 58, 130, 0.3); }
-        .btn-build:disabled { background: #999; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-build:hover:not(:disabled) { background: #f5a623; color: #1a3a82; transform: translateY(-2px); }
+        :root { --asu-blue: #1a3a82; --asu-gold: #f5a623; --asu-light: #f0f2f5; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--asu-light); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        .container { flex: 1; padding: 40px 20px; }
+        .builder-card { background: white; padding: 40px; border-radius: 12px; max-width: 1100px; margin: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 10px solid var(--asu-blue); }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header img { max-height: 100px; margin: 0 10px; }
+        .role-section { display: grid; grid-template-columns: 220px 1fr 1fr 200px; gap: 15px; align-items: center; padding: 20px; background: #fff; border: 1px solid #eee; border-radius: 8px; margin-bottom: 15px; transition: 0.3s; }
+        .role-section:hover { border-color: var(--asu-gold); }
+        .role-name { font-weight: bold; color: var(--asu-blue); font-size: 0.85em; border-left: 5px solid var(--asu-gold); padding-left: 12px; }
+        .status-msg { font-size: 11px; color: #666; font-style: italic; }
+        .status-dot { font-size: 11px; margin-top: 4px; color: #28a745; font-weight: bold; }
+        .btn-gen { background: var(--asu-blue); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8em; transition: 0.3s; }
+        .btn-gen:hover { background: var(--asu-gold); color: var(--asu-blue); }
+        .btn-gen:disabled { background: #ccc; cursor: not-allowed; }
+        footer { background: #222; color: #bbb; padding: 25px; text-align: center; font-size: 13px; border-top: 4px solid var(--asu-gold); line-height: 2; }
+        footer a { color: var(--asu-gold); text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="builder-card">
-    <div class="header">
-        <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/ASU-logo.png" alt="ASU Logo">
-        <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/CLFS-logo.jpg" alt="CLFS Logo">
-        <h2>E-Certificates Generator</h2>
-        <p>Unified Management Portal for Participants, Organizers, and Speakers</p>
-    </div>
+<div class="container">
+    <div class="builder-card">
+        <div class="header">
+            <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/ASU-logo.png" alt="ASU Logo">
+            <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/CLFS-logo.jpg" alt="CLFS Logo">
+            <h2>Symposium-4 CLFS 2026</h2>
+            <p>Unified Certificate Portal Manager (GitHub Auto-Fetch)</p>
+        </div>
 
-    <div id="mainStatus" class="instructions">
-        <strong>Status:</strong> Initializing connection to GitHub...
-    </div>
+        <div class="role-section" style="background: #fdfaf3;">
+            <div class="role-name">PARTICIPANTS<br><small>(Regular + On-Site)</small></div>
+            <div class="status-msg" id="pdfStatP">Loading Template...</div>
+            <div class="status-msg" id="csvStatP">Syncing CSV files...</div>
+            <button class="btn-gen" id="btnP" onclick="generatePortal('Participant')" disabled>GENERATE PORTAL</button>
+        </div>
 
-    <div class="row">
-        <div class="col" style="flex: 0.4;"><span class="role-label">PARTICIPANTS</span></div>
-        <div class="col"><div id="statP" class="status">Loading assets...</div></div>
-    </div>
+        <div class="role-section">
+            <div class="role-name">ORGANIZERS</div>
+            <div class="status-msg" id="pdfStatO">Loading Template...</div>
+            <div class="status-msg" id="csvStatO">Syncing CSV files...</div>
+            <button class="btn-gen" id="btnO" onclick="generatePortal('Organizer')" disabled>GENERATE PORTAL</button>
+        </div>
 
-    <div class="row">
-        <div class="col" style="flex: 0.4;"><span class="role-label">ORGANIZERS</span></div>
-        <div class="col"><div id="statO" class="status">Waiting...</div></div>
+        <div class="role-section">
+            <div class="role-name">SPEAKERS</div>
+            <div class="status-msg" id="pdfStatS">Loading Template...</div>
+            <div class="status-msg" id="csvStatS">Syncing CSV files...</div>
+            <button class="btn-gen" id="btnS" onclick="generatePortal('Speaker')" disabled>GENERATE PORTAL</button>
+        </div>
+        <footer>
+    <a href="https://www.asu.edu.om/" target="_blank">A'Sharqiyah University</a>: P.O Box 42, Postal Code:400 Ibra, Sultanate of Oman. <br>
+    <a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Language%20and%20Foundation%20Studies">Center For Language and Foundation Studies</a>. 
+    Copyright &copy; <a href="mailto:hrehman08@yahoo.com">drkhan</a> 2026.
+</footer>
     </div>
-
-    <div class="row">
-        <div class="col" style="flex: 0.4;"><span class="role-label">SPEAKERS</span></div>
-        <div class="col"><div id="statS" class="status">Waiting...</div></div>
-    </div>
-
-    <button id="btnBuild" class="btn-build" onclick="buildMasterPortal()" disabled>SYNCING DATA...</button>
 </div>
 
 <script>
-    const REPO_BASE = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
-    const LOGO_URL = REPO_BASE + "ASU-logo.png";
+    const GITHUB_RAW = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
     
-    const fileMap = {
-        Participant: {
-            pdf: REPO_BASE + "Participant.pdf",
-            csv: REPO_BASE + "4th%20Symposium%202026%20Participants.csv",
-            statId: "statP"
-        },
-        Organizer: {
-            pdf: REPO_BASE + "Organizer.pdf",
-            csv: REPO_BASE + "4th%20Symposium%202026%20Organisers.csv",
-            statId: "statO"
-        },
-        Speaker: {
-            pdf: REPO_BASE + "Speakers.pdf",
-            csv: REPO_BASE + "4th%20Symposium%202026%20Speakers.csv",
-            statId: "statS"
-        }
+    let masterStore = {
+        Participant: { pdf: "", data: [], templates: [GITHUB_RAW + "Participant.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Participants.csv", GITHUB_RAW + "4th%20Symposium%202026%20On-Site%20Participants.csv"] },
+        Organizer: { pdf: "", data: [], templates: [GITHUB_RAW + "Organizer.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Organisers.csv"] },
+        Speaker: { pdf: "", data: [], templates: [GITHUB_RAW + "Speakers.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Speakers.csv"] }
     };
 
-    let store = { Participant: {}, Organizer: {}, Speaker: {} };
+    async function initFetch() {
+        for (const role in masterStore) {
+            const short = role[0];
+            try {
+                // Fetch PDF Template
+                const pdfRes = await fetch(masterStore[role].templates[0]);
+                const pdfBlob = await pdfRes.blob();
+                masterStore[role].pdf = await new Promise(r => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => r(reader.result.split(',')[1]);
+                    reader.readAsDataURL(pdfBlob);
+                });
+                document.getElementById(`pdfStat${short}`).innerHTML = "<span style='color:green'>✓ Template Synced</span>";
 
-    async function blobToBase64(blob) {
-        return new Promise(r => { 
-            const reader = new FileReader(); 
-            reader.onloadend = () => r(reader.result.split(',')[1]); 
-            reader.readAsDataURL(blob); 
-        });
+                // Fetch CSV(s)
+                for (const url of masterStore[role].csvs) {
+                    const csvRes = await fetch(url);
+                    const arrayBuffer = await csvRes.arrayBuffer();
+                    const data = new Uint8Array(arrayBuffer);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                    const mapped = json.map(r => {
+                        const nameKey = Object.keys(r).find(k => k.toLowerCase().includes('name'));
+                        const emailKey = Object.keys(r).find(k => k.toLowerCase().includes('email'));
+                        const titleKey = Object.keys(r).find(k => k.toLowerCase().includes('title'));
+                        return {
+                            name: `${r[titleKey] || ''} ${r[nameKey] || ''}`.trim(),
+                            email: (r[emailKey] || "").toLowerCase().trim()
+                        };
+                    }).filter(u => u.name && u.email);
+                    masterStore[role].data.push(...mapped);
+                }
+
+                // Deduplicate
+                masterStore[role].data = Array.from(new Map(masterStore[role].data.map(item => [item.email, item])).values());
+                document.getElementById(`csvStat${short}`).innerHTML = `<span style='color:green'>✓ ${masterStore[role].data.length} Records Synced</span>`;
+                document.getElementById(`btn${short}`).disabled = false;
+
+            } catch (err) {
+                document.getElementById(`pdfStat${short}`).innerHTML = "<span style='color:red'>× Connection Error</span>";
+            }
+        }
     }
 
-    window.onload = async () => {
-        try {
-            for (const role in fileMap) {
-                document.getElementById(fileMap[role].statId).innerText = "⏳ Fetching...";
-                const pdfRes = await fetch(fileMap[role].pdf);
-                store[role].pdf = await blobToBase64(await pdfRes.blob());
-
-                const csvRes = await fetch(fileMap[role].csv);
-                const csvBuf = await csvRes.arrayBuffer();
-                const wb = XLSX.read(csvBuf, { type: 'array' });
-                
-                store[role].data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(r => ({
-                    name: `${r.Title || r.title || ''} ${r["Full Name"] || r["full name"] || ''}`.trim(),
-                    email: (r["Email Address"] || r["Email address"] || r["Email"] || "").toLowerCase().trim()
-                })).filter(u => u.email);
-
-                document.getElementById(fileMap[role].statId).innerText = "✓ Sync Ready (" + store[role].data.length + " names)";
-            }
-
-            document.getElementById('mainStatus').innerHTML = "<strong>Success:</strong> All GitHub assets synced successfully.";
-            document.getElementById('mainStatus').style.background = "#d4edda";
-            document.getElementById('btnBuild').disabled = false;
-            document.getElementById('btnBuild').innerText = "CREATE MASTER PORTAL FILE";
-
-        } catch (e) {
-            document.getElementById('mainStatus').innerHTML = "<strong>Error:</strong> Failed to fetch from GitHub. Check your internet or repository links.";
-            document.getElementById('mainStatus').style.background = "#f8d7da";
-        }
-    };
-
-    function buildMasterPortal() {
-        const portalCode = `
+    function generatePortal(role) {
+        const portalHtml = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ASU CLFS 2026 - Certificate Portal</title>
+    <title>ASU Portal - ${role}</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"><\/script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-        body { font-family: 'Montserrat', sans-serif; background: #1a3a82; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 40px; border-radius: 15px; text-align: center; width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        .logo { max-height: 100px; margin-bottom: 20px; }
-        h3 { color: #1a3a82; margin: 0; font-size: 1.3em; border-bottom: 2px solid #f5a623; padding-bottom: 10px; display: inline-block; }
-        p { color: #555; font-size: 0.9em; margin: 20px 0; line-height: 1.5; }
-        input { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1em; text-align: center; outline: none; }
-        .btn { background: #f5a623; color: #1a3a82; border: none; padding: 16px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1em; }
-        #msg { margin-top: 15px; font-size: 0.85em; font-weight: bold; min-height: 1.5em; }
+        body { font-family: sans-serif; background: #1a3a82; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; color: white; }
+        .card { background: white; color: #333; padding: 40px; border-radius: 15px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; text-align: center; }
+        button { background: #f5a623; color: #1a3a82; border: none; padding: 12px 20px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <img src="${LOGO_URL}" class="logo">
-        <br>
-        <h3>Symposium 2026</h3>
-        <p>Please enter your <b>registered email address</b> to download your certificate.</p>
-        <input type="text" id="email" placeholder="Email Address">
-        <button class="btn" onclick="verifyAndDownload()">DOWNLOAD CERTIFICATE</button>
-        <div id="msg"></div>
+        <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/ASU-logo.png" width="150">
+        <h3>${role} Certificate</h3>
+        <input type="text" id="email" placeholder="Enter Registered Email">
+        <button onclick="download()">Download PDF</button>
+        <p id="msg" style="font-size:12px; margin-top:10px;"></p>
     </div>
     <script>
-        const masterStore = ${JSON.stringify(store)};
-        const priority = ["Speaker", "Organizer", "Participant"];
-
-        async function verifyAndDownload() {
-            const input = document.getElementById('email').value.toLowerCase().trim();
-            const msg = document.getElementById('msg');
-            msg.style.color = "#666";
-            msg.innerText = "Searching...";
-
-            let userObj = null; let roleType = "";
-            for (const role of priority) {
-                const user = masterStore[role].data.find(u => u.email === input);
-                if (user) { userObj = user; roleType = role; break; }
-            }
-
-            if (!userObj) {
-                msg.style.color = "#d9534f";
-                msg.innerText = "Email not found.";
-                return;
-            }
-
-            try {
-                const { PDFDocument, rgb, StandardFonts } = PDFLib;
-                const pdfB64 = masterStore[roleType].pdf;
-                const doc = await PDFDocument.load(pdfB64);
-                const font = await doc.embedFont(StandardFonts.TimesRomanBoldItalic);
-                const page = doc.getPages()[0];
-                const fontSize = 34;
-                const textWidth = font.widthOfTextAtSize(userObj.name, fontSize);
-                
-                page.drawText(userObj.name, {
-                    x: (page.getSize().width / 2) - (textWidth / 2),
-                    y: 322,
-                    size: fontSize,
-                    font: font,
-                    color: rgb(0.1, 0.2, 0.5)
-                });
-
-                const bytes = await doc.save();
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(new Blob([bytes], {type: "application/pdf"}));
-                a.download = roleType + "_" + userObj.name.replace(/\\s+/g, '_') + ".pdf";
-                a.click();
-                msg.style.color = "green";
-                msg.innerText = "Success! " + roleType + " certificate downloaded.";
-            } catch (e) {
-                msg.innerText = "Error generating PDF.";
-            }
+        const store = ${JSON.stringify({pdf: masterStore[role].pdf, data: masterStore[role].data})};
+        async function download() {
+            const email = document.getElementById('email').value.toLowerCase().trim();
+            const user = store.data.find(u => u.email === email);
+            if(!user) { document.getElementById('msg').innerText = "Email not found"; return; }
+            
+            const { PDFDocument, rgb, StandardFonts } = PDFLib;
+            const doc = await PDFDocument.load(store.pdf);
+            const font = await doc.embedFont(StandardFonts.TimesRomanBoldItalic);
+            const page = doc.getPages()[0];
+            const name = user.name;
+            const tw = font.widthOfTextAtSize(name, 34);
+            page.drawText(name, { x: (page.getSize().width/2)-(tw/2), y: 322, size: 34, font, color: rgb(0.1, 0.2, 0.4) });
+            const bytes = await doc.save();
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(new Blob([bytes], {type: "application/pdf"}));
+            a.download = name + ".pdf"; a.click();
         }
     <\/script>
 </body>
 </html>`;
 
-        const blob = new Blob([portalCode], {type: 'text/html'});
+        const blob = new Blob([portalHtml], {type: 'text/html'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = "Symposium_Certificates.html";
+        a.download = `Portal_${role}.html`;
         a.click();
     }
+
+    window.onload = initFetch;
 </script>
 </body>
 </html>
