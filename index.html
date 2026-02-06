@@ -34,11 +34,13 @@ body {
 .header-left { display: flex; align-items: center; gap: 15px; }
 .banner-img { height: 100px; } 
 
-/* NEW ANIMATION OVERLAY STYLES */
-#flowOverlay {
+/* FLOW & STATS OVERLAYS */
+#flowOverlay, #statsOverlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: white; z-index: 9999; display: none; overflow: hidden;
 }
+#statsOverlay { background: #f8fafc; padding: 40px; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: center; display: none; }
+
 .flow-content { width: 100%; position: absolute; top: -100%; }
 .close-flow { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: var(--danger); color: white; border: none; cursor: pointer; z-index: 10000; border-radius: 5px; font-weight: bold; }
 
@@ -78,6 +80,12 @@ footer { padding: 6px; text-align: center; font-size: 10px; color: var(--gray); 
 input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; border: 1px solid #ccc; font-size: 13px; }
 
 .stats-grid p { margin: 3px 0; display: flex; justify-content: space-between; font-size: 11px; }
+
+/* FULLSCREEN STATS STYLING */
+.fs-stats-card { background: white; border-radius: 20px; padding: 40px; width: 90%; max-width: 1000px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
+.fs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 30px; }
+.fs-val { font-size: 3rem; font-weight: 800; color: var(--primary); display: block; }
+.fs-label { color: var(--gray); text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -85,8 +93,24 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 <div id="flowOverlay">
     <button class="close-flow" onclick="stopFlow()">✖ Close Animation</button>
     <div id="scroller" class="flow-content" style="height: 2000px;">
-    <iframe src="4th Symposium Program Flow.pdf" style="width:100%; height:100%; border:none;"></iframe>
+        <iframe src="4th Symposium Program Flow.pdf" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
 </div>
+
+<div id="statsOverlay">
+    <button class="close-flow" onclick="closeStats()">✖ Close Statistics</button>
+    <div class="fs-stats-card">
+        <h1 style="color:var(--primary); margin-top:0;">Live Attendance Statistics</h1>
+        <div style="height: 400px; width: 100%; margin: 20px 0;">
+            <canvas id="fsStatChart"></canvas>
+        </div>
+        <div class="fs-grid">
+            <div><span class="fs-val" id="fsTotal">0</span><span class="fs-label">Total Registered</span></div>
+            <div><span class="fs-val" id="fsPresent" style="color:var(--success)">0</span><span class="fs-label">Present</span></div>
+            <div><span class="fs-val" id="fsOnsite" style="color:var(--danger)">0</span><span class="fs-label">On-Site</span></div>
+            <div><span class="fs-val" id="fsRate" style="color:var(--secondary)">0%</span><span class="fs-label">Attendance Rate</span></div>
+        </div>
+    </div>
 </div>
 
 <div class="container" id="mainDashboard">
@@ -191,6 +215,7 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
               <div id="statTotalPerc" style="font-size: 24px; font-weight: bold; color: var(--primary);">0%</div>
               <span style="font-size: 9px; color: var(--gray); text-transform: uppercase;">Total Attendance Rate</span>
           </div>
+          <button class="btn btn-primary" style="width:100%; margin-top:10px; background:var(--secondary);" onclick="showFullscreenStats()">📊 Show Full Screen Stats</button>
       </div>
     </div>
   </div>
@@ -214,7 +239,7 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 let attendees = JSON.parse(localStorage.getItem('asuDashboardAttendees')) || [];
 let currentIdx = -1, isGeoFenceEnabled = false;
 let qrExpiryInterval, idleTimer, animId;
-let scrollPos = -2000, myChart;
+let scrollPos = -2000, myChart, fsChart;
 
 const modalQR = new QRCodeStyling({
     width: 320, height: 320,
@@ -225,7 +250,8 @@ const modalQR = new QRCodeStyling({
 
 function initChart() {
     const ctx = document.getElementById('statChart').getContext('2d');
-    myChart = new Chart(ctx, {
+    const fsCtx = document.getElementById('fsStatChart').getContext('2d');
+    const chartConfig = {
         type: 'bar',
         data: {
             labels: ['Pre-Reg', 'Present', 'On-Site'],
@@ -241,7 +267,10 @@ function initChart() {
             plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false } } }
         }
-    });
+    };
+
+    myChart = new Chart(ctx, JSON.parse(JSON.stringify(chartConfig)));
+    fsChart = new Chart(fsCtx, JSON.parse(JSON.stringify(chartConfig)));
 }
 
 function toggleFullScreen() {
@@ -249,12 +278,21 @@ function toggleFullScreen() {
     else if (document.exitFullscreen) document.exitFullscreen();
 }
 
-// RESET IDLE TIMER UPDATED TO CALL NEW FLOW
+function showFullscreenStats() {
+    document.getElementById('statsOverlay').style.display = 'flex';
+    updateStats();
+}
+
+function closeStats() {
+    document.getElementById('statsOverlay').style.display = 'none';
+}
+
 function resetIdleTimer() {
     if(document.getElementById('flowOverlay').style.display === 'block') stopFlow();
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-        if(document.getElementById('regModal').style.display !== 'flex') startFlow();
+        if(document.getElementById('regModal').style.display !== 'flex' && 
+           document.getElementById('statsOverlay').style.display !== 'flex') startFlow();
     }, 120000);
 }
 
@@ -262,18 +300,14 @@ function resetIdleTimer() {
     window.addEventListener(evt, resetIdleTimer, true);
 });
 
-// NEW FLOW ANIMATION FUNCTIONS
 function startFlow() {
     document.getElementById('flowOverlay').style.display = 'block';
     const scroller = document.getElementById('scroller');
     scrollPos = -scroller.offsetHeight;
-    
     function move() {
-        scrollPos += 3; // Speed - adjust as needed
+        scrollPos += 3; 
         scroller.style.top = scrollPos + 'px';
-        if (scrollPos > window.innerHeight) {
-            scrollPos = -scroller.offsetHeight;
-        }
+        if (scrollPos > window.innerHeight) scrollPos = -scroller.offsetHeight;
         animId = requestAnimationFrame(move);
     }
     move();
@@ -288,51 +322,61 @@ function stopFlow() {
 async function syncAll() {
     const dot = document.getElementById('statusDot');
     dot.className = 'dot dot-sync';
-    
-    const preRegUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpIqmmrbr2onWAPZN9vyRHSIVuWamRG2fToIh4odfeZCF9s5fnn2gXzKhyFXcoSnKxhP4JPBBdM7_7/pub?gid=1600117244&single=true&output=csv";
-    const onSiteUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHm3hXcQhODrGTNIaAxjGTWwHSxw-KbZ_eZPTcBXyvthjFZcx3Y0aPKntG1dPe1-0j6gyOHCryb8-M/pub?gid=1907106900&single=true&output=csv";
-
+    const baseUrl = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
+    const files = [
+        { name: "4th Symposium 2026 Participants.csv", role: "Participant" },
+        { name: "4th Symposium 2026 On-Site Participants.csv", role: "Participant (New)" },
+        { name: "4th Symposium 2026 Organisers.csv", role: "Organiser" },
+        { name: "4th Symposium 2026 Speakers.csv", role: "Speaker" }
+    ];
     try {
-        const preRegResponse = await fetch(preRegUrl);
-        const onSiteResponse = await fetch(onSiteUrl);
-        
-        const preRegData = await preRegResponse.text();
-        const onSiteData = await onSiteResponse.text();
-
-        processSyncData(preRegData, false);
-        processSyncData(onSiteData, true);
-
+        for (let file of files) {
+            const response = await fetch(baseUrl + encodeURIComponent(file.name));
+            if (response.ok) {
+                const csvData = await response.text();
+                processSyncData(csvData, file.role);
+            }
+        }
         localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
-        filterRole('All');
-        updateStats();
-        
+        filterRole('All'); updateStats();
         dot.className = 'dot dot-online';
-        alert("Sync Successful!");
+        alert("Sync Successful! Data fetched from GitHub.");
     } catch (error) {
-        console.error("Sync Failed:", error);
         dot.className = 'dot dot-offline';
-        alert("Sync failed. Check internet connection.");
+        alert("Sync failed.");
     }
 }
 
-function processSyncData(csvText, isOnSite) {
+function processSyncData(csvText, assignedRole) {
     const rows = csvText.split('\n');
     rows.slice(1).forEach(row => {
         const cols = row.split(',');
         if (cols.length > 4) {
             const name = cols[4].trim();
             const institute = cols[7] ? cols[7].trim() : "ASU";
-            const role = isOnSite ? "Participant (New)" : "Participant";
-            
-            if (!attendees.find(a => a.name === name)) {
-                attendees.push({
-                    name: name,
-                    status: "❌ Pending",
-                    institute: institute,
-                    role: role
-                });
-            }
+            let existing = attendees.find(a => a.name === name);
+            if (!existing) {
+                attendees.push({ name: name, status: "❌ Pending", institute: institute, role: assignedRole });
+            } else if(assignedRole !== "Participant") existing.role = assignedRole;
         }
+    });
+}
+
+function handleFileUpload(input) {
+    const files = Array.from(input.files);
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            let role = "Participant";
+            const fname = file.name.toLowerCase();
+            if (fname.includes("speaker")) role = "Speaker";
+            else if (fname.includes("organiser")) role = "Organiser";
+            else if (fname.includes("on-site")) role = "Participant (New)";
+            processSyncData(e.target.result, role);
+            localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
+            filterRole('All'); updateStats();
+        };
+        reader.readAsText(file);
     });
 }
 
@@ -340,50 +384,32 @@ function showSecureQR(type) {
     let guestName = "";
     if(type === 'PRE-REG') {
         if(currentIdx === -1) return alert("Select participant first!");
-        if(attendees[currentIdx].status.includes('✅')) return alert("Already Checked-In");
         guestName = attendees[currentIdx].name;
     } else {
         let realNameInput = prompt("Enter Participant Real Name:");
-        if (!realNameInput || realNameInput.trim() === "") return;
+        if (!realNameInput) return;
         guestName = realNameInput.trim();
-        
         if (!attendees.find(a => a.name === guestName)) {
-            attendees.push({
-                name: guestName, 
-                status: "❌ Pending", 
-                institute: "On-Site Registration", 
-                role: "Participant (New)" 
-            });
+            attendees.push({ name: guestName, status: "❌ Pending", institute: "On-Site Registration", role: "Participant (New)" });
             localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
         }
-        filterRole('All');
-        updateStats();
-        selectUserByName(guestName);
+        filterRole('All'); updateStats(); selectUserByName(guestName);
     }
-
     const modal = document.getElementById('regModal');
-    const timerDisplay = document.getElementById('expiryTimer');
-    
     let baseUrl = (type==='PRE-REG') ? "https://forms.gle/izxwf4pbgJb1UXhTA" : "https://forms.gle/FtuEVmusMqCerHqC7";
-    let finalUrl = baseUrl + "?id=" + encodeURIComponent(guestName);
-
     document.getElementById('modalTitle').textContent = type + " REGISTRATION";
     document.getElementById('modalAttendee').textContent = "Name: " + guestName;
-    
     modal.style.display = 'flex';
-    document.getElementById('regModalQR').classList.remove('active');
-
     clearInterval(qrExpiryInterval);
     let timeLeft = 300;
     qrExpiryInterval = setInterval(() => {
         timeLeft--;
         let m = Math.floor(timeLeft/60), s = timeLeft%60;
-        timerDisplay.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        document.getElementById('expiryTimer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         if(timeLeft <= 0) closeModal();
     }, 1000);
-
     setTimeout(() => {
-        modalQR.update({ data: finalUrl });
+        modalQR.update({ data: baseUrl + "?id=" + encodeURIComponent(guestName) });
         document.getElementById('regModalQR').classList.add('active');
     }, 150);
 }
@@ -397,6 +423,38 @@ function togglePresence() {
     updateStats();
 }
 
+function updateStats() {
+    const preRegs = attendees.filter(p => !p.role.includes('(New)'));
+    const onSite = attendees.filter(p => p.role.includes('(New)'));
+    const prePresent = preRegs.filter(p => p.status.includes('✅')).length;
+    const totalPresent = attendees.filter(p => p.status.includes('✅')).length;
+    const rate = (attendees.length > 0 ? (totalPresent/attendees.length*100).toFixed(1) : 0) + "%";
+
+    document.getElementById('statNew').textContent = onSite.length;
+    document.getElementById('statPreReg').textContent = preRegs.length;
+    document.getElementById('statPreAtt').textContent = prePresent;
+    document.getElementById('statPrePerc').textContent = (preRegs.length > 0 ? (prePresent/preRegs.length*100).toFixed(1) : 0) + "%";
+    document.getElementById('statSpeakers').textContent = attendees.filter(p => p.role === 'Speaker').length;
+    document.getElementById('statOrg').textContent = attendees.filter(p => p.role === 'Organiser').length;
+    document.getElementById('statTotalPres').textContent = totalPresent;
+    document.getElementById('statTotalPerc').textContent = rate;
+
+    // Full Screen Stats Update
+    document.getElementById('fsTotal').textContent = attendees.length;
+    document.getElementById('fsPresent').textContent = totalPresent;
+    document.getElementById('fsOnsite').textContent = onSite.length;
+    document.getElementById('fsRate').textContent = rate;
+
+    if(myChart) {
+        myChart.data.datasets[0].data = [preRegs.length, totalPresent, onSite.length];
+        myChart.update();
+    }
+    if(fsChart) {
+        fsChart.data.datasets[0].data = [preRegs.length, totalPresent, onSite.length];
+        fsChart.update();
+    }
+}
+
 function downloadReport() {
     let csv = "Name,Category,Institution,Status\n";
     attendees.forEach(p => { csv += `"${p.name}","${p.role}","${p.institute}","${p.status}"\n`; });
@@ -406,45 +464,20 @@ function downloadReport() {
     a.href = url; a.download = `Symposium_Final_Report.csv`; a.click();
 }
 
-function updateStats() {
-    const preRegs = attendees.filter(p => !p.role.includes('(New)'));
-    const onSite = attendees.filter(p => p.role.includes('(New)'));
-    const prePresent = preRegs.filter(p => p.status.includes('✅')).length;
-    const totalPresent = attendees.filter(p => p.status.includes('✅')).length;
-    
-    document.getElementById('statNew').textContent = onSite.length;
-    document.getElementById('statPreReg').textContent = preRegs.length;
-    document.getElementById('statPreAtt').textContent = prePresent;
-    document.getElementById('statPrePerc').textContent = (preRegs.length > 0 ? (prePresent/preRegs.length*100).toFixed(1) : 0) + "%";
-    document.getElementById('statSpeakers').textContent = attendees.filter(p => p.role === 'Speaker').length;
-    document.getElementById('statOrg').textContent = attendees.filter(p => p.role === 'Organiser').length;
-    document.getElementById('statTotalPres').textContent = totalPresent;
-    document.getElementById('statTotalPerc').textContent = (attendees.length > 0 ? (totalPresent/attendees.length*100).toFixed(1) : 0) + "%";
-
-    if(myChart) {
-        myChart.data.datasets[0].data = [preRegs.length, totalPresent, onSite.length];
-        myChart.update();
-    }
-}
-
 function selectUserByName(name) {
     const p = attendees.find(u => u.name === name);
     if(!p) return;
     currentIdx = attendees.indexOf(p);
     document.getElementById('displayName').textContent = p.name;
     document.getElementById('valStatus').textContent = p.status;
-    
     const btn = document.getElementById('btnMarkPresent');
     if(p.status.includes('✅')) {
         document.getElementById('valStatus').style.color = '#10b981';
-        btn.textContent = "☒ Mark Un-Present";
-        btn.className = "btn btn-danger";
+        btn.textContent = "☒ Mark Un-Present"; btn.className = "btn btn-danger";
     } else {
         document.getElementById('valStatus').style.color = '#f72585';
-        btn.textContent = "☑ Mark Present";
-        btn.className = "btn btn-success";
+        btn.textContent = "☑ Mark Present"; btn.className = "btn btn-success";
     }
-    
     document.getElementById('valInstitution').textContent = p.institute; 
     document.getElementById('valCategory').textContent = p.role;
     document.getElementById('combinedDropdown').value = p.name;
@@ -454,15 +487,6 @@ function handleSearch(val) {
     const search = val.toLowerCase();
     const filtered = attendees.filter(p => p.name.toLowerCase().includes(search));
     if(filtered.length > 0) selectUserByName(filtered[0].name);
-}
-
-function handleFileUpload(input) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        processSyncData(e.target.result, false);
-        filterRole('All'); updateStats();
-    };
-    reader.readAsText(input.files[0]);
 }
 
 function filterRole(role) {
@@ -487,26 +511,15 @@ function handleCurtainClick() {
     navigator.geolocation.getCurrentPosition(() => document.getElementById('qrCurtain').classList.add('open'));
 }
 
-function closeModal() { 
-    document.getElementById('regModal').style.display='none'; 
-    clearInterval(qrExpiryInterval);
-}
-
+function closeModal() { document.getElementById('regModal').style.display='none'; clearInterval(qrExpiryInterval); }
 function openCertLink() { window.open('4th Symposium Certificates.html'); }
-
 document.getElementById('combinedDropdown').onchange = (e) => selectUserByName(e.target.value);
 
 window.onload = () => { 
-    initChart();
-    filterRole('All'); 
-    updateStats();
+    initChart(); filterRole('All'); updateStats();
     modalQR.append(document.getElementById("regModalQR")); 
     resetIdleTimer();
 };
 </script>
 </body>
 </html>
-
-
-
-
