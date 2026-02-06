@@ -8,19 +8,27 @@
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
         :root { --asu-blue: #1a3a82; --asu-gold: #f5a623; --asu-light: #f0f2f5; }
         body { font-family: 'Montserrat', sans-serif; background: var(--asu-light); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .container { flex: 1; padding: 40px 20px; }
-        .builder-card { background: white; padding: 40px; border-radius: 12px; max-width: 1100px; margin: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 10px solid var(--asu-blue); }
-        .header { text-align: center; margin-bottom: 40px; }
-        .header img { max-height: 100px; margin: 0 10px; }
-        .role-section { display: grid; grid-template-columns: 220px 1fr 1fr 200px; gap: 15px; align-items: center; padding: 20px; background: #fff; border: 1px solid #eee; border-radius: 8px; margin-bottom: 15px; transition: 0.3s; }
-        .role-section:hover { border-color: var(--asu-gold); }
-        .role-name { font-weight: bold; color: var(--asu-blue); font-size: 0.85em; border-left: 5px solid var(--asu-gold); padding-left: 12px; }
-        .status-msg { font-size: 11px; color: #666; font-style: italic; }
-        .status-dot { font-size: 11px; margin-top: 4px; color: #28a745; font-weight: bold; }
-        .btn-gen { background: var(--asu-blue); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8em; transition: 0.3s; }
+        .container { flex: 1; padding: 30px 15px; }
+        
+        /* Width reduced to 750px for a more vertical/compact look */
+        .builder-card { background: white; padding: 30px; border-radius: 12px; max-width: 750px; margin: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 8px solid var(--asu-blue); }
+        
+        .header { text-align: center; margin-bottom: 30px; }
+        .header img { max-height: 70px; margin: 0 8px; }
+        .header h2 { font-size: 1.5em; margin: 10px 0 5px; }
+        .header p { font-size: 0.9em; color: #555; }
+
+        /* Optimized grid for horizontal space reduction */
+        .role-section { display: grid; grid-template-columns: 160px 1fr 1fr 150px; gap: 12px; align-items: center; padding: 15px; background: #fff; border: 1px solid #eee; border-radius: 8px; margin-bottom: 12px; transition: 0.3s; }
+        
+        .role-section:hover { border-color: var(--asu-gold); background-color: #fafafa; }
+        .role-name { font-weight: bold; color: var(--asu-blue); font-size: 0.8em; border-left: 4px solid var(--asu-gold); padding-left: 10px; line-height: 1; }
+        .status-msg { font-size: 10.5px; color: #666; font-style: italic; }
+        .btn-gen { background: var(--asu-blue); color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.75em; transition: 0.3s; }
         .btn-gen:hover { background: var(--asu-gold); color: var(--asu-blue); }
-        .btn-gen:disabled { background: #ccc; cursor: not-allowed; }
-        footer { background: #222; color: #bbb; padding: 25px; text-align: center; font-size: 13px; border-top: 4px solid var(--asu-gold); line-height: 2; }
+        .btn-gen:disabled { background: #ddd; color: #999; cursor: not-allowed; }
+
+        footer { background: #222; color: #bbb; padding: 20px; text-align: center; font-size: 12px; border-top: 4px solid var(--asu-gold); line-height: 1; margin-top: 20px; border-radius: 0 0 12px 12px; }
         footer a { color: var(--asu-gold); text-decoration: none; font-weight: bold; }
     </style>
 </head>
@@ -29,37 +37,40 @@
 <div class="container">
     <div class="builder-card">
         <div class="header">
-            <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/ASU-logo.png" alt="ASU Logo">
-            <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/CLFS-logo.jpg" alt="CLFS Logo">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px;">
+                <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/ASU-logo.png" alt="ASU Logo">
+                <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/CLFS-logo.jpg" alt="CLFS Logo">
+            </div>
             <h2>Symposium-4 CLFS 2026</h2>
-            <p>Unified Certificate Portal Manager (GitHub Auto-Fetch)</p>
+            <p>Unified Certificate Portal Manager</p>
         </div>
 
         <div class="role-section" style="background: #fdfaf3;">
-            <div class="role-name">PARTICIPANTS<br><small>(Regular + On-Site)</small></div>
-            <div class="status-msg" id="pdfStatP">Loading Template...</div>
-            <div class="status-msg" id="csvStatP">Syncing CSV files...</div>
+            <div class="role-name">PARTICIPANTS<br><small style="font-weight: normal; color: #777;">Reg + On-Site</small></div>
+            <div class="status-msg" id="pdfStatP">Loading PDF...</div>
+            <div class="status-msg" id="csvStatP">Syncing CSV...</div>
             <button class="btn-gen" id="btnP" onclick="generatePortal('Participant')" disabled>GENERATE PORTAL</button>
         </div>
 
         <div class="role-section">
             <div class="role-name">ORGANIZERS</div>
-            <div class="status-msg" id="pdfStatO">Loading Template...</div>
-            <div class="status-msg" id="csvStatO">Syncing CSV files...</div>
+            <div class="status-msg" id="pdfStatO">Loading PDF...</div>
+            <div class="status-msg" id="csvStatO">Syncing CSV...</div>
             <button class="btn-gen" id="btnO" onclick="generatePortal('Organizer')" disabled>GENERATE PORTAL</button>
         </div>
 
         <div class="role-section">
             <div class="role-name">SPEAKERS</div>
-            <div class="status-msg" id="pdfStatS">Loading Template...</div>
-            <div class="status-msg" id="csvStatS">Syncing CSV files...</div>
+            <div class="status-msg" id="pdfStatS">Loading PDF...</div>
+            <div class="status-msg" id="csvStatS">Syncing CSV...</div>
             <button class="btn-gen" id="btnS" onclick="generatePortal('Speaker')" disabled>GENERATE PORTAL</button>
         </div>
+        
         <footer>
-    <a href="https://www.asu.edu.om/" target="_blank">A'Sharqiyah University</a>: P.O Box 42, Postal Code:400 Ibra, Sultanate of Oman. <br>
-    <a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Language%20and%20Foundation%20Studies">Center For Language and Foundation Studies</a>. 
-    Copyright &copy; <a href="mailto:hrehman08@yahoo.com">drkhan</a> 2026.
-</footer>
+            <a href="https://www.asu.edu.om/" target="_blank">A'Sharqiyah University</a>, Oman.
+            <a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Language%20and%20Foundation%20Studies">CLFS Department</a>. 
+            &copy; <a href="mailto:hrehman08@yahoo.com">drkhan</a> 2026.
+        </footer>
     </div>
 </div>
 
@@ -76,7 +87,6 @@
         for (const role in masterStore) {
             const short = role[0];
             try {
-                // Fetch PDF Template
                 const pdfRes = await fetch(masterStore[role].templates[0]);
                 const pdfBlob = await pdfRes.blob();
                 masterStore[role].pdf = await new Promise(r => {
@@ -84,9 +94,8 @@
                     reader.onloadend = () => r(reader.result.split(',')[1]);
                     reader.readAsDataURL(pdfBlob);
                 });
-                document.getElementById(`pdfStat${short}`).innerHTML = "<span style='color:green'>✓ Template Synced</span>";
+                document.getElementById(`pdfStat${short}`).innerHTML = "<span style='color:green'>✓ PDF Loaded</span>";
 
-                // Fetch CSV(s)
                 for (const url of masterStore[role].csvs) {
                     const csvRes = await fetch(url);
                     const arrayBuffer = await csvRes.arrayBuffer();
@@ -106,13 +115,12 @@
                     masterStore[role].data.push(...mapped);
                 }
 
-                // Deduplicate
                 masterStore[role].data = Array.from(new Map(masterStore[role].data.map(item => [item.email, item])).values());
-                document.getElementById(`csvStat${short}`).innerHTML = `<span style='color:green'>✓ ${masterStore[role].data.length} Records Synced</span>`;
+                document.getElementById(`csvStat${short}`).innerHTML = `<span style='color:green'>✓ ${masterStore[role].data.length} Records</span>`;
                 document.getElementById(`btn${short}`).disabled = false;
 
             } catch (err) {
-                document.getElementById(`pdfStat${short}`).innerHTML = "<span style='color:red'>× Connection Error</span>";
+                document.getElementById(`pdfStat${short}`).innerHTML = "<span style='color:red'>× Sync Error</span>";
             }
         }
     }
@@ -126,25 +134,25 @@
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"><\/script>
     <style>
         body { font-family: sans-serif; background: #1a3a82; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; color: white; }
-        .card { background: white; color: #333; padding: 40px; border-radius: 15px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input { width: 100%; padding: 12px; margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; text-align: center; }
-        button { background: #f5a623; color: #1a3a82; border: none; padding: 12px 20px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        .card { background: white; color: #333; padding: 30px; border-radius: 12px; text-align: center; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; text-align: center; font-size: 14px; }
+        button { background: #f5a623; color: #1a3a82; border: none; padding: 12px 20px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/ASU-logo.png" width="150">
-        <h3>${role} Certificate</h3>
+        <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/ASU-logo.png" width="110">
+        <h3 style="margin: 15px 0;">${role} Certificate</h3>
         <input type="text" id="email" placeholder="Enter Registered Email">
         <button onclick="download()">Download PDF</button>
-        <p id="msg" style="font-size:12px; margin-top:10px;"></p>
+        <p id="msg" style="font-size:11px; margin-top:10px; color: #d9534f;"></p>
     </div>
     <script>
         const store = ${JSON.stringify({pdf: masterStore[role].pdf, data: masterStore[role].data})};
         async function download() {
             const email = document.getElementById('email').value.toLowerCase().trim();
             const user = store.data.find(u => u.email === email);
-            if(!user) { document.getElementById('msg').innerText = "Email not found"; return; }
+            if(!user) { document.getElementById('msg').innerText = "Email not found in database"; return; }
             
             const { PDFDocument, rgb, StandardFonts } = PDFLib;
             const doc = await PDFDocument.load(store.pdf);
