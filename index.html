@@ -68,8 +68,8 @@ body {
 .dual-guest-group { display: flex; margin-top: 4px; }
 .btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; }
 .btn-guest-arrow { width: 40px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); }
-.guest-grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; background: #eef2ff; padding: 8px; border-radius: 5px; border: 1px solid #d0d7f7; }
-.btn-mini { padding: 4px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; }
+.guest-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 6px; background: #eef2ff; padding: 8px; border-radius: 5px; border: 1px solid #d0d7f7; }
+.btn-mini { padding: 6px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; font-weight: bold; }
 .btn-mini:hover { background: var(--primary); color: white; }
 
 .main-content { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 10px; padding: 10px 20px; }
@@ -87,13 +87,13 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 
 .stats-grid p { margin: 3px 0; display: flex; justify-content: space-between; font-size: 11px; }
 
-.fs-stats-card { background: white; border-radius: 20px; padding: 40px; width: 90%; max-width: 1000px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
-.fs-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 30px; }
-.fs-val { font-size: 2.5rem; font-weight: 800; color: var(--primary); display: block; }
-.fs-label { color: var(--gray); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+.fs-stats-card { background: white; border-radius: 20px; padding: 40px; width: 90%; max-width: 1100px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
+.fs-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 30px; }
+.fs-val { font-size: 2.2rem; font-weight: 800; color: var(--primary); display: block; }
+.fs-label { color: var(--gray); text-transform: uppercase; font-size: 9px; letter-spacing: 1px; }
 
-/* New Pulse effect for Header Counter */
 .header-count-badge { background: var(--success); color: white; padding: 4px 12px; border-radius: 50px; font-size: 1.2rem; margin-left: 10px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+.header-rate-badge { background: var(--dark); color: white; padding: 4px 12px; border-radius: 50px; font-size: 1.2rem; margin-left: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); }
 </style>
 </head>
 <body>
@@ -108,8 +108,10 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 <div id="statsOverlay">
     <button class="close-flow" onclick="closeStats()">✖ Close Statistics</button>
     <div class="fs-stats-card">
-        <h1 style="color:var(--primary); margin-top:0; display: flex; align-items: center; justify-content: center;">
-            Live Attendance Analytics <span class="header-count-badge" id="fsHeaderPresent">0</span>
+        <h1 style="color:var(--primary); margin-top:0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px;">
+            Live Attendance Analytics 
+            <span class="header-count-badge" id="fsHeaderPresent">0</span>
+            <span class="header-rate-badge" id="fsHeaderRate">0%</span>
         </h1>
         <div style="height: 380px; width: 100%; margin: 20px 0;">
             <canvas id="fsStatChart"></canvas>
@@ -117,6 +119,8 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
         <div class="fs-grid">
             <div><span class="fs-val" id="fsTotal">0</span><span class="fs-label">Total Base</span></div>
             <div><span class="fs-val" id="fsPresent" style="color:var(--success)">0</span><span class="fs-label">Total Present</span></div>
+            <div><span class="fs-val" id="fsStudent" style="color:#00b4d8">0</span><span class="fs-label">ASU Students</span></div>
+            <div><span class="fs-val" id="fsStaff" style="color:#f39c12">0</span><span class="fs-label">ASU Staff</span></div>
             <div><span class="fs-val" id="fsOnsite" style="color:var(--danger)">0</span><span class="fs-label">On-Site New</span></div>
             <div><span class="fs-val" id="fsGuestStat" style="color:var(--secondary)">0</span><span class="fs-label">VIP Guests</span></div>
             <div><span class="fs-val" id="fsRate" style="color:var(--dark)">0%</span><span class="fs-label">Presence Rate</span></div>
@@ -171,18 +175,14 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
         </div>
 
         <div id="guestPanel" class="guest-grid">
-            <button class="btn-mini" onclick="quickAddGuest('Minister')">Min.</button>
-            <button class="btn-mini" onclick="quickAddGuest('BoT')">BoT</button>
-            <button class="btn-mini" onclick="quickAddGuest('ROP')">ROP</button>
-            <button class="btn-mini" onclick="quickAddGuest('VC')">VC</button>
-            <button class="btn-mini" onclick="quickAddGuest('DVC')">DVC</button>
-            <button class="btn-mini" onclick="quickAddGuest('DVCAAR')">DVCAAR</button>
-            <button class="btn-mini" onclick="quickAddGuest('Dean')">Dean</button>
-            <button class="btn-mini" onclick="quickAddGuest('Director')">Dir.</button>
-            <button class="btn-mini" onclick="quickAddGuest('ASU Staff')">Staff</button>
-            <button class="btn-mini" onclick="quickAddGuest('Friend')">Frnd</button>
-            <button class="btn-mini" onclick="quickAddGuest('Relative')">Rel.</button>
-            <button class="btn-mini" style="background:#f1f5f9" onclick="customGuest()">Other+</button>
+            <button class="btn-mini" onclick="quickAddGuest('Ministers/VIP')">Min./VIP</button>
+            <button class="btn-mini" onclick="quickAddGuest('BoT/BoD')">BoT/BoD</button>
+            <button class="btn-mini" onclick="quickAddGuest('VC/DVC/DVCAAR')">VC/DVCs</button>
+            <button class="btn-mini" onclick="quickAddGuest('Deans/Directors')">Deans/Dir</button>
+            <button class="btn-mini" onclick="quickAddGuest('ASU Staff')">ASU Staff</button>
+            <button class="btn-mini" onclick="quickAddGuest('ASU Students')">ASU Students</button>
+            <button class="btn-mini" onclick="quickAddGuest('Friends/Relatives')">Friends/Rel</button>
+            <button class="btn-mini" style="background:#f1f5f9; grid-column: span 2;" onclick="customGuest()">Custom Guest+</button>
         </div>
       </div>
 
@@ -234,10 +234,10 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
           <div class="stats-grid">
               <p>Pre-registered: <b id="statPreReg">0</b></p>
               <p>On-Site (New): <b id="statNew">0</b></p>
-              <p>Guests (VIP): <b id="statGuests">0</b></p>
+              <p>ASU Students: <b id="statStudents">0</b></p>
+              <p>ASU Staff: <b id="statStaff">0</b></p>
+              <p>VIP Guests: <b id="statGuests">0</b></p>
               <hr style="border:0; border-top:1px solid #f1f1f1; margin: 4px 0;">
-              <p>Speakers: <b id="statSpeakers">0</b></p>
-              <p>Organisers: <b id="statOrg">0</b></p>
               <p>Total Present: <b id="statTotalPres" style="color:var(--success)">0</b></p>
           </div>
           <div style="text-align: center; margin-top: 5px;">
@@ -270,116 +270,196 @@ let currentIdx = -1, isGeoFenceEnabled = false;
 let qrExpiryInterval, idleTimer, animId;
 let scrollPos = -2000, myChart, fsChart;
 
-// UPDATE: High Contrast Colors Gradient for QRs
-const modalQR = new QRCodeStyling({
-    width: 320, height: 320,
-    dotsOptions: { 
-        type: "extra-rounded", 
-        gradient: {
-            type: "linear",
-            rotation: 0.78,
-            colorStops: [
-                { offset: 0, color: "#f72585" }, // High Contrast Pink
-                { offset: 1, color: "#4361ee" }  // High Contrast Blue
-            ]
-        }
-    },
-    cornersSquareOptions: { type: "extra-rounded", color: "#000000" },
-    cornersDotOptions: { type: "dot", color: "#3a0ca3" },
-    backgroundOptions: { color: "#ffffff" }
-});
+// Dynamic High-Contrast Single Solid Colors (No Gradients)
+function getDynamicQRStyle() {
+    const contrastColors = ["#000000", "#064e3b", "#1e3a8a", "#991b1b", "#451a03"];
+    const pick = contrastColors[Math.floor(Math.random() * contrastColors.length)];
+    return {
+        dotsOptions: { type: "extra-rounded", color: pick, gradient: null },
+        cornersSquareOptions: { type: "extra-rounded", color: pick },
+        cornersDotOptions: { type: "dot", color: pick }
+    };
+}
+
+const modalQR = new QRCodeStyling({ width: 320, height: 320, backgroundOptions: { color: "#ffffff" } });
 
 function initChart() {
     const ctx = document.getElementById('statChart').getContext('2d');
     const fsCtx = document.getElementById('fsStatChart').getContext('2d');
-    
-    const chartConfig = {
-        type: 'bar',
-        data: {
-            // UPDATED LABELS: Total Base xx, Total Present xx, etc.
-            labels: ['Total Base', 'Total Present', 'On-Site New', 'VIP Guests'],
-            datasets: [{
-                label: 'Headcount',
-                data: [0, 0, 0, 0],
-                backgroundColor: ['#4361ee', '#10b981', '#f72585', '#7209b7'],
-                borderRadius: 8
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            // UPDATE: Graph animation from x-axis to up
-            animation: {
-                duration: 2000,
-                easing: 'easeOutQuart'
-            },
-            plugins: { 
-                legend: { display: false },
-                tooltip: { enabled: true }
-            },
-            scales: { 
-                y: { beginAtZero: true, display: true, ticks: { precision: 0 } }, 
-                x: { grid: { display: false } } 
-            }
-        }
+    const commonOptions = {
+        maintainAspectRatio: false,
+        animation: { duration: 1500, easing: 'easeOutQuart', y: { from: (ctx) => ctx.chart.scales.y.getPixelForValue(0) } },
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, display: true, ticks: { precision: 0 } }, x: { grid: { display: false } } }
     };
-    myChart = new Chart(ctx, JSON.parse(JSON.stringify(chartConfig)));
-    fsChart = new Chart(fsCtx, JSON.parse(JSON.stringify(chartConfig)));
+    const commonData = {
+        labels: ['Total', 'Present', 'Student', 'Staff', 'On-Site', 'VIP'],
+        datasets: [{ label: 'Count', data: [0, 0, 0, 0, 0, 0], backgroundColor: ['#4361ee', '#10b981', '#00b4d8', '#f39c12', '#f72585', '#7209b7'], borderRadius: 6 }]
+    };
+    myChart = new Chart(ctx, { type: 'bar', data: JSON.parse(JSON.stringify(commonData)), options: commonOptions });
+    fsChart = new Chart(fsCtx, { type: 'bar', data: JSON.parse(JSON.stringify(commonData)), options: commonOptions });
 }
 
 function updateStats() {
     const totalBase = attendees.length;
-    const onSite = attendees.filter(p => p.role.includes('(New)'));
-    const guests = attendees.filter(p => p.role.includes('Guest'));
-    const totalPresent = attendees.filter(p => p.status.includes('✅')).length;
-    
-    // UI Updates
-    document.getElementById('statNew').textContent = onSite.length;
-    document.getElementById('statPreReg').textContent = attendees.filter(p => !p.role.includes('(New)') && !p.role.includes('Guest')).length;
-    document.getElementById('statGuests').textContent = guests.length;
-    document.getElementById('statSpeakers').textContent = attendees.filter(p => p.role === 'Speaker').length;
-    document.getElementById('statOrg').textContent = attendees.filter(p => p.role === 'Organiser').length;
-    document.getElementById('statTotalPres').textContent = totalPresent;
-    
-    // UPDATED Presence Rate: xx.x% of total present (Based on base vs current)
-    const rate = (totalBase > 0 ? (totalPresent/totalBase*100).toFixed(1) : 0) + "%";
-    document.getElementById('statTotalPerc').textContent = rate;
-    
-    // Fullscreen Overlay Updates
-    document.getElementById('fsTotal').textContent = totalBase;
-    document.getElementById('fsPresent').textContent = totalPresent;
-    document.getElementById('fsOnsite').textContent = onSite.length;
-    document.getElementById('fsGuestStat').textContent = guests.length;
-    document.getElementById('fsRate').textContent = rate;
-    
-    // UPDATE: Show total present immediately after Live Attendance Analytics
-    document.getElementById('fsHeaderPresent').textContent = totalPresent;
+    const present = attendees.filter(p => p.status.includes('✅')).length;
+    const students = attendees.filter(p => p.role.includes('ASU Students')).length;
+    const staff = attendees.filter(p => p.role.includes('ASU Staff')).length;
+    const onsite = attendees.filter(p => p.role.includes('(New)')).length;
+    const guests = attendees.filter(p => p.role.includes('Guest') && !p.role.includes('ASU')).length;
+    const rate = (totalBase > 0 ? (present/totalBase*100).toFixed(1) : 0) + "%";
 
-    // UPDATED BAR GRAPH DATA: Total Base xx, Total Present xx, On-Site New xx, VIP Guests xx.
-    const chartData = [totalBase, totalPresent, onSite.length, guests.length];
-    
-    if(myChart) { 
-        myChart.data.datasets[0].data = chartData; 
-        myChart.update(); 
-    }
-    if(fsChart) { 
-        fsChart.data.datasets[0].data = chartData; 
-        fsChart.update(); 
-    }
+    // Dashboard Updates
+    document.getElementById('statPreReg').textContent = totalBase - onsite - students - staff - guests;
+    document.getElementById('statNew').textContent = onsite;
+    document.getElementById('statStudents').textContent = students;
+    document.getElementById('statStaff').textContent = staff;
+    document.getElementById('statGuests').textContent = guests;
+    document.getElementById('statTotalPres').textContent = present;
+    document.getElementById('statTotalPerc').textContent = rate;
+
+    // Full Screen Updates
+    document.getElementById('fsTotal').textContent = totalBase;
+    document.getElementById('fsPresent').textContent = present;
+    document.getElementById('fsStudent').textContent = students;
+    document.getElementById('fsStaff').textContent = staff;
+    document.getElementById('fsOnsite').textContent = onsite;
+    document.getElementById('fsGuestStat').textContent = guests;
+    document.getElementById('fsRate').textContent = rate;
+    document.getElementById('fsHeaderPresent').textContent = present;
+    document.getElementById('fsHeaderRate').textContent = rate;
+
+    const chartData = [totalBase, present, students, staff, onsite, guests];
+    if(myChart) { myChart.data.datasets[0].data = chartData; myChart.update(); }
+    if(fsChart) { fsChart.data.datasets[0].data = chartData; fsChart.update(); }
 }
 
-// Logic below remains the same to preserve functions
-function handleDataAction() { if (confirm("Choose Data Action:\n\nOK = Sync from GitHub Cloud\nCancel = Upload Local CSV Files")) syncAll(); else document.getElementById('uploadFiles').click(); }
+function handleDataAction() { if (confirm("Sync from GitHub Cloud?")) syncAll(); else document.getElementById('uploadFiles').click(); }
 function toggleGuestPanel() { const panel = document.getElementById('guestPanel'); panel.style.display = panel.style.display === 'grid' ? 'none' : 'grid'; }
-function quickAddGuest(role) { if (!role) return; const existingCount = attendees.filter(a => a.name.startsWith(role)).length; const guestName = `${role} ${(existingCount + 1).toString().padStart(2, '0')}`; const newGuest = { name: guestName, status: "✅ Present", institute: "ASU Symposium Guest", role: "Guest (" + role + ")" }; attendees.push(newGuest); localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees)); filterRole('All'); updateStats(); selectUserByName(guestName); }
+
+function quickAddGuest(roleGroup) {
+    const guestName = `${roleGroup} ${(attendees.filter(a => a.name.startsWith(roleGroup)).length + 1).toString().padStart(2, '0')}`;
+    const newGuest = { name: guestName, status: "✅ Present", institute: "ASU", role: "Guest (" + roleGroup + ")" };
+    attendees.push(newGuest);
+    localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
+    filterRole('All'); updateStats(); selectUserByName(guestName);
+}
+
 function customGuest() { const cat = prompt("Enter Custom Category:"); if(cat) quickAddGuest(cat.trim()); }
-async function syncAll() { const dot = document.getElementById('statusDot'); dot.className = 'dot dot-sync'; const baseUrl = "https://raw.githubusercontent.com/hameedktk09/cms/main/"; const files = [{ name: "4th Symposium 2026 Participants.csv", role: "Participant" }, { name: "4th Symposium 2026 On-Site Participants.csv", role: "Participant (New)" }, { name: "4th Symposium 2026 Organisers.csv", role: "Organiser" }, { name: "4th Symposium 2026 Speakers.csv", role: "Speaker" }]; try { for (let file of files) { const response = await fetch(baseUrl + encodeURIComponent(file.name)); if (response.ok) processSyncData(await response.text(), file.role); } localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees)); filterRole('All'); updateStats(); dot.className = 'dot dot-online'; alert("Sync Successful!"); } catch (e) { dot.className = 'dot dot-offline'; alert("Sync failed."); } }
-function processSyncData(csvText, assignedRole) { const rows = csvText.split('\n'); rows.slice(1).forEach(row => { const cols = row.split(','); if (cols.length > 4) { const name = cols[4].trim(); if (!attendees.find(a => a.name === name)) { attendees.push({ name: name, status: "❌ Pending", institute: cols[7] ? cols[7].trim() : "ASU", role: assignedRole }); } } }); }
-function handleFileUpload(input) { Array.from(input.files).forEach(file => { const reader = new FileReader(); reader.onload = (e) => { let r = file.name.toLowerCase().includes("speaker") ? "Speaker" : (file.name.toLowerCase().includes("organiser") ? "Organiser" : "Participant"); processSyncData(e.target.result, r); localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees)); filterRole('All'); updateStats(); }; reader.readAsText(file); }); }
-function showSecureQR(type) { const modal = document.getElementById('regModal'); let qrData = ""; if(type === 'PRE-REG') { if(currentIdx === -1) return alert("Select participant first!"); document.getElementById('modalAttendee').textContent = "Name: " + attendees[currentIdx].name; qrData = "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name); } else { document.getElementById('modalAttendee').textContent = "NEW ON-SITE REGISTRATION"; qrData = "https://forms.gle/FtuEVmusMqCerHqC7"; } document.getElementById('modalTitle').textContent = type + " REGISTRATION"; modal.style.display = 'flex'; clearInterval(qrExpiryInterval); let timeLeft = 300; qrExpiryInterval = setInterval(() => { timeLeft--; let m = Math.floor(timeLeft/60), s = timeLeft%60; document.getElementById('expiryTimer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; if(timeLeft <= 0) closeModal(); }, 1000); setTimeout(() => { modalQR.update({ data: qrData }); document.getElementById('regModalQR').classList.add('active'); }, 150); }
-function togglePresence() { if(currentIdx === -1) return; let p = attendees[currentIdx]; p.status = p.status.includes('✅') ? "❌ Pending" : "✅ Present"; localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees)); selectUserByName(p.name); updateStats(); }
-function selectUserByName(name) { const p = attendees.find(u => u.name === name); if(!p) return; currentIdx = attendees.indexOf(p); document.getElementById('displayName').textContent = p.name; document.getElementById('valStatus').textContent = p.status; document.getElementById('valStatus').style.color = p.status.includes('✅') ? '#10b981' : '#f72585'; document.getElementById('btnMarkPresent').textContent = p.status.includes('✅') ? "☒ Mark Un-Present" : "☑ Mark Present"; document.getElementById('btnMarkPresent').className = p.status.includes('✅') ? "btn btn-danger" : "btn btn-success"; document.getElementById('valInstitution').textContent = p.institute; document.getElementById('valCategory').textContent = p.role; document.getElementById('combinedDropdown').value = p.name; }
-function handleSearch(val) { const filtered = attendees.filter(p => p.name.toLowerCase().includes(val.toLowerCase())); if(filtered.length > 0) selectUserByName(filtered[0].name); }
-function filterRole(role) { const dd = document.getElementById('combinedDropdown'); dd.innerHTML = '<option value="">Select Participant...</option>'; attendees.forEach(p => { if(role === 'All' || p.role.includes(role)) { const o = document.createElement('option'); o.value = p.name; o.textContent = p.name; dd.appendChild(o); } }); }
+
+async function syncAll() {
+    const dot = document.getElementById('statusDot');
+    dot.className = 'dot dot-sync';
+    const baseUrl = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
+    const files = [
+        { name: "4th Symposium 2026 Participants.csv", role: "Participant" },
+        { name: "4th Symposium 2026 On-Site Participants.csv", role: "Participant (New)" },
+        { name: "4th Symposium 2026 Organisers.csv", role: "Organiser" },
+        { name: "4th Symposium 2026 Speakers.csv", role: "Speaker" }
+    ];
+    try {
+        for (let file of files) {
+            const response = await fetch(baseUrl + encodeURIComponent(file.name));
+            if (response.ok) processSyncData(await response.text(), file.role);
+        }
+        localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
+        filterRole('All'); updateStats(); dot.className = 'dot dot-online'; alert("Sync Successful!");
+    } catch (e) { dot.className = 'dot dot-offline'; }
+}
+
+function processSyncData(csvText, assignedRole) {
+    const rows = csvText.split('\n');
+    rows.slice(1).forEach(row => {
+        const cols = row.split(',');
+        if (cols.length > 4) {
+            const name = cols[4].trim();
+            if (!attendees.find(a => a.name === name)) {
+                attendees.push({ name: name, status: "❌ Pending", institute: cols[7] ? cols[7].trim() : "ASU", role: assignedRole });
+            }
+        }
+    });
+}
+
+function handleFileUpload(input) {
+    Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            let r = file.name.toLowerCase().includes("speaker") ? "Speaker" : (file.name.toLowerCase().includes("organiser") ? "Organiser" : "Participant");
+            processSyncData(e.target.result, r);
+            localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
+            filterRole('All'); updateStats();
+        };
+        reader.readAsText(file);
+    });
+}
+
+function showSecureQR(type) {
+    const modal = document.getElementById('regModal');
+    let qrData = "";
+    if(type === 'PRE-REG') {
+        if(currentIdx === -1) return alert("Select participant first!");
+        document.getElementById('modalAttendee').textContent = "Name: " + attendees[currentIdx].name;
+        qrData = "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name);
+    } else {
+        document.getElementById('modalAttendee').textContent = "NEW ON-SITE REGISTRATION";
+        qrData = "https://forms.gle/FtuEVmusMqCerHqC7";
+    }
+    document.getElementById('modalTitle').textContent = type + " REGISTRATION";
+    modal.style.display = 'flex';
+    modalQR.update(getDynamicQRStyle());
+    clearInterval(qrExpiryInterval);
+    let timeLeft = 300;
+    qrExpiryInterval = setInterval(() => {
+        timeLeft--;
+        let m = Math.floor(timeLeft/60), s = timeLeft%60;
+        document.getElementById('expiryTimer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        if(timeLeft <= 0) closeModal();
+    }, 1000);
+    setTimeout(() => {
+        modalQR.update({ data: qrData });
+        document.getElementById('regModalQR').classList.add('active');
+    }, 150);
+}
+
+function togglePresence() {
+    if(currentIdx === -1) return;
+    let p = attendees[currentIdx];
+    p.status = p.status.includes('✅') ? "❌ Pending" : "✅ Present";
+    localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
+    selectUserByName(p.name);
+    updateStats();
+}
+
+function selectUserByName(name) {
+    const p = attendees.find(u => u.name === name);
+    if(!p) return;
+    currentIdx = attendees.indexOf(p);
+    document.getElementById('displayName').textContent = p.name;
+    document.getElementById('valStatus').textContent = p.status;
+    document.getElementById('valStatus').style.color = p.status.includes('✅') ? '#10b981' : '#f72585';
+    document.getElementById('btnMarkPresent').textContent = p.status.includes('✅') ? "☒ Mark Un-Present" : "☑ Mark Present";
+    document.getElementById('btnMarkPresent').className = p.status.includes('✅') ? "btn btn-danger" : "btn btn-success";
+    document.getElementById('valInstitution').textContent = p.institute;
+    document.getElementById('valCategory').textContent = p.role;
+    document.getElementById('combinedDropdown').value = p.name;
+}
+
+function handleSearch(val) {
+    const filtered = attendees.filter(p => p.name.toLowerCase().includes(val.toLowerCase()));
+    if(filtered.length > 0) selectUserByName(filtered[0].name);
+}
+
+function filterRole(role) {
+    const dd = document.getElementById('combinedDropdown');
+    dd.innerHTML = '<option value="">Select Participant...</option>';
+    attendees.forEach(p => {
+        if(role === 'All' || p.role.includes(role)) {
+            const o = document.createElement('option');
+            o.value = p.name; o.textContent = p.name; dd.appendChild(o);
+        }
+    });
+}
+
 function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
 function showFullscreenStats() { document.getElementById('statsOverlay').style.display = 'flex'; updateStats(); }
 function closeStats() { document.getElementById('statsOverlay').style.display = 'none'; }
