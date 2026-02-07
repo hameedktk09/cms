@@ -14,9 +14,6 @@
   --primary: #4361ee; --secondary: #7209b7; --success: #10b981;
   --danger: #f72585; --dark: #212529; --gray: #6c757d;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --curtain-main: #3d5a80;   
-  --curtain-shadow: #293241; 
-  --curtain-light: #4e6e96;  
 }
 
 body {
@@ -38,7 +35,7 @@ body {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: white; z-index: 9999; display: none; overflow: hidden;
 }
-#statsOverlay { background: #f8fafc; padding: 40px; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: center; display: none; }
+#statsOverlay { background: #f8fafc; padding: 40px; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: center; }
 
 .flow-content { width: 100%; position: absolute; top: -100%; }
 .close-flow { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: var(--danger); color: white; border: none; cursor: pointer; z-index: 10000; border-radius: 5px; font-weight: bold; }
@@ -67,9 +64,9 @@ body {
 
 .dual-guest-group { display: flex; margin-top: 4px; }
 .btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; }
-.btn-guest-arrow { width: 40px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); }
-.guest-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 6px; background: #eef2ff; padding: 8px; border-radius: 5px; border: 1px solid #d0d7f7; }
-.btn-mini { padding: 6px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; font-weight: bold; }
+.btn-guest-arrow { width: 85px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); }
+.guest-grid { display: none; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 6px; background: #eef2ff; padding: 8px; border-radius: 5px; border: 1px solid #d0d7f7; }
+.btn-mini { padding: 6px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; font-weight: bold; text-align: left; }
 .btn-mini:hover { background: var(--primary); color: white; }
 
 .main-content { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 10px; padding: 10px 20px; }
@@ -77,7 +74,7 @@ body {
 .display-name { color: var(--primary); font-weight: 600; font-size: 1.1rem; border: 1px solid #eee; padding: 4px 10px; min-width: 250px; display: inline-block; }
 
 .qr-frame { width: 220px; height: 220px; padding: 10px; border: 2px solid var(--primary); border-radius: 8px; background: white; position: relative; overflow: hidden; cursor: pointer; }
-.qr-curtain { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, var(--curtain-shadow) 0%, var(--curtain-main) 30%, var(--curtain-light) 50%, var(--curtain-main) 70%, var(--curtain-shadow) 100%); background-size: 40px 100%; transition: transform 0.6s; z-index: 10; transform-origin: top; }
+.qr-curtain { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #3d5a80; transition: transform 0.6s; z-index: 10; transform-origin: top; }
 .qr-curtain.open { transform: scaleY(0); }
 
 .info-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -87,10 +84,10 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 
 .stats-grid p { margin: 3px 0; display: flex; justify-content: space-between; font-size: 11px; }
 
-.fs-stats-card { background: white; border-radius: 20px; padding: 40px; width: 90%; max-width: 1100px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
-.fs-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 30px; }
-.fs-val { font-size: 2.2rem; font-weight: 800; color: var(--primary); display: block; }
-.fs-label { color: var(--gray); text-transform: uppercase; font-size: 9px; letter-spacing: 1px; }
+.fs-stats-card { background: white; border-radius: 20px; padding: 40px; width: 95%; max-width: 1200px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
+.fs-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-top: 30px; }
+.fs-val { font-size: 1.6rem; font-weight: 800; color: var(--primary); display: block; }
+.fs-label { color: var(--gray); text-transform: uppercase; font-size: 8px; letter-spacing: 1px; }
 
 .header-count-badge { background: var(--success); color: white; padding: 4px 12px; border-radius: 50px; font-size: 1.2rem; margin-left: 10px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
 .header-rate-badge { background: var(--dark); color: white; padding: 4px 12px; border-radius: 50px; font-size: 1.2rem; margin-left: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); }
@@ -108,22 +105,17 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 <div id="statsOverlay">
     <button class="close-flow" onclick="closeStats()">✖ Close Statistics</button>
     <div class="fs-stats-card">
-        <h1 style="color:var(--primary); margin-top:0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px;">
-            Live Attendance Analytics 
-            <span class="header-count-badge" id="fsHeaderPresent">0</span>
-            <span class="header-rate-badge" id="fsHeaderRate">0%</span>
-        </h1>
-        <div style="height: 380px; width: 100%; margin: 20px 0;">
-            <canvas id="fsStatChart"></canvas>
-        </div>
+        <h1 style="color:var(--primary); margin-top:0;">Live Symposium Analytics <span class="header-count-badge" id="fsHeaderPresent">0</span> <span class="header-rate-badge" id="fsHeaderRate">0%</span></h1>
+        <div style="height: 380px; width: 100%; margin: 20px 0;"><canvas id="fsStatChart"></canvas></div>
         <div class="fs-grid">
-            <div><span class="fs-val" id="fsTotal">0</span><span class="fs-label">Total Base</span></div>
-            <div><span class="fs-val" id="fsPresent" style="color:var(--success)">0</span><span class="fs-label">Total Present</span></div>
-            <div><span class="fs-val" id="fsStudent" style="color:#00b4d8">0</span><span class="fs-label">ASU Students</span></div>
-            <div><span class="fs-val" id="fsStaff" style="color:#f39c12">0</span><span class="fs-label">ASU Staff</span></div>
-            <div><span class="fs-val" id="fsOnsite" style="color:var(--danger)">0</span><span class="fs-label">On-Site New</span></div>
-            <div><span class="fs-val" id="fsGuestStat" style="color:var(--secondary)">0</span><span class="fs-label">VIP Guests</span></div>
-            <div><span class="fs-val" id="fsRate" style="color:var(--dark)">0%</span><span class="fs-label">Presence Rate</span></div>
+            <div><span class="fs-val" id="fsPreReg">0</span><span class="fs-label">Pre-Reg</span></div>
+            <div><span class="fs-val" id="fsCheckIn" style="color:var(--success)">0</span><span class="fs-label">Check-in</span></div>
+            <div><span class="fs-val" id="fsOnsite" style="color:var(--danger)">0</span><span class="fs-label">On-Site Reg</span></div>
+            <div><span class="fs-val" id="fsGuestStat" style="color:var(--secondary)">0</span><span class="fs-label">Guests</span></div>
+            <div><span class="fs-val" id="fsStaffStat" style="color:#f39c12">0</span><span class="fs-label">Staff</span></div>
+            <div><span class="fs-val" id="fsStudentStat" style="color:#00b4d8">0</span><span class="fs-label">Students</span></div>
+            <div><span class="fs-val" id="fsSpeakerStat" style="color:var(--dark)">0</span><span class="fs-label">Speakers</span></div>
+            <div><span class="fs-val" id="fsOrgStat" style="color:var(--gray)">0</span><span class="fs-label">Organisers</span></div>
         </div>
     </div>
 </div>
@@ -171,18 +163,23 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
         
         <div class="dual-guest-group">
             <button class="btn btn-guest-main" onclick="filterRole('Guest')">👤 Guest List</button>
-            <button class="btn btn-guest-arrow" onclick="toggleGuestPanel()">▼</button>
+            <button class="btn btn-guest-arrow" onclick="toggleGuestPanel()">▼ Quick Add</button>
         </div>
 
         <div id="guestPanel" class="guest-grid">
-            <button class="btn-mini" onclick="quickAddGuest('Ministers/VIP')">Min./VIP</button>
-            <button class="btn-mini" onclick="quickAddGuest('BoT/BoD')">BoT/BoD</button>
-            <button class="btn-mini" onclick="quickAddGuest('VC/DVC/DVCAAR')">VC/DVCs</button>
-            <button class="btn-mini" onclick="quickAddGuest('Deans/Directors')">Deans/Dir</button>
-            <button class="btn-mini" onclick="quickAddGuest('ASU Staff')">ASU Staff</button>
-            <button class="btn-mini" onclick="quickAddGuest('ASU Students')">ASU Students</button>
-            <button class="btn-mini" onclick="quickAddGuest('Friends/Relatives')">Friends/Rel</button>
-            <button class="btn-mini" style="background:#f1f5f9; grid-column: span 2;" onclick="customGuest()">Custom Guest+</button>
+            <div style="grid-column: span 2; display:flex; justify-content:space-between; margin-bottom:5px;">
+                <span style="font-size:9px; color:var(--primary); font-weight:bold;">QUICK SELECT</span>
+                <span style="font-size:9px; color:var(--gray);" id="innerGuestCount">Guests: 0</span>
+            </div>
+            <button class="btn-mini" style="background:#fff5f7; border-color:#f72585;" onclick="quickAddGuest('Min/VIP', 'Guest')">👑 Minister/VIP</button>
+            <button class="btn-mini" style="background:#fff5f7; border-color:#f72585;" onclick="quickAddGuest('BoT/BoD', 'Guest')">🏛️ BoT / BoD</button>
+            <button class="btn-mini" onclick="quickAddGuest('VC/DVC', 'Guest')">🎓 VC / DVCs</button>
+            <button class="btn-mini" onclick="quickAddGuest('Deans/Dir', 'Guest')">📖 Deans/Dir</button>
+            <button class="btn-mini" style="background:#f0f7ff;" onclick="quickAddGuest('ASU Staff', 'Staff')">👔 ASU Staff</button>
+            <button class="btn-mini" style="background:#f0f7ff;" onclick="quickAddGuest('ASU Students', 'Student')">🎒 ASU Students</button>
+            <button class="btn-mini" onclick="quickAddGuest('Friends/Rel', 'Guest')">👨‍👩‍👧 Friends/Rel</button>
+            <button class="btn-mini" onclick="quickAddGuest('Media/Press', 'Guest')">📸 Media/Press</button>
+            <button class="btn-mini" style="background:#f1f5f9; grid-column: span 2; text-align:center;" onclick="customGuest()">➕ Custom Guest Entry</button>
         </div>
       </div>
 
@@ -226,21 +223,11 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
     </div>
     
     <div class="panel">
-      <h4 style="margin:0 0 5px 0; color: var(--secondary); border-bottom: 2px solid #eee; padding-bottom: 3px;">📊 Symposium Statistics</h4>
+      <h4 style="margin:0 0 5px 0; color: var(--secondary); border-bottom: 2px solid #eee; padding-bottom: 3px;">📊 Stats Breakdown</h4>
       <div id="statsContainer">
-          <div style="height: 100px; margin-bottom: 10px;">
-              <canvas id="statChart"></canvas>
-          </div>
-          <div class="stats-grid">
-              <p>Pre-registered: <b id="statPreReg">0</b></p>
-              <p>On-Site (New): <b id="statNew">0</b></p>
-              <p>ASU Students: <b id="statStudents">0</b></p>
-              <p>ASU Staff: <b id="statStaff">0</b></p>
-              <p>VIP Guests: <b id="statGuests">0</b></p>
-              <hr style="border:0; border-top:1px solid #f1f1f1; margin: 4px 0;">
-              <p>Total Present: <b id="statTotalPres" style="color:var(--success)">0</b></p>
-          </div>
-          <div style="text-align: center; margin-top: 5px;">
+          <div style="height: 120px; margin-bottom: 10px;"><canvas id="statChart"></canvas></div>
+          <div class="stats-grid" id="sidebarStatsList"></div>
+          <div style="text-align: center; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px;">
               <div id="statTotalPerc" style="font-size: 24px; font-weight: bold; color: var(--primary);">0%</div>
               <span style="font-size: 9px; color: var(--gray);">ATTENDANCE RATE</span>
           </div>
@@ -270,112 +257,101 @@ let currentIdx = -1, isGeoFenceEnabled = false;
 let qrExpiryInterval, idleTimer, animId;
 let scrollPos = -2000, myChart, fsChart;
 
-// Dynamic High-Contrast Single Solid Colors (No Gradients)
-function getDynamicQRStyle() {
-    const contrastColors = ["#000000", "#064e3b", "#1e3a8a", "#991b1b", "#451a03"];
-    const pick = contrastColors[Math.floor(Math.random() * contrastColors.length)];
-    return {
-        dotsOptions: { type: "extra-rounded", color: pick, gradient: null },
-        cornersSquareOptions: { type: "extra-rounded", color: pick },
-        cornersDotOptions: { type: "dot", color: pick }
-    };
-}
-
 const modalQR = new QRCodeStyling({ width: 320, height: 320, backgroundOptions: { color: "#ffffff" } });
 
 function initChart() {
     const ctx = document.getElementById('statChart').getContext('2d');
     const fsCtx = document.getElementById('fsStatChart').getContext('2d');
-    const commonOptions = {
-        maintainAspectRatio: false,
-        animation: { duration: 1500, easing: 'easeOutQuart', y: { from: (ctx) => ctx.chart.scales.y.getPixelForValue(0) } },
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, display: true, ticks: { precision: 0 } }, x: { grid: { display: false } } }
-    };
-    const commonData = {
-        labels: ['Total', 'Present', 'Student', 'Staff', 'On-Site', 'VIP'],
-        datasets: [{ label: 'Count', data: [0, 0, 0, 0, 0, 0], backgroundColor: ['#4361ee', '#10b981', '#00b4d8', '#f39c12', '#f72585', '#7209b7'], borderRadius: 6 }]
-    };
-    myChart = new Chart(ctx, { type: 'bar', data: JSON.parse(JSON.stringify(commonData)), options: commonOptions });
-    fsChart = new Chart(fsCtx, { type: 'bar', data: JSON.parse(JSON.stringify(commonData)), options: commonOptions });
+    const labels = ['Pre-Reg', 'Check-in', 'On-Site', 'Guests', 'Staff', 'Students', 'Speakers', 'Organisers'];
+    const colors = ['#4361ee', '#10b981', '#f72585', '#7209b7', '#f39c12', '#00b4d8', '#212529', '#6c757d'];
+    const config = { type: 'bar', data: { labels: labels, datasets: [{ data: new Array(8).fill(0), backgroundColor: colors, borderRadius: 4 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false }, ticks: { font: { size: 8 } } } } } };
+    myChart = new Chart(ctx, config);
+    fsChart = new Chart(fsCtx, JSON.parse(JSON.stringify(config)));
 }
 
 function updateStats() {
-    const totalBase = attendees.length;
-    const present = attendees.filter(p => p.status.includes('✅')).length;
-    const students = attendees.filter(p => p.role.includes('ASU Students')).length;
-    const staff = attendees.filter(p => p.role.includes('ASU Staff')).length;
-    const onsite = attendees.filter(p => p.role.includes('(New)')).length;
-    const guests = attendees.filter(p => p.role.includes('Guest') && !p.role.includes('ASU')).length;
-    const rate = (totalBase > 0 ? (present/totalBase*100).toFixed(1) : 0) + "%";
+    const stats = {
+        preReg: attendees.filter(p => p.role === 'Participant').length,
+        checkIn: attendees.filter(p => p.status.includes('✅')).length,
+        onSite: attendees.filter(p => p.role.includes('New')).length,
+        guests: attendees.filter(p => p.role === 'Guest').length,
+        staff: attendees.filter(p => p.role === 'Staff').length,
+        students: attendees.filter(p => p.role === 'Student').length,
+        speakers: attendees.filter(p => p.role === 'Speaker').length,
+        organisers: attendees.filter(p => p.role === 'Organiser').length
+    };
 
-    // Dashboard Updates
-    document.getElementById('statPreReg').textContent = totalBase - onsite - students - staff - guests;
-    document.getElementById('statNew').textContent = onsite;
-    document.getElementById('statStudents').textContent = students;
-    document.getElementById('statStaff').textContent = staff;
-    document.getElementById('statGuests').textContent = guests;
-    document.getElementById('statTotalPres').textContent = present;
+    const rate = (attendees.length > 0 ? (stats.checkIn/attendees.length*100).toFixed(1) : 0) + "%";
+    
+    document.getElementById('sidebarStatsList').innerHTML = `
+        <p>Pre-Reg Total: <b>${stats.preReg}</b></p>
+        <p>On-Site Reg: <b>${stats.onSite}</b></p>
+        <p>Guests: <b>${stats.guests}</b></p>
+        <p>Staff: <b>${stats.staff}</b></p>
+        <p>Students: <b>${stats.students}</b></p>
+        <p>Speakers: <b>${stats.speakers}</b></p>
+        <p>Organisers: <b>${stats.organisers}</b></p>
+        <hr style="border:0; border-top:1px solid #eee; margin: 5px 0;">
+        <p>Total Check-ins: <b style="color:var(--success)">${stats.checkIn}</b></p>
+    `;
+
+    document.getElementById('innerGuestCount').textContent = `Guests: ${stats.guests}`;
+    document.getElementById('fsPreReg').textContent = stats.preReg;
+    document.getElementById('fsCheckIn').textContent = stats.checkIn;
+    document.getElementById('fsOnsite').textContent = stats.onSite;
+    document.getElementById('fsGuestStat').textContent = stats.guests;
+    document.getElementById('fsStaffStat').textContent = stats.staff;
+    document.getElementById('fsStudentStat').textContent = stats.students;
+    document.getElementById('fsSpeakerStat').textContent = stats.speakers;
+    document.getElementById('fsOrgStat').textContent = stats.organisers;
+    document.getElementById('fsHeaderPresent').textContent = stats.checkIn;
+    document.getElementById('fsHeaderRate').textContent = rate;
     document.getElementById('statTotalPerc').textContent = rate;
 
-    // Full Screen Updates
-    document.getElementById('fsTotal').textContent = totalBase;
-    document.getElementById('fsPresent').textContent = present;
-    document.getElementById('fsStudent').textContent = students;
-    document.getElementById('fsStaff').textContent = staff;
-    document.getElementById('fsOnsite').textContent = onsite;
-    document.getElementById('fsGuestStat').textContent = guests;
-    document.getElementById('fsRate').textContent = rate;
-    document.getElementById('fsHeaderPresent').textContent = present;
-    document.getElementById('fsHeaderRate').textContent = rate;
-
-    const chartData = [totalBase, present, students, staff, onsite, guests];
-    if(myChart) { myChart.data.datasets[0].data = chartData; myChart.update(); }
-    if(fsChart) { fsChart.data.datasets[0].data = chartData; fsChart.update(); }
+    const data = [stats.preReg, stats.checkIn, stats.onSite, stats.guests, stats.staff, stats.students, stats.speakers, stats.organisers];
+    myChart.data.datasets[0].data = data; myChart.update();
+    fsChart.data.datasets[0].data = data; fsChart.update();
 }
 
-function handleDataAction() { if (confirm("Sync from GitHub Cloud?")) syncAll(); else document.getElementById('uploadFiles').click(); }
-function toggleGuestPanel() { const panel = document.getElementById('guestPanel'); panel.style.display = panel.style.display === 'grid' ? 'none' : 'grid'; }
+function handleDataAction() { if (confirm("Sync from Cloud?")) syncAll(); else document.getElementById('uploadFiles').click(); }
+function toggleGuestPanel() { const p = document.getElementById('guestPanel'); p.style.display = p.style.display === 'grid' ? 'none' : 'grid'; }
 
-function quickAddGuest(roleGroup) {
-    const guestName = `${roleGroup} ${(attendees.filter(a => a.name.startsWith(roleGroup)).length + 1).toString().padStart(2, '0')}`;
-    const newGuest = { name: guestName, status: "✅ Present", institute: "ASU", role: "Guest (" + roleGroup + ")" };
-    attendees.push(newGuest);
+function quickAddGuest(label, roleType) {
+    const name = `${label} ${(attendees.filter(a => a.name.startsWith(label)).length + 1).toString().padStart(2, '0')}`;
+    attendees.push({ name: name, status: "✅ Present", institute: "ASU Guest", role: roleType });
+    saveAndRefresh(name);
+}
+
+function customGuest() { 
+    const name = prompt("Enter Custom Guest Name:"); 
+    if(name) {
+        attendees.push({ name: name, status: "✅ Present", institute: "External", role: "Guest" });
+        saveAndRefresh(name);
+    }
+}
+
+function saveAndRefresh(name) {
     localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
-    filterRole('All'); updateStats(); selectUserByName(guestName);
+    filterRole('All'); updateStats(); selectUserByName(name);
 }
-
-function customGuest() { const cat = prompt("Enter Custom Category:"); if(cat) quickAddGuest(cat.trim()); }
 
 async function syncAll() {
-    const dot = document.getElementById('statusDot');
-    dot.className = 'dot dot-sync';
+    const dot = document.getElementById('statusDot'); dot.className = 'dot dot-sync';
     const baseUrl = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
-    const files = [
-        { name: "4th Symposium 2026 Participants.csv", role: "Participant" },
-        { name: "4th Symposium 2026 On-Site Participants.csv", role: "Participant (New)" },
-        { name: "4th Symposium 2026 Organisers.csv", role: "Organiser" },
-        { name: "4th Symposium 2026 Speakers.csv", role: "Speaker" }
-    ];
+    const files = [{n:"4th Symposium 2026 Participants.csv", r:"Participant"}, {n:"4th Symposium 2026 On-Site Participants.csv", r:"Participant (New)"}, {n:"4th Symposium 2026 Organisers.csv", r:"Organiser"}, {n:"4th Symposium 2026 Speakers.csv", r:"Speaker"}];
     try {
-        for (let file of files) {
-            const response = await fetch(baseUrl + encodeURIComponent(file.name));
-            if (response.ok) processSyncData(await response.text(), file.role);
-        }
+        for(let f of files) { const res = await fetch(baseUrl + encodeURIComponent(f.n)); if(res.ok) processSyncData(await res.text(), f.r); }
         localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
-        filterRole('All'); updateStats(); dot.className = 'dot dot-online'; alert("Sync Successful!");
-    } catch (e) { dot.className = 'dot dot-offline'; }
+        filterRole('All'); updateStats(); dot.className = 'dot dot-online'; alert("Sync Done!");
+    } catch(e) { dot.className = 'dot dot-offline'; }
 }
 
-function processSyncData(csvText, assignedRole) {
-    const rows = csvText.split('\n');
-    rows.slice(1).forEach(row => {
+function processSyncData(csv, role) {
+    csv.split('\n').slice(1).forEach(row => {
         const cols = row.split(',');
-        if (cols.length > 4) {
-            const name = cols[4].trim();
-            if (!attendees.find(a => a.name === name)) {
-                attendees.push({ name: name, status: "❌ Pending", institute: cols[7] ? cols[7].trim() : "ASU", role: assignedRole });
-            }
+        if(cols.length > 4) {
+            const n = cols[4].trim();
+            if(!attendees.find(a => a.name === n)) attendees.push({ name: n, status: "❌ Pending", institute: cols[7]?.trim() || "ASU", role: role });
         }
     });
 }
@@ -384,7 +360,7 @@ function handleFileUpload(input) {
     Array.from(input.files).forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
-            let r = file.name.toLowerCase().includes("speaker") ? "Speaker" : (file.name.toLowerCase().includes("organiser") ? "Organiser" : "Participant");
+            let r = file.name.toLowerCase().includes("speaker") ? "Speaker" : "Participant";
             processSyncData(e.target.result, r);
             localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
             filterRole('All'); updateStats();
@@ -394,40 +370,28 @@ function handleFileUpload(input) {
 }
 
 function showSecureQR(type) {
+    if(type === 'PRE-REG' && currentIdx === -1) return alert("Select participant!");
     const modal = document.getElementById('regModal');
-    let qrData = "";
-    if(type === 'PRE-REG') {
-        if(currentIdx === -1) return alert("Select participant first!");
-        document.getElementById('modalAttendee').textContent = "Name: " + attendees[currentIdx].name;
-        qrData = "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name);
-    } else {
-        document.getElementById('modalAttendee').textContent = "NEW ON-SITE REGISTRATION";
-        qrData = "https://forms.gle/FtuEVmusMqCerHqC7";
-    }
+    let qrData = type === 'PRE-REG' ? "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name) : "https://forms.gle/FtuEVmusMqCerHqC7";
     document.getElementById('modalTitle').textContent = type + " REGISTRATION";
+    document.getElementById('modalAttendee').textContent = type === 'PRE-REG' ? attendees[currentIdx].name : "NEW ENTRY";
     modal.style.display = 'flex';
-    modalQR.update(getDynamicQRStyle());
     clearInterval(qrExpiryInterval);
     let timeLeft = 300;
     qrExpiryInterval = setInterval(() => {
         timeLeft--;
         let m = Math.floor(timeLeft/60), s = timeLeft%60;
-        document.getElementById('expiryTimer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        document.getElementById('expiryTimer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
         if(timeLeft <= 0) closeModal();
     }, 1000);
-    setTimeout(() => {
-        modalQR.update({ data: qrData });
-        document.getElementById('regModalQR').classList.add('active');
-    }, 150);
+    modalQR.update({ data: qrData });
+    document.getElementById('regModalQR').classList.add('active');
 }
 
 function togglePresence() {
     if(currentIdx === -1) return;
-    let p = attendees[currentIdx];
-    p.status = p.status.includes('✅') ? "❌ Pending" : "✅ Present";
-    localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
-    selectUserByName(p.name);
-    updateStats();
+    attendees[currentIdx].status = attendees[currentIdx].status.includes('✅') ? "❌ Pending" : "✅ Present";
+    saveAndRefresh(attendees[currentIdx].name);
 }
 
 function selectUserByName(name) {
@@ -437,25 +401,21 @@ function selectUserByName(name) {
     document.getElementById('displayName').textContent = p.name;
     document.getElementById('valStatus').textContent = p.status;
     document.getElementById('valStatus').style.color = p.status.includes('✅') ? '#10b981' : '#f72585';
-    document.getElementById('btnMarkPresent').textContent = p.status.includes('✅') ? "☒ Mark Un-Present" : "☑ Mark Present";
+    document.getElementById('btnMarkPresent').textContent = p.status.includes('✅') ? "☒ Un-Present" : "☑ Mark Present";
     document.getElementById('btnMarkPresent').className = p.status.includes('✅') ? "btn btn-danger" : "btn btn-success";
     document.getElementById('valInstitution').textContent = p.institute;
     document.getElementById('valCategory').textContent = p.role;
     document.getElementById('combinedDropdown').value = p.name;
 }
 
-function handleSearch(val) {
-    const filtered = attendees.filter(p => p.name.toLowerCase().includes(val.toLowerCase()));
-    if(filtered.length > 0) selectUserByName(filtered[0].name);
-}
+function handleSearch(val) { const f = attendees.filter(p => p.name.toLowerCase().includes(val.toLowerCase())); if(f.length > 0) selectUserByName(f[0].name); }
 
 function filterRole(role) {
     const dd = document.getElementById('combinedDropdown');
     dd.innerHTML = '<option value="">Select Participant...</option>';
     attendees.forEach(p => {
         if(role === 'All' || p.role.includes(role)) {
-            const o = document.createElement('option');
-            o.value = p.name; o.textContent = p.name; dd.appendChild(o);
+            const o = document.createElement('option'); o.value = p.name; o.textContent = p.name; dd.appendChild(o);
         }
     });
 }
@@ -463,18 +423,16 @@ function filterRole(role) {
 function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
 function showFullscreenStats() { document.getElementById('statsOverlay').style.display = 'flex'; updateStats(); }
 function closeStats() { document.getElementById('statsOverlay').style.display = 'none'; }
-function resetIdleTimer() { if(document.getElementById('flowOverlay').style.display === 'block') stopFlow(); clearTimeout(idleTimer); idleTimer = setTimeout(() => { if(document.getElementById('regModal').style.display !== 'flex' && document.getElementById('statsOverlay').style.display !== 'flex') startFlow(); }, 120000); }
-function startFlow() { document.getElementById('flowOverlay').style.display = 'block'; const scroller = document.getElementById('scroller'); scrollPos = -scroller.offsetHeight; function move() { scrollPos += 3; scroller.style.top = scrollPos + 'px'; if (scrollPos > window.innerHeight) scrollPos = -scroller.offsetHeight; animId = requestAnimationFrame(move); } move(); }
+function resetIdleTimer() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if(document.getElementById('regModal').style.display !== 'flex') startFlow(); }, 120000); }
+function startFlow() { document.getElementById('flowOverlay').style.display = 'block'; const scroller = document.getElementById('scroller'); function move() { scrollPos += 2; scroller.style.top = scrollPos + 'px'; if (scrollPos > window.innerHeight) scrollPos = -scroller.offsetHeight; animId = requestAnimationFrame(move); } move(); }
 function stopFlow() { document.getElementById('flowOverlay').style.display = 'none'; cancelAnimationFrame(animId); resetIdleTimer(); }
-function toggleGeoFence() { isGeoFenceEnabled = !isGeoFenceEnabled; document.getElementById('geoBtn').textContent = isGeoFenceEnabled ? "📍 Location: ON" : "📍 Location: OFF"; document.getElementById('geoBtn').style.background = isGeoFenceEnabled ? "#10b981" : "#636e72"; }
-function handleCurtainClick() { if(!isGeoFenceEnabled) return document.getElementById('qrCurtain').classList.toggle('open'); navigator.geolocation.getCurrentPosition(() => document.getElementById('qrCurtain').classList.add('open')); }
+function toggleGeoFence() { isGeoFenceEnabled = !isGeoFenceEnabled; document.getElementById('geoBtn').textContent = isGeoFenceEnabled ? "📍 Location: ON" : "📍 Location: OFF"; }
+function handleCurtainClick() { document.getElementById('qrCurtain').classList.toggle('open'); }
 function closeModal() { document.getElementById('regModal').style.display='none'; clearInterval(qrExpiryInterval); }
 function openCertLink() { window.open('4th Symposium Certificates.html'); }
-function downloadReport() { let csv = "Name,Category,Institution,Status\n"; attendees.forEach(p => { csv += `"${p.name}","${p.role}","${p.institute}","${p.status}"\n`; }); window.open(URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))); }
+function downloadReport() { let csv = "Name,Role,Status\n"; attendees.forEach(p => csv += `"${p.name}","${p.role}","${p.status}"\n`); window.open(URL.createObjectURL(new Blob([csv], {type:'text/csv'}))); }
 
 document.getElementById('combinedDropdown').onchange = (e) => selectUserByName(e.target.value);
-['mousedown', 'mousemove', 'keypress', 'touchstart'].forEach(evt => window.addEventListener(evt, resetIdleTimer, true));
-
 window.onload = () => { initChart(); filterRole('All'); updateStats(); modalQR.append(document.getElementById("regModalQR")); resetIdleTimer(); };
 </script>
 </body>
