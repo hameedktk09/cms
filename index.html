@@ -65,9 +65,12 @@ body {
 .btn-danger { background: var(--danger); color: white; border: none; }
 .btn-flow { background: #ff9f43; color: white; border: none; }
 
-/* Guest Mini Button Styles */
-.guest-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; display: none; background: #eef2ff; padding: 8px; border-radius: 5px; }
-.btn-mini { padding: 4px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); }
+/* Dual Action Guest Button Styles */
+.dual-guest-group { display: flex; margin-top: 4px; }
+.btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; }
+.btn-guest-arrow { width: 40px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); }
+.guest-grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; background: #eef2ff; padding: 8px; border-radius: 5px; border: 1px solid #d0d7f7; }
+.btn-mini { padding: 4px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; }
 .btn-mini:hover { background: var(--primary); color: white; }
 
 .main-content { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 10px; padding: 10px 20px; }
@@ -86,9 +89,9 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 .stats-grid p { margin: 3px 0; display: flex; justify-content: space-between; font-size: 11px; }
 
 .fs-stats-card { background: white; border-radius: 20px; padding: 40px; width: 90%; max-width: 1000px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
-.fs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 30px; }
-.fs-val { font-size: 3rem; font-weight: 800; color: var(--primary); display: block; }
-.fs-label { color: var(--gray); text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+.fs-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 30px; }
+.fs-val { font-size: 2.5rem; font-weight: 800; color: var(--primary); display: block; }
+.fs-label { color: var(--gray); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -103,15 +106,16 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
 <div id="statsOverlay">
     <button class="close-flow" onclick="closeStats()">✖ Close Statistics</button>
     <div class="fs-stats-card">
-        <h1 style="color:var(--primary); margin-top:0;">Live Attendance Statistics</h1>
-        <div style="height: 400px; width: 100%; margin: 20px 0;">
+        <h1 style="color:var(--primary); margin-top:0;">Live Attendance Analytics</h1>
+        <div style="height: 380px; width: 100%; margin: 20px 0;">
             <canvas id="fsStatChart"></canvas>
         </div>
         <div class="fs-grid">
-            <div><span class="fs-val" id="fsTotal">0</span><span class="fs-label">Total Registered</span></div>
-            <div><span class="fs-val" id="fsPresent" style="color:var(--success)">0</span><span class="fs-label">Present</span></div>
-            <div><span class="fs-val" id="fsOnsite" style="color:var(--danger)">0</span><span class="fs-label">On-Site</span></div>
-            <div><span class="fs-val" id="fsRate" style="color:var(--secondary)">0%</span><span class="fs-label">Attendance Rate</span></div>
+            <div><span class="fs-val" id="fsTotal">0</span><span class="fs-label">Total Base</span></div>
+            <div><span class="fs-val" id="fsPresent" style="color:var(--success)">0</span><span class="fs-label">Total Present</span></div>
+            <div><span class="fs-val" id="fsOnsite" style="color:var(--danger)">0</span><span class="fs-label">On-Site New</span></div>
+            <div><span class="fs-val" id="fsGuestStat" style="color:var(--secondary)">0</span><span class="fs-label">VIP Guests</span></div>
+            <div><span class="fs-val" id="fsRate" style="color:var(--dark)">0%</span><span class="fs-label">Presence Rate</span></div>
         </div>
     </div>
 </div>
@@ -156,20 +160,25 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
             <button class="btn btn-sync" id="syncBtn" onclick="handleDataAction()">📂 Sync Cloud & ⬆️ Upload CSV</button>
             <input type="file" id="uploadFiles" style="display:none" accept=".csv" multiple onchange="handleFileUpload(this)">
         </div>
-        <button class="btn" style="width:100%; margin-top:4px; background:var(--primary); color:white;" onclick="toggleGuestPanel()">👤 Add Guest (Mini Buttons)</button>
+        
+        <div class="dual-guest-group">
+            <button class="btn btn-guest-main" onclick="filterRole('Guest')">👤 Guest List</button>
+            <button class="btn btn-guest-arrow" onclick="toggleGuestPanel()">▼</button>
+        </div>
+
         <div id="guestPanel" class="guest-grid">
-            <button class="btn btn-mini" onclick="quickAddGuest('Minister')">Min.</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('BoT')">BoT</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('ROP')">ROP</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('VC')">VC</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('DVC')">DVC</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('DVCAAR')">DVCAAR</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('Dean')">Dean</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('Director')">Dir.</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('ASU Staff')">Staff</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('Friend')">Frnd</button>
-            <button class="btn btn-mini" onclick="quickAddGuest('Relative')">Rel.</button>
-            <button class="btn btn-mini" style="background:#f1f5f9" onclick="customGuest()">Other+</button>
+            <button class="btn-mini" onclick="quickAddGuest('Minister')">Min.</button>
+            <button class="btn-mini" onclick="quickAddGuest('BoT')">BoT</button>
+            <button class="btn-mini" onclick="quickAddGuest('ROP')">ROP</button>
+            <button class="btn-mini" onclick="quickAddGuest('VC')">VC</button>
+            <button class="btn-mini" onclick="quickAddGuest('DVC')">DVC</button>
+            <button class="btn-mini" onclick="quickAddGuest('DVCAAR')">DVCAAR</button>
+            <button class="btn-mini" onclick="quickAddGuest('Dean')">Dean</button>
+            <button class="btn-mini" onclick="quickAddGuest('Director')">Dir.</button>
+            <button class="btn-mini" onclick="quickAddGuest('ASU Staff')">Staff</button>
+            <button class="btn-mini" onclick="quickAddGuest('Friend')">Frnd</button>
+            <button class="btn-mini" onclick="quickAddGuest('Relative')">Rel.</button>
+            <button class="btn-mini" style="background:#f1f5f9" onclick="customGuest()">Other+</button>
         </div>
       </div>
 
@@ -220,8 +229,8 @@ input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; bord
           </div>
           <div class="stats-grid">
               <p>Pre-registered: <b id="statPreReg">0</b></p>
-              <p>Pre-Reg. Attendance: <b id="statPreAtt">0</b></p>
-              <p style="background:#f0f4ff; padding: 2px 4px; border-radius: 3px;">On-Site (New): <b id="statNew" style="color:var(--primary)">0</b></p>
+              <p>On-Site (New): <b id="statNew">0</b></p>
+              <p>Guests (VIP): <b id="statGuests">0</b></p>
               <hr style="border:0; border-top:1px solid #f1f1f1; margin: 4px 0;">
               <p>Speakers: <b id="statSpeakers">0</b></p>
               <p>Organisers: <b id="statOrg">0</b></p>
@@ -270,18 +279,18 @@ function initChart() {
     const chartConfig = {
         type: 'bar',
         data: {
-            labels: ['Pre-Reg', 'Present', 'On-Site'],
+            labels: ['Pre-Reg', 'Present', 'On-Site', 'Guests'],
             datasets: [{
                 label: 'Headcount',
-                data: [0, 0, 0],
-                backgroundColor: ['#4361ee', '#10b981', '#f72585'],
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#4361ee', '#10b981', '#f72585', '#7209b7'],
                 borderRadius: 5
             }]
         },
         options: {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, display: true, ticks: { precision: 0 } }, x: { grid: { display: false } } }
         }
     };
     myChart = new Chart(ctx, JSON.parse(JSON.stringify(chartConfig)));
@@ -364,17 +373,14 @@ function handleFileUpload(input) {
 function showSecureQR(type) {
     const modal = document.getElementById('regModal');
     let qrData = "";
-    
     if(type === 'PRE-REG') {
         if(currentIdx === -1) return alert("Select participant first!");
         document.getElementById('modalAttendee').textContent = "Name: " + attendees[currentIdx].name;
         qrData = "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name);
     } else {
-        // ON-SITE Registration: No Name Prompt. Just open QR.
         document.getElementById('modalAttendee').textContent = "NEW ON-SITE REGISTRATION";
-        qrData = "https://forms.gle/FtuEVmusMqCerHqC7"; // Static link for form scanning
+        qrData = "https://forms.gle/FtuEVmusMqCerHqC7";
     }
-    
     document.getElementById('modalTitle').textContent = type + " REGISTRATION";
     modal.style.display = 'flex';
     clearInterval(qrExpiryInterval);
@@ -385,14 +391,12 @@ function showSecureQR(type) {
         document.getElementById('expiryTimer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         if(timeLeft <= 0) closeModal();
     }, 1000);
-    
     setTimeout(() => {
         modalQR.update({ data: qrData });
         document.getElementById('regModalQR').classList.add('active');
     }, 150);
 }
 
-// ... Statistics and UI Helper functions (togglePresence, updateStats, selectUserByName, etc.) ...
 function togglePresence() {
     if(currentIdx === -1) return;
     let p = attendees[currentIdx];
@@ -404,11 +408,12 @@ function togglePresence() {
 function updateStats() {
     const preRegs = attendees.filter(p => !p.role.includes('(New)') && !p.role.includes('Guest'));
     const onSite = attendees.filter(p => p.role.includes('(New)'));
+    const guests = attendees.filter(p => p.role.includes('Guest'));
     const totalPresent = attendees.filter(p => p.status.includes('✅')).length;
     
     document.getElementById('statNew').textContent = onSite.length;
     document.getElementById('statPreReg').textContent = preRegs.length;
-    document.getElementById('statPreAtt').textContent = preRegs.filter(p => p.status.includes('✅')).length;
+    document.getElementById('statGuests').textContent = guests.length;
     document.getElementById('statSpeakers').textContent = attendees.filter(p => p.role === 'Speaker').length;
     document.getElementById('statOrg').textContent = attendees.filter(p => p.role === 'Organiser').length;
     document.getElementById('statTotalPres').textContent = totalPresent;
@@ -419,10 +424,12 @@ function updateStats() {
     document.getElementById('fsTotal').textContent = attendees.length;
     document.getElementById('fsPresent').textContent = totalPresent;
     document.getElementById('fsOnsite').textContent = onSite.length;
+    document.getElementById('fsGuestStat').textContent = guests.length;
     document.getElementById('fsRate').textContent = rate;
 
-    if(myChart) { myChart.data.datasets[0].data = [preRegs.length, totalPresent, onSite.length]; myChart.update(); }
-    if(fsChart) { fsChart.data.datasets[0].data = [preRegs.length, totalPresent, onSite.length]; fsChart.update(); }
+    const chartData = [preRegs.length, totalPresent, onSite.length, guests.length];
+    if(myChart) { myChart.data.datasets[0].data = chartData; myChart.update(); }
+    if(fsChart) { fsChart.data.datasets[0].data = chartData; fsChart.update(); }
 }
 
 function selectUserByName(name) {
