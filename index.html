@@ -338,7 +338,7 @@ function saveAndRefresh(name) {
 async function syncAll() {
     const dot = document.getElementById('statusDot'); dot.className = 'dot dot-sync';
     const baseUrl = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
-    const files = [{n:"4th Symposium 2026 Participants.csv", r:"Participant"}, {n:"4th Symposium 2026 On-Site Participants.csv", r:"Participant (New)"}, {n:"4th Symposium 2026 Organisers.csv", r:"Organiser"}, {n:"4th Symposium 2026 Speakers.csv", r:"Speaker"}];
+    const files = [{n:"4th Symposium 2026 Participants.csv", r:"Participant"}, {n:"4th Symposium 2026 Check-in Participants.csv", r:"Participant"}, {n:"4th Symposium 2026 On-Site Participants.csv", r:"Participant (New)"}, {n:"4th Symposium 2026 Organisers.csv", r:"Organiser"}, {n:"4th Symposium 2026 Speakers.csv", r:"Speaker"}];
     try {
         for(let f of files) { const res = await fetch(baseUrl + encodeURIComponent(f.n)); if(res.ok) processSyncData(await res.text(), f.r); }
         localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
@@ -436,4 +436,5 @@ document.getElementById('combinedDropdown').onchange = (e) => selectUserByName(e
 window.onload = () => { initChart(); filterRole('All'); updateStats(); modalQR.append(document.getElementById("regModalQR")); resetIdleTimer(); };
 </script>
 </body>
+
 </html>
