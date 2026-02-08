@@ -62,14 +62,14 @@
         .btn-danger { background: var(--danger); color: white; border: none; }
         .btn-flow { background: #ff9f43; color: white; border: none; }
 
-        /* GUEST LIST BUTTON IMPROVEMENTS */
         .dual-guest-group { display: flex; margin-top: 4px; height: 30px; }
         .btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; font-size: 11px; cursor: pointer; font-weight: 600; }
         .btn-guest-arrow { width: 80px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 10px; cursor: pointer; }
         
-        .guest-grid { display: none; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 6px; background: #eef2ff; padding: 8px; border-radius: 5px; border: 1px solid #d0d7f7; }
-        .btn-mini { padding: 5px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; font-weight: bold; text-align: left; }
-        .btn-mini:hover { background: var(--primary); color: white; }
+        /* GUEST PANEL - SOFT BUTTON STYLES */
+        .guest-grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; background: #f4f7ff; padding: 12px; border-radius: 10px; border: 1px solid #e0e7ff; }
+        .btn-mini { padding: 8px 2px; font-size: 10px; font-weight: 600; text-transform: uppercase; background: white; color: #4361ee; border: 1.5px solid #4361ee; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; text-align: center; display: flex; align-items: center; justify-content: center; }
+        .btn-mini:hover { background: #4361ee; color: white; box-shadow: 0 4px 10px rgba(67, 97, 238, 0.2); transform: translateY(-1px); }
 
         .main-content { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 10px; padding: 10px 20px; }
         .panel { background: white; padding: 12px 15px; border-radius: 8px; border: 1px solid #e5e7eb; box-shadow: var(--shadow); position: relative;}
@@ -158,7 +158,7 @@
       </div>
 
       <div>
-        <label style="font-size:10px; font-weight:bold; color: var(--gray);">MANAGEMENT</label>
+        <label style="font-size:10px; font-weight:bold; color: var(--gray);">GUEST LIST & MANAGEMENT</label>
         <div class="btn-pair" style="grid-template-columns: 1fr;">
             <button class="btn btn-sync" id="syncBtn" onclick="handleDataAction()">📂 Sync Cloud & ⬆️ Upload CSV</button>
             <input type="file" id="uploadFiles" style="display:none" accept=".csv" multiple onchange="handleFileUpload(this)">
@@ -170,19 +170,14 @@
         </div>
 
         <div id="guestPanel" class="guest-grid">
-            <div style="grid-column: span 2; display:flex; justify-content:space-between; margin-bottom:5px;">
-                <span style="font-size:9px; color:var(--primary); font-weight:bold;">QUICK SELECT</span>
-                <span style="font-size:9px; color:var(--gray);" id="innerGuestCount">Guests: 0</span>
-            </div>
-            <button class="btn-mini" style="background:#fff5f7; border-color:#f72585;" onclick="quickAddGuest('Min/VIP', 'Guest')">👑 Minister/VIP</button>
-            <button class="btn-mini" style="background:#fff5f7; border-color:#f72585;" onclick="quickAddGuest('BoT/BoD', 'Guest')">🏛️ BoT / BoD</button>
-            <button class="btn-mini" onclick="quickAddGuest('VC/DVC', 'Guest')">🎓 VC / DVCs</button>
-            <button class="btn-mini" onclick="quickAddGuest('Deans/Dir', 'Guest')">📖 Deans/Dir</button>
-            <button class="btn-mini" style="background:#f0f7ff;" onclick="quickAddGuest('ASU Staff', 'Staff')">👔 ASU Staff</button>
-            <button class="btn-mini" style="background:#f0f7ff;" onclick="quickAddGuest('ASU Students', 'Student')">🎒 ASU Students</button>
-            <button class="btn-mini" onclick="quickAddGuest('Friends/Rel', 'Guest')">👨‍👩‍👧 Friends/Rel</button>
-            <button class="btn-mini" onclick="quickAddGuest('Media/Press', 'Guest')">📸 Media/Press</button>
-            <button class="btn-mini" style="background:#f1f5f9; grid-column: span 2; text-align:center;" onclick="customGuest()">➕ Custom Guest Entry</button>
+            <button class="btn-mini" onclick="quickAddGuest('Min/VIP', 'Guest')">VIP</button>
+            <button class="btn-mini" onclick="quickAddGuest('BoT/BoD', 'Guest')">BoT/BoD</button>
+            <button class="btn-mini" onclick="quickAddGuest('VC/DVC', 'Guest')">VC/DVC</button>
+            <button class="btn-mini" onclick="quickAddGuest('Dean/Dir', 'Guest')">Deans/Directors</button>
+            <button class="btn-mini" onclick="quickAddGuest('ASU Staff', 'Staff')">ASU Staff</button>
+            <button class="btn-mini" onclick="quickAddGuest('ASU Stud', 'Student')">ASU Students</button>
+            <button class="btn-mini" onclick="quickAddGuest('Media', 'Guest')">Press/Media</button>
+            <button class="btn-mini" onclick="customGuest()">+Custom</button>
         </div>
       </div>
 
@@ -251,7 +246,7 @@
         <div id="regModalQR" class="modal-qr-container"></div>
         <div style="background: #fff5f5; padding: 10px; border-radius: 8px;">
             <span style="font-size: 10px; color: #c53030; text-transform: uppercase;">Time Remaining</span>
-            <div id="expiryTimer" style="color:var(--danger); font-size: 22px; font-weight:bold; font-family: monospace;">05:00</div>
+            <div id="expiryTimer" style="color:var(--danger); font-size: 22px; font-weight:bold; font-family: monospace;">02:00</div>
         </div>
         <button class="btn btn-primary" style="width:100%; margin-top:15px; padding:10px;" onclick="closeModal()">Close</button>
     </div>
@@ -263,7 +258,28 @@ let currentIdx = -1, isGeoFenceEnabled = false;
 let qrExpiryInterval, idleTimer, animId;
 let scrollPos = 0, myChart, fsChart;
 
-const modalQR = new QRCodeStyling({ width: 320, height: 320, backgroundOptions: { color: "#ffffff" } });
+// High-Contrast Colorful QR Configuration
+const modalQR = new QRCodeStyling({
+    width: 320,
+    height: 320,
+    type: "svg",
+    data: "",
+    dotsOptions: {
+        color: "#4361ee",
+        type: "extra-rounded",
+        gradient: {
+            type: "linear",
+            rotation: 45,
+            colorStops: [
+                { offset: 0, color: "#4361ee" },
+                { offset: 1, color: "#f72585" }
+            ]
+        }
+    },
+    backgroundOptions: { color: "#ffffff" },
+    cornersSquareOptions: { type: "extra-rounded", color: "#3a0ca3" },
+    cornersDotOptions: { type: "dot", color: "#7209b7" }
+});
 
 function initChart() {
     const ctx = document.getElementById('statChart').getContext('2d');
@@ -294,16 +310,11 @@ function initChart() {
             plugins: { legend: { display: false } },
             scales: {
                 y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } },
-                x: { 
-                    stacked: true, 
-                    grid: { display: false }, 
-                    ticks: { font: { size: 10, weight: 'bold' } } // Increased label size for Stats Breakdown
-                }
+                x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } }
             }
         }
     };
 
-    // Deep copy for Fullscreen Chart with even larger font
     const fsChartConfig = JSON.parse(JSON.stringify(chartConfig));
     fsChartConfig.options.scales.x.ticks.font = { size: 14, weight: 'bold' };
 
@@ -316,7 +327,6 @@ function updateStats() {
     const preRegTotal = preRegGroup.length;
     const preRegPresent = preRegGroup.filter(p => p.status.includes('✅')).length;
     const preRegPending = preRegTotal - preRegPresent;
-
     const onSiteGroup = attendees.filter(p => p.role.includes('New'));
     const onSitePresent = onSiteGroup.filter(p => p.status.includes('✅')).length;
     
@@ -332,9 +342,7 @@ function updateStats() {
     const totalCheckIn = attendees.filter(p => p.status.includes('✅')).length;
     const rate = (attendees.length > 0 ? (totalCheckIn/attendees.length*100).toFixed(1) : 0) + "%";
     
-    document.getElementById('fsCalculationLabel').innerHTML = 
-        `Total Present: <b> = ${totalCheckIn} (ATTENDANCE RATE: ${rate})</b>`;
-
+    document.getElementById('fsCalculationLabel').innerHTML = `Total Present: <b> = ${totalCheckIn} (ATTENDANCE RATE: ${rate})</b>`;
     document.getElementById('sidebarStatsList').innerHTML = `
         <p>Pre-Reg Total: <b>${preRegTotal}</b> (Pending: <span style="color:red">${preRegPending}</span>)</p>
         <p>On-Site Reg: <b>${stats.onSite}</b></p>
@@ -349,14 +357,12 @@ function updateStats() {
 
     const presentDataset = [preRegPresent, onSitePresent, stats.guests, stats.staff, stats.students, stats.speakers, stats.organisers];
     const pendingDataset = [preRegPending, 0, 0, 0, 0, 0, 0];
-
     [myChart, fsChart].forEach(chart => {
         chart.data.datasets[0].data = presentDataset;
         chart.data.datasets[1].data = pendingDataset;
         chart.update();
     });
 
-    document.getElementById('innerGuestCount').textContent = `Guests: ${stats.guests}`;
     document.getElementById('fsPreReg').textContent = preRegTotal;
     document.getElementById('fsCheckIn').textContent = totalCheckIn;
     document.getElementById('fsOnsite').textContent = stats.onSite;
@@ -452,17 +458,23 @@ function showSecureQR(type) {
         "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name) : 
         "https://forms.gle/FtuEVmusMqCerHqC7";
 
-    document.getElementById('modalTitle').textContent = type + " REGISTRATION";
+    // UPDATED: Changed to PRE-REGISTRATION
+    document.getElementById('modalTitle').textContent = type === 'PRE-REG' ? "PRE-REGISTRATION" : type + " REGISTRATION";
     document.getElementById('modalAttendee').textContent = type === 'PRE-REG' ? attendees[currentIdx].name : "NEW ENTRY";
     modal.style.display = 'flex';
+    
+    // UPDATED: 2 Minute Timer
     clearInterval(qrExpiryInterval);
-    let timeLeft = 300;
+    let timeLeft = 120;
+    document.getElementById('expiryTimer').textContent = "02:00";
+
     qrExpiryInterval = setInterval(() => {
         timeLeft--;
         let m = Math.floor(timeLeft/60), s = timeLeft%60;
         document.getElementById('expiryTimer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
         if(timeLeft <= 0) closeModal();
     }, 1000);
+
     modalQR.update({ data: qrData });
     document.getElementById('regModalQR').classList.add('active');
 }
