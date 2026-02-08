@@ -37,7 +37,7 @@
         }
         #statsOverlay { background: #f8fafc; padding: 40px; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: center; }
 
-        .flow-content { width: 100%; position: absolute; top: -100%; }
+        .flow-content { width: 100%; position: absolute; left: 0; }
         .close-flow { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: var(--danger); color: white; border: none; cursor: pointer; z-index: 10000; border-radius: 5px; font-weight: bold; }
 
         .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 20px; background: #f1f5f9; }
@@ -62,11 +62,13 @@
         .btn-danger { background: var(--danger); color: white; border: none; }
         .btn-flow { background: #ff9f43; color: white; border: none; }
 
-        .dual-guest-group { display: flex; margin-top: 4px; }
-        .btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; }
-        .btn-guest-arrow { width: 85px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); }
+        /* GUEST LIST BUTTON UPDATES */
+        .dual-guest-group { display: flex; margin-top: 4px; height: 32px; }
+        .btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; font-size: 11px; font-weight: bold; cursor: pointer;}
+        .btn-guest-arrow { width: 85px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 10px; cursor: pointer;}
+        
         .guest-grid { display: none; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 6px; background: #eef2ff; padding: 8px; border-radius: 5px; border: 1px solid #d0d7f7; }
-        .btn-mini { padding: 6px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; font-weight: bold; text-align: left; }
+        .btn-mini { padding: 4px 6px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; font-weight: bold; text-align: left; }
         .btn-mini:hover { background: var(--primary); color: white; }
 
         .main-content { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 10px; padding: 10px 20px; }
@@ -90,26 +92,25 @@
         .fs-label { color: var(--gray); text-transform: uppercase; font-size: 8px; letter-spacing: 1px; }
 
         .header-count-badge { background: var(--success); color: white; padding: 4px 12px; border-radius: 50px; font-size: 1.2rem; margin-left: 10px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-        .header-rate-badge { background: var(--dark); color: white; padding: 4px 12px; border-radius: 50px; font-size: 1.2rem; margin-left: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); }
     </style>
 </head>
 <body>
 
 <div id="flowOverlay">
-    <button class="close-flow" onclick="stopFlow()">✖ Close Animation</button>
-    <div id="scroller" class="flow-content" style="height: 2000px;">
-        <iframe src="4th Symposium Program Flow.pdf" style="width:100%; height:100%; border:none;"></iframe>
+    <button class="close-flow" onclick="stopFlow()">✖ Close (Esc)</button>
+    <div id="scroller" class="flow-content">
+        <iframe src="4th Symposium Program Flow.pdf" style="width:100%; height: 100vh; border:none;"></iframe>
     </div>
 </div>
 
 <div id="statsOverlay">
-    <button class="close-flow" onclick="closeStats()">✖ Close Statistics</button>
+    <button class="close-flow" onclick="closeStats()">✖ Close (Esc)</button>
     <div class="fs-stats-card">
         <h1 style="color:var(--primary); margin-top:0;">Live Symposium Analytics</h1>
-        <p id="fsCalculationLabel" style="color:var(--gray); font-size: 1.2rem; margin-bottom: 20px; font-weight: bold;">
-            Total Presence = 0
+        <p id="fsCalculationLabel" style="color:var(--gray); font-size: 1.4rem; margin-bottom: 20px; font-weight: bold;">
+            Total Present: = 0 (ATTENDANCE RATE: 0%)
         </p>
-        <div style="height: 380px; width: 100%; margin: 20px 0;"><canvas id="fsStatChart"></canvas></div>
+        <div style="height: 420px; width: 100%; margin: 20px 0;"><canvas id="fsStatChart"></canvas></div>
         <div class="fs-grid">
             <div><span class="fs-val" id="fsPreReg">0</span><span class="fs-label">Pre-Reg</span></div>
             <div><span class="fs-val" id="fsCheckIn" style="color:var(--success)">0</span><span class="fs-label">Check-in</span></div>
@@ -120,7 +121,6 @@
             <div><span class="fs-val" id="fsSpeakerStat" style="color:var(--dark)">0</span><span class="fs-label">Speakers</span></div>
             <div><span class="fs-val" id="fsOrgStat" style="color:var(--gray)">0</span><span class="fs-label">Organisers</span></div>
         </div>
-        <div style="margin-top: 20px;"><span class="header-rate-badge" id="fsHeaderRate">0%</span></div>
     </div>
 </div>
 
@@ -229,10 +229,10 @@
     <div class="panel">
       <h4 style="margin:0 0 5px 0; color: var(--secondary); border-bottom: 2px solid #eee; padding-bottom: 3px;">📊 Stats Breakdown</h4>
       <div id="statsContainer">
-          <div style="height: 120px; margin-bottom: 10px;"><canvas id="statChart"></canvas></div>
+          <div style="height: 140px; margin-bottom: 10px;"><canvas id="statChart"></canvas></div>
           <div class="stats-grid" id="sidebarStatsList"></div>
           <div style="text-align: center; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px;">
-              <div id="statTotalPerc" style="font-size: 24px; font-weight: bold; color: var(--primary);">0%</div>
+              <div id="statTotalPerc" style="font-size: 18px; font-weight: bold; color: var(--primary);"> 0%</div>
               <span style="font-size: 9px; color: var(--gray);">ATTENDANCE RATE</span>
           </div>
           <button class="btn btn-primary" style="width:100%; margin-top:10px; background:var(--secondary);" onclick="showFullscreenStats()">📊 Full Screen Stats</button>
@@ -240,11 +240,8 @@
     </div>
   </div>
   <footer>
-  <a href="https://www.asu.edu.om/" target="_blank" class="univ-link">
-  A'Sharqiyah University </a>: P.O Box 42, Postal Code:400 Ibra, Sultanate of Oman.
-<a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Language%20and%20Foundation%20Studies"> 
-Center For Language and Foundation Studies
-</a>. Copyright <span class="copyright">&copy; <a href="mailto:h.rehman@asu.edu.om">drkhan</a> <span id="year"></span></span>.
+  <a href="https://www.asu.edu.om/" target="_blank" class="univ-link">A'Sharqiyah University </a>: P.O Box 42, Postal Code:400 Ibra, Sultanate of Oman.
+<a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Language%20and%20Foundation%20Studies">Center For Language and Foundation Studies</a>. Copyright <span class="copyright">&copy; <a href="mailto:hrehman08@yahoo.com">drkhan</a> <span id="year"></span></span>.
 </footer>
 </div>
 
@@ -265,7 +262,7 @@ Center For Language and Foundation Studies
 let attendees = JSON.parse(localStorage.getItem('asuDashboardAttendees')) || [];
 let currentIdx = -1, isGeoFenceEnabled = false;
 let qrExpiryInterval, idleTimer, animId;
-let scrollPos = -2000, myChart, fsChart;
+let scrollPos = 0, myChart, fsChart;
 
 const modalQR = new QRCodeStyling({ width: 320, height: 320, backgroundOptions: { color: "#ffffff" } });
 
@@ -274,6 +271,7 @@ function initChart() {
     const fsCtx = document.getElementById('fsStatChart').getContext('2d');
     const labels = ['Pre-Reg', 'On-Site', 'Guests', 'Staff', 'Students', 'Speakers', 'Organisers'];
     
+    // Increased font sizes for X-axis labels
     const chartConfig = {
         type: 'bar',
         data: {
@@ -298,27 +296,28 @@ function initChart() {
             plugins: { legend: { display: false } },
             scales: {
                 y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } },
-                x: { stacked: true, grid: { display: false }, ticks: { font: { size: 8 } } }
+                x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } } // Increased from 8 to 10
             }
         }
     };
 
+    // Fullscreen chart config with even larger labels
+    const fsConfig = JSON.parse(JSON.stringify(chartConfig));
+    fsConfig.options.scales.x.ticks.font = { size: 14, weight: 'bold' };
+
     myChart = new Chart(ctx, chartConfig);
-    fsChart = new Chart(fsCtx, JSON.parse(JSON.stringify(chartConfig)));
+    fsChart = new Chart(fsCtx, fsConfig);
 }
 
 function updateStats() {
-    // 1. PRE-REG COUNT (Strict check for "Participant" role only)
     const preRegGroup = attendees.filter(p => p.role === 'Participant');
     const preRegTotal = preRegGroup.length;
     const preRegPresent = preRegGroup.filter(p => p.status.includes('✅')).length;
     const preRegPending = preRegTotal - preRegPresent;
 
-    // 2. ON-SITE COUNT
     const onSiteGroup = attendees.filter(p => p.role.includes('New'));
     const onSitePresent = onSiteGroup.filter(p => p.status.includes('✅')).length;
     
-    // 3. OTHER CATEGORIES
     const stats = {
         onSite: onSiteGroup.length,
         guests: attendees.filter(p => p.role === 'Guest').length,
@@ -328,15 +327,11 @@ function updateStats() {
         organisers: attendees.filter(p => p.role === 'Organiser').length
     };
 
-    // 4. CALCULATION LOGIC
     const totalCheckIn = attendees.filter(p => p.status.includes('✅')).length;
     const rate = (attendees.length > 0 ? (totalCheckIn/attendees.length*100).toFixed(1) : 0) + "%";
     
-    // Others are anyone present who is not a Participant or On-Site (New)
-    const othersPresent = totalCheckIn - (preRegPresent + onSitePresent);
-
     document.getElementById('fsCalculationLabel').innerHTML = 
-        `Total Present: <b> = ${totalCheckIn}</b>`;
+        `Total Present: <b> = ${totalCheckIn} (ATTENDANCE RATE: ${rate})</b>`;
 
     document.getElementById('sidebarStatsList').innerHTML = `
         <p>Pre-Reg Total: <b>${preRegTotal}</b> (Pending: <span style="color:red">${preRegPending}</span>)</p>
@@ -368,7 +363,6 @@ function updateStats() {
     document.getElementById('fsStudentStat').textContent = stats.students;
     document.getElementById('fsSpeakerStat').textContent = stats.speakers;
     document.getElementById('fsOrgStat').textContent = stats.organisers;
-    document.getElementById('fsHeaderRate').textContent = rate;
     document.getElementById('statTotalPerc').textContent = rate;
 }
 
@@ -416,20 +410,16 @@ async function syncAll() {
 
 function processSyncData(csv, role) {
     csv.split('\n').forEach((row, idx) => {
-        if(idx === 0 || !row.trim()) return; // Skip header/empty
+        if(idx === 0 || !row.trim()) return;
         const cols = row.split(',');
         if(cols.length > 4) {
             const n = cols[4].trim();
-            // If it's a file that implies presence (Check-in or On-site), mark it
             let status = (role.includes('New') || role === 'Organiser') ? "✅ Present" : "❌ Pending";
-            
             const existing = attendees.find(a => a.name === n);
             if(!existing) {
                 attendees.push({ name: n, status: status, institute: cols[7]?.trim() || "ASU", role: role });
             } else {
-                // Correct role if a previously pre-reg person is in an Organiser/Speaker file
                 if(role === 'Organiser' || role === 'Speaker') existing.role = role;
-                // Update status if uploading a file that marks them present
                 if(status === "✅ Present") existing.status = status;
             }
         }
@@ -445,7 +435,6 @@ function handleFileUpload(input) {
             if(fname.includes("speaker")) r = "Speaker";
             else if(fname.includes("organiser")) r = "Organiser";
             else if(fname.includes("onsite") || fname.includes("on-site")) r = "Participant (New)";
-            
             processSyncData(e.target.result, r);
             localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
             filterRole('All'); updateStats();
@@ -455,9 +444,12 @@ function handleFileUpload(input) {
 }
 
 function showSecureQR(type) {
-    if(type === 'PRE-REG' && currentIdx === -1) return alert("Select participant!");
+    if(type === 'PRE-REG' && currentIdx === -1) return alert("Select participant first!");
     const modal = document.getElementById('regModal');
-    let qrData = type === 'PRE-REG' ? "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name) : "https://forms.gle/FtuEVmusMqCerHqC7";
+    let qrData = type === 'PRE-REG' ? 
+        "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name) : 
+        "https://forms.gle/FtuEVmusMqCerHqC7";
+
     document.getElementById('modalTitle').textContent = type + " REGISTRATION";
     document.getElementById('modalAttendee').textContent = type === 'PRE-REG' ? attendees[currentIdx].name : "NEW ENTRY";
     modal.style.display = 'flex';
@@ -509,8 +501,30 @@ function toggleFullScreen() { if (!document.fullscreenElement) document.document
 function showFullscreenStats() { document.getElementById('statsOverlay').style.display = 'flex'; updateStats(); }
 function closeStats() { document.getElementById('statsOverlay').style.display = 'none'; }
 function resetIdleTimer() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if(document.getElementById('regModal').style.display !== 'flex') startFlow(); }, 120000); }
-function startFlow() { document.getElementById('flowOverlay').style.display = 'block'; const scroller = document.getElementById('scroller'); function move() { scrollPos += 2; scroller.style.top = scrollPos + 'px'; if (scrollPos > window.innerHeight) scrollPos = -scroller.offsetHeight; animId = requestAnimationFrame(move); } move(); }
+
+function startFlow() { 
+    document.getElementById('flowOverlay').style.display = 'block'; 
+    const scroller = document.getElementById('scroller'); 
+    scrollPos = window.innerHeight; 
+    function move() { 
+        scrollPos -= 1.5; 
+        scroller.style.top = scrollPos + 'px'; 
+        if (scrollPos < -scroller.offsetHeight) scrollPos = window.innerHeight; 
+        animId = requestAnimationFrame(move); 
+    } 
+    move(); 
+}
+
 function stopFlow() { document.getElementById('flowOverlay').style.display = 'none'; cancelAnimationFrame(animId); resetIdleTimer(); }
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === "Escape") {
+        stopFlow();
+        closeStats();
+        closeModal();
+    }
+});
+
 function toggleGeoFence() { isGeoFenceEnabled = !isGeoFenceEnabled; document.getElementById('geoBtn').textContent = isGeoFenceEnabled ? "📍 Location: ON" : "📍 Location: OFF"; }
 function handleCurtainClick() { document.getElementById('qrCurtain').classList.toggle('open'); }
 function closeModal() { document.getElementById('regModal').style.display='none'; clearInterval(qrExpiryInterval); }
@@ -521,5 +535,4 @@ document.getElementById('combinedDropdown').onchange = (e) => selectUserByName(e
 window.onload = () => { initChart(); filterRole('All'); updateStats(); modalQR.append(document.getElementById("regModalQR")); resetIdleTimer(); };
 </script>
 </body>
-
 </html>
