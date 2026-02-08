@@ -62,13 +62,13 @@
         .btn-danger { background: var(--danger); color: white; border: none; }
         .btn-flow { background: #ff9f43; color: white; border: none; }
 
-        /* GUEST LIST BUTTON UPDATES */
-        .dual-guest-group { display: flex; margin-top: 4px; height: 32px; }
-        .btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; font-size: 11px; font-weight: bold; cursor: pointer;}
-        .btn-guest-arrow { width: 85px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 10px; cursor: pointer;}
+        /* GUEST LIST BUTTON IMPROVEMENTS */
+        .dual-guest-group { display: flex; margin-top: 4px; height: 30px; }
+        .btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; font-size: 11px; cursor: pointer; font-weight: 600; }
+        .btn-guest-arrow { width: 80px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 10px; cursor: pointer; }
         
         .guest-grid { display: none; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 6px; background: #eef2ff; padding: 8px; border-radius: 5px; border: 1px solid #d0d7f7; }
-        .btn-mini { padding: 4px 6px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; font-weight: bold; text-align: left; }
+        .btn-mini { padding: 5px; font-size: 9px; text-transform: uppercase; background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 3px; cursor: pointer; font-weight: bold; text-align: left; }
         .btn-mini:hover { background: var(--primary); color: white; }
 
         .main-content { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 10px; padding: 10px 20px; }
@@ -90,8 +90,6 @@
         .fs-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-top: 30px; }
         .fs-val { font-size: 1.6rem; font-weight: 800; color: var(--primary); display: block; }
         .fs-label { color: var(--gray); text-transform: uppercase; font-size: 8px; letter-spacing: 1px; }
-
-        .header-count-badge { background: var(--success); color: white; padding: 4px 12px; border-radius: 50px; font-size: 1.2rem; margin-left: 10px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
     </style>
 </head>
 <body>
@@ -110,7 +108,7 @@
         <p id="fsCalculationLabel" style="color:var(--gray); font-size: 1.4rem; margin-bottom: 20px; font-weight: bold;">
             Total Present: = 0 (ATTENDANCE RATE: 0%)
         </p>
-        <div style="height: 420px; width: 100%; margin: 20px 0;"><canvas id="fsStatChart"></canvas></div>
+        <div style="height: 400px; width: 100%; margin: 20px 0;"><canvas id="fsStatChart"></canvas></div>
         <div class="fs-grid">
             <div><span class="fs-val" id="fsPreReg">0</span><span class="fs-label">Pre-Reg</span></div>
             <div><span class="fs-val" id="fsCheckIn" style="color:var(--success)">0</span><span class="fs-label">Check-in</span></div>
@@ -128,6 +126,7 @@
   <div class="header">
     <div class="header-left">
         <img src="Certi-logo.png" class="banner-img" alt="ASU Banner">
+        <img src="clfs-logo.png" class="banner-img" alt="CLFS Logo" style="margin-left: 5px;">
         <div>
             <h2 style="margin:0; font-size:1.3rem; color:var(--primary);">4th International Symposium 2026</h2>
             <p style="margin:0; color:var(--gray); font-size: 12px;">Admin Face-to-Face Dashboard</p>
@@ -229,7 +228,7 @@
     <div class="panel">
       <h4 style="margin:0 0 5px 0; color: var(--secondary); border-bottom: 2px solid #eee; padding-bottom: 3px;">📊 Stats Breakdown</h4>
       <div id="statsContainer">
-          <div style="height: 140px; margin-bottom: 10px;"><canvas id="statChart"></canvas></div>
+          <div style="height: 130px; margin-bottom: 10px;"><canvas id="statChart"></canvas></div>
           <div class="stats-grid" id="sidebarStatsList"></div>
           <div style="text-align: center; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px;">
               <div id="statTotalPerc" style="font-size: 18px; font-weight: bold; color: var(--primary);"> 0%</div>
@@ -271,7 +270,6 @@ function initChart() {
     const fsCtx = document.getElementById('fsStatChart').getContext('2d');
     const labels = ['Pre-Reg', 'On-Site', 'Guests', 'Staff', 'Students', 'Speakers', 'Organisers'];
     
-    // Increased font sizes for X-axis labels
     const chartConfig = {
         type: 'bar',
         data: {
@@ -296,17 +294,21 @@ function initChart() {
             plugins: { legend: { display: false } },
             scales: {
                 y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } },
-                x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } } // Increased from 8 to 10
+                x: { 
+                    stacked: true, 
+                    grid: { display: false }, 
+                    ticks: { font: { size: 10, weight: 'bold' } } // Increased label size for Stats Breakdown
+                }
             }
         }
     };
 
-    // Fullscreen chart config with even larger labels
-    const fsConfig = JSON.parse(JSON.stringify(chartConfig));
-    fsConfig.options.scales.x.ticks.font = { size: 14, weight: 'bold' };
+    // Deep copy for Fullscreen Chart with even larger font
+    const fsChartConfig = JSON.parse(JSON.stringify(chartConfig));
+    fsChartConfig.options.scales.x.ticks.font = { size: 14, weight: 'bold' };
 
     myChart = new Chart(ctx, chartConfig);
-    fsChart = new Chart(fsCtx, fsConfig);
+    fsChart = new Chart(fsCtx, fsChartConfig);
 }
 
 function updateStats() {
