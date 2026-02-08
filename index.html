@@ -550,19 +550,33 @@ function closeStats() { document.getElementById('statsOverlay').style.display = 
 function resetIdleTimer() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if(document.getElementById('regModal').style.display !== 'flex') startFlow(); }, 120000); }
 
 function startFlow() { 
-    document.getElementById('flowOverlay').style.display = 'block'; 
-    const scroller = document.getElementById('scroller'); 
+    const overlay = document.getElementById('flowOverlay');
+    const scroller = document.getElementById('scroller');
+    overlay.style.display = 'block'; 
+    
+    // Reset position to bottom of screen
     scrollPos = window.innerHeight; 
+    
     function move() { 
-        scrollPos -= 1.5; 
-        scroller.style.top = scrollPos + 'px'; 
-        if (scrollPos < -scroller.offsetHeight) scrollPos = window.innerHeight; 
+        scrollPos -= 0.8; // Slower, smoother speed (0.8 pixels per frame)
+        scroller.style.transform = `translateY(${scrollPos}px)`; 
+        
+        // If the top of the content leaves the top of the screen, reset
+        if (Math.abs(scrollPos) > scroller.offsetHeight) {
+            scrollPos = window.innerHeight;
+        }
+        
         animId = requestAnimationFrame(move); 
     } 
+    cancelAnimationFrame(animId); // Prevent double animation
     move(); 
 }
 
-function stopFlow() { document.getElementById('flowOverlay').style.display = 'none'; cancelAnimationFrame(animId); resetIdleTimer(); }
+function stopFlow() { 
+    document.getElementById('flowOverlay').style.display = 'none'; 
+    cancelAnimationFrame(animId); 
+    resetIdleTimer(); 
+}
 
 document.addEventListener('keydown', (e) => {
     if (e.key === "Escape") {
