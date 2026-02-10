@@ -10,9 +10,19 @@
         :root { --asu-blue: #1a3a82; --asu-gold: #f5a623; --asu-light: #f0f2f5; }
         body { font-family: 'Montserrat', sans-serif; background: var(--asu-light); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
         .container { flex: 1; padding: 30px 15px; }
-        .builder-card { background: white; padding: 30px; border-radius: 12px; max-width: 750px; margin: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 8px solid var(--asu-blue); }
+        .builder-card { background: white; padding: 30px; border-radius: 12px; max-width: 750px; margin: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 8px solid var(--asu-blue); position: relative; }
         .header { text-align: center; margin-bottom: 30px; }
         .header img { max-height: 70px; margin-bottom: 10px; }
+        .expiry-notice { color: #d9534f; font-weight: bold; font-size: 0.9em; margin-top: 10px; display: block; }
+
+        /* Admin Styles */
+        #adminArea { position: absolute; top: 10px; right: 10px; }
+        .btn-admin { background: #444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; opacity: 0.6; }
+        .btn-admin:hover { opacity: 1; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+        .report-table th, .report-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .report-table th { background: var(--asu-blue); color: white; }
+
         .role-section { display: grid; grid-template-columns: 160px 1fr 1fr 150px; gap: 12px; align-items: center; padding: 15px; background: #fff; border: 1px solid #eee; border-radius: 8px; margin-bottom: 12px; transition: 0.3s; }
         .role-name { font-weight: bold; color: var(--asu-blue); font-size: 0.8em; border-left: 4px solid var(--asu-gold); padding-left: 10px; }
         .status-msg { font-size: 10.5px; color: #666; }
@@ -27,10 +37,14 @@
 
 <div class="container">
     <div class="builder-card" id="mainCard">
+        <div id="adminArea">
+            <button class="btn-admin" onclick="checkAdmin()">Admin Access</button>
+        </div>
         <div class="header">
             <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/clfs-logo.png" alt="ASU Logo">
             <h2>Symposium-4 CLFS 2026</h2>
             <p>Unified Certificate Portal Manager</p>
+            <span class="expiry-notice">This Certificate Portal Will Expire on (20 Feb, 2026)</span>
         </div>
 
         <div id="roleList">
@@ -40,14 +54,12 @@
                 <div class="status-msg" id="csvStatP">Syncing CSV...</div>
                 <button class="btn-gen" id="btnP" onclick="generatePortal('Participant')" disabled> PARTICIPANTS PORTAL</button>
             </div>
-
             <div class="role-section">
                 <div class="role-name">ORGANIZERS</div>
                 <div class="status-msg" id="pdfStatO">Loading PDF...</div>
                 <div class="status-msg" id="csvStatO">Syncing CSV...</div>
                 <button class="btn-gen" id="btnO" onclick="generatePortal('Organizer')" disabled> ORGANIZERS PORTAL</button>
             </div>
-
             <div class="role-section">
                 <div class="role-name">SPEAKERS</div>
                 <div class="status-msg" id="pdfStatS">Loading PDF...</div>
@@ -57,19 +69,29 @@
         </div>
         
         <footer id="footer">
-            <a href="https://www.asu.edu.om/" target="_blank">A'Sharqiyah University</a> | 2026
+           
+  <a href="https://www.asu.edu.om/" target="_blank" class="univ-link">
+  A'Sharqiyah University </a>: P.O Box 42, Postal Code:400 Ibra, Sultanate of Oman.
+<a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Language%20and%20Foundation%20Studies"> 
+Center For Language and Foundation Studies
+</a>. Copyright <span class="copyright">&copy; <a href="mailto:hrehman08@yahoo.com">drkhan</a> <span id="year"></span></span>.
+
         </footer>
     </div>
 </div>
 
 <script>
     const GITHUB_RAW = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
+    const ADMIN_EMAIL = "h.rehman@asu.edu.om";
     
     let masterStore = {
         Participant: { pdf: "", data: [], templates: [GITHUB_RAW + "Participant.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Participants.csv", GITHUB_RAW + "4th%20Symposium%202026%20On-Site%20Participants.csv"] },
         Organizer: { pdf: "", data: [], templates: [GITHUB_RAW + "Organizer.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Organisers.csv"] },
         Speaker: { pdf: "", data: [], templates: [GITHUB_RAW + "Speakers.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Speakers.csv"] }
     };
+
+    // Tracker for local session (Who downloaded)
+    let downloadLog = JSON.parse(localStorage.getItem('asu_download_log')) || [];
 
     async function initFetch() {
         for (const role in masterStore) {
@@ -110,14 +132,43 @@
         }
     }
 
+    function checkAdmin() {
+        const email = prompt("Please enter admin email to view reports:");
+        if (email === ADMIN_EMAIL) {
+            showReport();
+        } else {
+            alert("Access Denied.");
+        }
+    }
+
+    function showReport() {
+        const card = document.getElementById('mainCard');
+        let rows = downloadLog.map(log => `<tr><td>${log.name}</td><td>${log.email}</td><td>${log.role}</td><td>${log.time}</td></tr>`).join('');
+        
+        card.innerHTML = `
+            <div class="header">
+                <h3>Admin Download Report</h3>
+                <p>Tracking downloads for this session/browser</p>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="report-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Date/Time</th></tr></thead>
+                    <tbody>${rows || '<tr><td colspan="4" style="text-align:center">No downloads recorded yet.</td></tr>'}</tbody>
+                </table>
+            </div>
+            <button onclick="location.reload()" class="btn-gen" style="width:100%; margin-top:20px;">BACK TO PORTAL</button>
+        `;
+    }
+
     function generatePortal(role) {
         const data = masterStore[role].data;
         const pdfBase64 = masterStore[role].pdf;
         const card = document.getElementById('mainCard');
+        document.getElementById('adminArea').style.display = 'none';
 
         card.innerHTML = `
             <div class="header">
-                <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/ASU-logo.png" width="110">
+                <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/clfs-logo.png" alt="ASU Logo" style="max-height: 70px;">
                 <h3>${role} Portal</h3>
                 <p>Enter email to download your certificate</p>
             </div>
@@ -159,6 +210,11 @@
                 });
 
                 const finalPdf = await pdfDoc.save();
+                
+                // LOG THE DOWNLOAD
+                downloadLog.push({ name: user.name, email: user.email, role: role, time: new Date().toLocaleString() });
+                localStorage.setItem('asu_download_log', JSON.stringify(downloadLog));
+
                 const blob = new Blob([finalPdf], { type: "application/pdf" });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -169,7 +225,7 @@
                 msg.innerText = "Success! Your download should start shortly.";
             } catch (e) {
                 msg.style.color = "red";
-                msg.innerText = "Error generating PDF. Please try again.";
+                msg.innerText = "Error generating PDF.";
             }
         };
     }
@@ -178,4 +234,3 @@
 </script>
 </body>
 </html>
-
