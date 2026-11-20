@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ASU CFS 2027 - Certificate Portal</title>
+    <title>ASU CFS 2027-Certificate Portal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
@@ -41,10 +41,10 @@
             <button class="btn-admin" onclick="checkAdmin()">Admin Access</button>
         </div>
         <div class="header">
-            <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/clfs-logo.png" alt="ASU Logo">
-            <h2>Symposium-4 CLFS 2026</h2>
+            <img src="https://raw.githubusercontent.com/hameedktk09/cms/main/cfsasu.png" alt="ASU Logo">
+            <h2>Symposium-5 CLFS 2027</h2>
             <p>Unified Certificate Portal Manager</p>
-            <span class="expiry-notice">This Certificate Portal Will Expire on (25 Feb, 2026)</span>
+            <span class="expiry-notice">This Certificate Portal Will Expire on (10 Feb, 2027)</span>
         </div>
 
         <div id="roleList">
@@ -72,8 +72,8 @@
            
   <a href="https://www.asu.edu.om/" target="_blank" class="univ-link">
   A'Sharqiyah University </a>: P.O Box 42, Postal Code:400 Ibra, Sultanate of Oman.
-<a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Language%20and%20Foundation%20Studies"> 
-Center For Language and Foundation Studies
+<a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Foundation%20Studies"> 
+Center For Foundation Studies
 </a>. Copyright <span class="copyright">&copy; <a href="mailto:hrehman08@yahoo.com">drkhan</a> <span id="year"></span></span>.
 
         </footer>
@@ -85,9 +85,9 @@ Center For Language and Foundation Studies
     const ADMIN_EMAIL = "h.rehman@asu.edu.om";
     
     let masterStore = {
-        Participant: { pdf: "", data: [], templates: [GITHUB_RAW + "Participant.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Participants.csv", GITHUB_RAW + "4th%20Symposium%202026%20On-Site%20Participants.csv"] },
-        Organizer: { pdf: "", data: [], templates: [GITHUB_RAW + "Organizer.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Organisers.csv"] },
-        Speaker: { pdf: "", data: [], templates: [GITHUB_RAW + "Speakers.pdf"], csvs: [GITHUB_RAW + "4th%20Symposium%202026%20Speakers.csv"] }
+        Participant: { pdf: "", data: [], templates: [GITHUB_RAW + "Participant.pdf"], csvs: [GITHUB_RAW + "5th%20Symposium%202027%20Participants.csv", GITHUB_RAW + "5th%20Symposium%202027%20On-Site%20Participants.csv"] },
+        Organizer: { pdf: "", data: [], templates: [GITHUB_RAW + "Organizer.pdf"], csvs: [GITHUB_RAW + "5th%20Symposium%202027%20Organisers.csv"] },
+        Speaker: { pdf: "", data: [], templates: [GITHUB_RAW + "Speakers.pdf"], csvs: [GITHUB_RAW + "5th%20Symposium%202027%20Speakers.csv"] }
     };
 
     // Tracker for local session (Who downloaded)
