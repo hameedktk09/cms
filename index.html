@@ -159,7 +159,7 @@
   <div class="header">
     <div class="header-left">
         <img src="Certi-logo.png" class="banner-img" alt="ASU Banner">
-        <img src="clfs-logo.png" class="banner-img" alt="CLFS Logo" style="margin-left: 5px;">
+        <img src="cfsasu.png" class="banner-img" alt="CFS Logo" style="margin-left: 5px;">
         <div>
             <h2 style="margin:0; font-size:1.3rem; color:var(--primary);">CONFERENCE MANAGEMENT SYSTEM (CMS)</h2>
             <p style="margin:0; color:var(--gray); font-size: 12px;">Admin Face-to-Face Dashboard</p>
@@ -239,7 +239,7 @@
         <div style="display:flex; gap:20px; align-items:flex-start;">
           <div class="qr-frame" onclick="handleCurtainClick()">
               <div id="qrCurtain" class="qr-curtain"></div>
-              <img id="mainQrImg" src="4th Symposium Check-in QR.png" style="width:100%">
+              <img id="mainQrImg" src="5th Symposium Check-in QR.png" style="width:100%">
           </div>
           <div class="info-grid">
             <div class="info-item"><b>Status</b><div id="valStatus" style="font-weight:bold; color:var(--danger);">-</div></div>
@@ -433,11 +433,11 @@ async function syncAll() {
     const dot = document.getElementById('statusDot'); dot.className = 'dot dot-sync';
     const baseUrl = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
     const files = [
-        {n:"4th Symposium 2026 Participants.csv", r:"Participant"}, 
-        {n:"4th Symposium 2026 Check-in Participants.csv", r:"Participant"}, 
-        {n:"4th Symposium 2026 On-Site Participants.csv", r:"Participant (New)"}, 
-        {n:"4th Symposium 2026 Organisers.csv", r:"Organiser"}, 
-        {n:"4th Symposium 2026 Speakers.csv", r:"Speaker"}
+        {n:"5th Symposium 2027 Participants.csv", r:"Participant"}, 
+        {n:"5th Symposium 2027 Check-in Participants.csv", r:"Participant"}, 
+        {n:"5th Symposium 2027 On-Site Participants.csv", r:"Participant (New)"}, 
+        {n:"5th Symposium 2027 Organisers.csv", r:"Organiser"}, 
+        {n:"5th Symposium 2027 Speakers.csv", r:"Speaker"}
     ];
     try {
         for(let f of files) { 
@@ -589,7 +589,7 @@ document.addEventListener('keydown', (e) => {
 function toggleGeoFence() { isGeoFenceEnabled = !isGeoFenceEnabled; document.getElementById('geoBtn').textContent = isGeoFenceEnabled ? "📍 Location: ON" : "📍 Location: OFF"; }
 function handleCurtainClick() { document.getElementById('qrCurtain').classList.toggle('open'); }
 function closeModal() { document.getElementById('regModal').style.display='none'; clearInterval(qrExpiryInterval); }
-function openCertLink() { window.open('4th Symposium Certificates.html'); }
+function openCertLink() { window.open('5th Symposium Certificates.html'); }
 function downloadReport() { let csv = "Name,Role,Status\n"; attendees.forEach(p => csv += `"${p.name}","${p.role}","${p.status}"\n`); window.open(URL.createObjectURL(new Blob([csv], {type:'text/csv'}))); }
 
 document.getElementById('combinedDropdown').onchange = (e) => selectUserByName(e.target.value);
