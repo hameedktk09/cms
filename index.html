@@ -2,337 +2,1554 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>5th International Symposium 2027 - Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event & Conference Management System (CMS)</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Production Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         :root {
-            --primary: #4361ee; --secondary: #7209b7; --success: #10b981;
-            --danger: #f72585; --dark: #212529; --gray: #6c757d;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --primary: #0f172a;
+            --secondary: #3b0764;
+            --accent: #0284c7;
+            --success: #059669;
+            --danger: #be123c;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --bg-grad-1: #0f172a;
+            --bg-grad-2: #1e293b;
+            --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-size: 13px;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-size: 13px;
+            color: var(--dark);
+            overflow-x: hidden;
         }
 
-        .container {
-            width: 98%; max-width: 1200px; background: white; border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.50); display: flex; flex-direction: column;
+        /* Full-screen feel, slightly smaller than PC screen (94vw x 92vh) */
+        .app-shell {
+            width: 94vw;
+            height: 92vh;
+            max-width: 1600px;
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-top: 5px solid var(--accent);
         }
 
-        .header { padding: 6px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
-        .header-left { display: flex; align-items: center; gap: 15px; }
-        .banner-img { height: 100px; } 
-
-        #flowOverlay, #statsOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 9999; display: none; overflow: hidden;
+        /* HEADER */
+        .header {
+            padding: 10px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+            flex-shrink: 0;
         }
-        #statsOverlay { background: #f8fafc; padding: 40px; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: center; }
 
-        .flow-content { width: 100%; position: absolute; left: 0; }
-        .close-flow { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: var(--danger); color: white; border: none; cursor: pointer; z-index: 10000; border-radius: 5px; font-weight: bold; }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
 
-        .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 20px; background: #f1f5f9; }
+        .logo-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            border: 1.5px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--gray);
+            text-align: center;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .banner-img {
+            height: 52px;
+            max-width: 160px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .event-badge {
+            display: inline-block;
+            background: #f1f5f9;
+            color: var(--primary);
+            border: 1px solid #cbd5e1;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 3px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* SEPARATE APP MODE SWITCHER */
+        .mode-switcher {
+            display: flex;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .mode-btn {
+            padding: 6px 13px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 11px;
+            cursor: pointer;
+            color: var(--gray);
+            transition: 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
         .dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; }
+        .dot-idle { background-color: #94a3b8; }
         .dot-online { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
         .dot-offline { background-color: var(--danger); }
-        .dot-sync { background-color: orange; box-shadow: 0 0 6px orange; }
+        .dot-sync { background-color: #d97706; box-shadow: 0 0 6px #d97706; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 3000; }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; text-align: center; max-width: 500px; width: 90%; }
-        .modal-qr-container { width: 320px; height: 320px; margin: 0 auto 15px auto; transition: 0.5s; transform: scale(0); opacity:0; }
-        .modal-qr-container.active { transform: scale(1); opacity:1; }
-
-        .controls { padding: 6px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-        .controls-grid { display: grid; grid-template-columns: 1fr 1.2fr 1.2fr; gap: 15px; align-items: start; }
-        .btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
-
-        .btn { padding: 7px 10px; border-radius: 5px; border: 1px solid #d1d5db; font-weight: 600; cursor: pointer; transition: 0.15s; font-size: 11px; }
+        /* BUTTONS */
+        .btn {
+            padding: 7px 11px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 11px;
+            font-family: inherit;
+            background: #ffffff;
+            color: var(--dark);
+        }
+        .btn:hover { opacity: 0.92; transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
         .btn-primary { background: var(--primary); color: white; border: none; }
         .btn-sync { background: var(--secondary); color: white; border: none; }
         .btn-success { background: var(--success); color: white; border: none; }
         .btn-danger { background: var(--danger); color: white; border: none; }
-        .btn-flow { background: #ff9f43; color: white; border: none; }
+        .btn-flow { background: #b45309; color: white; border: none; }
+        .btn-dark { background: #1e293b; color: white; border: none; }
 
-        .dual-guest-group { display: flex; margin-top: 4px; height: 30px; }
-        .btn-guest-main { flex: 1; border-radius: 5px 0 0 5px; background: var(--primary); color: white; border: none; font-size: 11px; cursor: pointer; font-weight: 600; }
-        .btn-guest-arrow { width: 80px; border-radius: 0 5px 5px 0; background: #3046bc; color: white; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 10px; cursor: pointer; }
-        
-        /* GUEST PANEL - SOFT BUTTON STYLES */
-        .guest-grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; background: #f4f7ff; padding: 12px; border-radius: 10px; border: 1px solid #e0e7ff; }
-        .btn-mini { padding: 8px 2px; font-size: 10px; font-weight: 600; text-transform: uppercase; background: white; color: #4361ee; border: 1.5px solid #4361ee; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; text-align: center; display: flex; align-items: center; justify-content: center; }
-        .btn-mini:hover { background: #4361ee; color: white; box-shadow: 0 4px 10px rgba(67, 97, 238, 0.2); transform: translateY(-1px); }
+        /* Deep Gradient Feedback Button */
+        .btn-feedback {
+            background: linear-gradient(135deg, #064e3b 0%, #0f766e 50%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 3px 10px rgba(6, 78, 59, 0.25);
+        }
 
-        .main-content { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 10px; padding: 10px 20px; }
-        .panel { background: white; padding: 12px 15px; border-radius: 8px; border: 1px solid #e5e7eb; box-shadow: var(--shadow); position: relative;}
-        .display-name { color: var(--primary); font-weight: 600; font-size: 1.1rem; border: 1px solid #eee; padding: 4px 10px; min-width: 250px; display: inline-block; }
+        /* VIEW CONTAINERS */
+        .view-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .hidden { display: none !important; }
 
-        .qr-frame { width: 220px; height: 220px; padding: 10px; border: 2px solid var(--primary); border-radius: 8px; background: white; position: relative; overflow: hidden; cursor: pointer; }
-        .qr-curtain { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #3d5a80; transition: transform 0.6s; z-index: 10; transform-origin: top; }
-        .qr-curtain.open { transform: scaleY(0); }
+        /* CMS CONTROLS BAR */
+        .controls {
+            padding: 10px 22px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.25fr 1.35fr;
+            gap: 16px;
+            align-items: start;
+        }
+        .btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 5px; }
 
-        .info-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .info-item { background: #f9fafb; padding: 8px 10px; border-radius: 6px; border: 1px solid #eee; }
-        footer { padding: 6px; text-align: center; font-size: 10px; color: var(--gray); border-top: 1px solid #f1f5f9; }
-        input[type="text"], select { width: 100%; padding: 7px; border-radius: 5px; border: 1px solid #ccc; font-size: 13px; }
+        .dual-guest-group { display: flex; margin-top: 6px; height: 30px; }
+        .btn-guest-main {
+            flex: 1;
+            border-radius: 6px 0 0 6px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-guest-arrow {
+            width: 90px;
+            border-radius: 0 6px 6px 0;
+            background: #1e293b;
+            color: white;
+            border: none;
+            border-left: 1px solid rgba(255,255,255,0.2);
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
-        .stats-grid p { margin: 3px 0; display: flex; justify-content: space-between; font-size: 11px; }
+        .guest-grid {
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-mini {
+            padding: 6px 2px;
+            font-size: 10px;
+            font-weight: 600;
+            background: white;
+            color: var(--primary);
+            border: 1px solid #94a3b8;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-mini:hover { background: var(--primary); color: white; }
 
-        .fs-stats-card { background: white; border-radius: 20px; padding: 40px; width: 95%; max-width: 1200px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
-        .fs-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-top: 30px; }
-        .fs-val { font-size: 1.6rem; font-weight: 800; color: var(--primary); display: block; }
-        .fs-label { color: var(--gray); text-transform: uppercase; font-size: 8px; letter-spacing: 1px; }
-    /* IMPROVED PROGRAM FLOW STYLES */
-#flowOverlay {
-    background: rgba(0, 0, 0, 0.95); /* Darker backdrop for focus */
-}
+        /* CMS MAIN WORKSPACE */
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1.35fr 0.65fr;
+            gap: 14px;
+            padding: 14px 22px;
+            overflow-y: auto;
+        }
 
-.flow-container {
-    display: flex;
-    gap: 20px;
-    width: 90%;
-    margin: 0 auto;
-    padding: 50px 0;
-}
+        .panel {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
 
-.flow-column {
-    flex: 1;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    overflow: hidden;
-    height: 1500px; /* Adjust based on PDF content length */
-}
+        .display-name {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 6px 14px;
+            min-width: 280px;
+            display: inline-block;
+        }
 
-.flow-column iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
+        .qr-frame {
+            width: 220px;
+            height: 220px;
+            padding: 10px;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qr-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .qr-curtain {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
+            transition: transform 0.5s ease;
+            z-index: 10;
+            transform-origin: top;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 11px;
+            text-align: center;
+            padding: 12px;
+        }
+        .qr-curtain.open { transform: scaleY(0); pointer-events: none; }
 
-</style>
+        .info-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .info-item {
+            background: #f8fafc;
+            padding: 8px 11px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .info-item b { font-size: 9.5px; text-transform: uppercase; color: var(--gray); display: block; margin-bottom: 2px; }
+
+        /* Action Grid: Feedback button placed directly under Report */
+        .action-grid {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .report-feedback-col {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        input[type="text"], input[type="email"], input[type="url"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 7px 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .stats-grid p { margin: 4px 0; display: flex; justify-content: space-between; font-size: 11px; }
+
+        /* =========================================================
+           SEPARATE CERTIFICATE PORTAL VIEW
+           ========================================================= */
+        .cert-portal-wrapper {
+            flex: 1;
+            background: #f1f5f9;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+        }
+        .builder-card {
+            background: white;
+            padding: 28px 32px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 820px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border-top: 5px solid var(--primary);
+            position: relative;
+        }
+        .cert-header { text-align: center; margin-bottom: 22px; }
+        .cert-header img { max-height: 68px; margin-bottom: 8px; }
+        .expiry-notice { color: var(--danger); font-weight: 700; font-size: 12px; margin-top: 6px; display: block; }
+        .role-section {
+            display: grid;
+            grid-template-columns: 160px 1fr 1fr 170px;
+            gap: 12px;
+            align-items: center;
+            padding: 14px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .role-name {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 12px;
+            border-left: 4px solid var(--accent);
+            padding-left: 10px;
+        }
+        .status-msg { font-size: 11px; color: var(--gray); }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+        .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+        .report-table th { background: var(--primary); color: white; }
+
+        /* MODALS & OVERLAYS */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            display: none; align-items: center; justify-content: center;
+            z-index: 3000; padding: 20px;
+        }
+        .modal-content {
+            background: white; padding: 24px; border-radius: 16px;
+            text-align: center; max-width: 500px; width: 100%;
+            max-height: 92vh; overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+        .modal-content.wide { max-width: 860px; text-align: left; }
+        .modal-qr-container {
+            width: 310px; height: 310px; margin: 0 auto 12px auto;
+            display: flex; align-items: center; justify-content: center;
+            padding: 10px; border-radius: 14px; background: #fff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+        .modal-qr-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* SETTINGS GRID */
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        .settings-group { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .settings-group h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 12px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+        .field-row { margin-bottom: 8px; }
+        .field-row label { display: block; font-size: 10px; font-weight: 700; color: var(--gray); margin-bottom: 3px; text-transform: uppercase; }
+
+        /* FULLSCREEN ANALYTICS & PROGRAM FLOW */
+        #flowOverlay, #statsOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 9999; display: none; overflow: hidden;
+        }
+        #statsOverlay { background: #f8fafc; padding: 30px; flex-direction: column; align-items: center; justify-content: center; }
+        .close-flow { position: fixed; top: 20px; right: 20px; padding: 10px 18px; background: var(--danger); color: white; border: none; cursor: pointer; z-index: 10000; border-radius: 6px; font-weight: 700; }
+        .fs-stats-card { background: white; border-radius: 18px; padding: 30px; width: 95%; max-width: 1200px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; }
+        .fs-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-top: 20px; }
+        .fs-val { font-size: 1.5rem; font-weight: 800; color: var(--primary); display: block; }
+        .fs-label { color: var(--gray); text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
+
+        #flowOverlay { background: rgba(0, 0, 0, 0.92); }
+        .flow-content { width: 100%; position: absolute; left: 0; }
+        .flow-container { width: 88%; max-width: 1000px; margin: 0 auto; padding: 40px 0; }
+        .flow-column { background: white; border-radius: 12px; overflow: hidden; height: 1400px; }
+        .flow-column iframe { width: 100%; height: 100%; border: none; }
+
+        footer {
+            padding: 8px 20px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--gray);
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            flex-shrink: 0;
+        }
+        footer a { color: var(--primary); font-weight: 600; text-decoration: none; }
+    </style>
 </head>
 <body>
 
+<!-- PROGRAM FLOW OVERLAY -->
 <div id="flowOverlay">
     <button class="close-flow" onclick="stopFlow()">✖ Close (Esc)</button>
     <div id="scroller" class="flow-content">
         <div class="flow-container">
             <div class="flow-column">
-                <iframe src="5th Symposium Program Flow.pdf#toolbar=0&navpanes=0"></iframe>
+                <iframe id="flowIframe" src=""></iframe>
             </div>
-            
         </div>
     </div>
 </div>
 
+<!-- FULLSCREEN ANALYTICS OVERLAY -->
 <div id="statsOverlay">
     <button class="close-flow" onclick="closeStats()">✖ Close (Esc)</button>
     <div class="fs-stats-card">
-        <h1 style="color:var(--primary); margin-top:0;">Live Symposium Analytics</h1>
-        <p id="fsCalculationLabel" style="color:var(--gray); font-size: 1.4rem; margin-bottom: 20px; font-weight: bold;">
-            Total Present: = 0 (ATTENDANCE RATE: 0%)
+        <h1 id="fsEventHeading" style="color:var(--primary); margin-top:0;">Live Event Analytics</h1>
+        <p id="fsCalculationLabel" style="color:var(--gray); font-size: 1.3rem; margin-bottom: 15px; font-weight: 700;">
+            Total Present: 0 / 0 (ATTENDANCE RATE: 0%)
         </p>
-        <div style="height: 400px; width: 100%; margin: 20px 0;"><canvas id="fsStatChart"></canvas></div>
+        <div style="height: 360px; width: 100%; margin: 15px 0;"><canvas id="fsStatChart"></canvas></div>
         <div class="fs-grid">
             <div><span class="fs-val" id="fsPreReg">0</span><span class="fs-label">Pre-Reg</span></div>
             <div><span class="fs-val" id="fsCheckIn" style="color:var(--success)">0</span><span class="fs-label">Check-in</span></div>
             <div><span class="fs-val" id="fsOnsite" style="color:var(--danger)">0</span><span class="fs-label">On-Site Reg</span></div>
             <div><span class="fs-val" id="fsGuestStat" style="color:var(--secondary)">0</span><span class="fs-label">Guests</span></div>
-            <div><span class="fs-val" id="fsStaffStat" style="color:#f39c12">0</span><span class="fs-label">Staff</span></div>
-            <div><span class="fs-val" id="fsStudentStat" style="color:#00b4d8">0</span><span class="fs-label">Students</span></div>
+            <div><span class="fs-val" id="fsStaffStat" style="color:#d97706">0</span><span class="fs-label">Staff</span></div>
+            <div><span class="fs-val" id="fsStudentStat" style="color:#0284c7">0</span><span class="fs-label">Students</span></div>
             <div><span class="fs-val" id="fsSpeakerStat" style="color:var(--dark)">0</span><span class="fs-label">Speakers</span></div>
             <div><span class="fs-val" id="fsOrgStat" style="color:var(--gray)">0</span><span class="fs-label">Organisers</span></div>
         </div>
     </div>
 </div>
 
-<div class="container" id="mainDashboard">
-  <div class="header">
-    <div class="header-left">
-        <img src="Certi-logo.png" class="banner-img" alt="ASU Banner">
-        <img src="cfsasu.png" class="banner-img" alt="CFS Logo" style="margin-left: 5px;">
-        <div>
-            <h2 style="margin:0; font-size:1.3rem; color:var(--primary);">CONFERENCE MANAGEMENT SYSTEM (CMS)</h2>
-            <p style="margin:0; color:var(--gray); font-size: 12px;">Admin Face-to-Face Dashboard</p>
-        </div>
-    </div>
-    <div style="display: flex; gap: 5px; align-items: center;">
-        <button class="btn btn-flow" onclick="toggleFullScreen()" style="background:#2d3436; color:white;">⛶ Fullscreen</button>
-        <button class="btn btn-flow" onclick="startFlow()">▶ Play Flow</button>
-        <button class="btn btn-geo" id="geoBtn" onclick="toggleGeoFence()">📍 Location: OFF</button>
-        <div class="status-indicator" style="margin-left:8px;">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusText">READY</span>
-        </div>
-    </div>
-  </div>
+<!-- MAIN APP SHELL (94vw x 92vh) -->
+<div class="app-shell" id="appShell">
 
-  <div class="controls">
-    <div class="controls-grid">
-      <div>
-        <label style="font-size:10px; font-weight:bold; color: var(--gray);">FILTERS</label>
-        <div class="btn-pair">
-            <button class="btn btn-primary" onclick="filterRole('All')">All</button>
-            <button class="btn btn-primary" onclick="filterRole('Participant')">Attendees</button>
-        </div>
-        <div class="btn-pair">
-            <button class="btn btn-primary" onclick="filterRole('Organiser')">Organisers</button>
-            <button class="btn btn-primary" onclick="filterRole('Speaker')">Speakers</button>
-        </div>
-      </div>
-
-      <div>
-        <label style="font-size:10px; font-weight:bold; color: var(--gray);">GUEST LIST & MANAGEMENT</label>
-        <div class="btn-pair" style="grid-template-columns: 1fr;">
-            <button class="btn btn-sync" id="syncBtn" onclick="handleDataAction()">📂 Sync Cloud & ⬆️ Upload CSV</button>
-            <input type="file" id="uploadFiles" style="display:none" accept=".csv" multiple onchange="handleFileUpload(this)">
-        </div>
-        
-        <div class="dual-guest-group">
-            <button class="btn btn-guest-main" onclick="filterRole('Guest')">👤 Guest List</button>
-            <button class="btn btn-guest-arrow" onclick="toggleGuestPanel()">▼ Quick Add</button>
-        </div>
-
-        <div id="guestPanel" class="guest-grid">
-            <button class="btn-mini" onclick="quickAddGuest('Min/VIP', 'Guest')">VIP</button>
-            <button class="btn-mini" onclick="quickAddGuest('BoT/BoD', 'Guest')">BoT/BoD</button>
-            <button class="btn-mini" onclick="quickAddGuest('VC/DVC', 'Guest')">VC/DVC</button>
-            <button class="btn-mini" onclick="quickAddGuest('Dean/Dir', 'Guest')">Deans/Direct</button>
-            <button class="btn-mini" onclick="quickAddGuest('ASU Staff', 'Staff')">ASU Staff</button>
-            <button class="btn-mini" onclick="quickAddGuest('ASU Stud', 'Student')">ASU Stud</button>
-            <button class="btn-mini" onclick="quickAddGuest('Media', 'Guest')">Press/Media</button>
-            <button class="btn-mini" onclick="customGuest()">+Custom</button>
-        </div>
-      </div>
-
-      <div>
-        <label style="font-size:10px; font-weight:bold; color: var(--gray);">SEARCH & QR ACCESS</label>
-        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-top: 4px;">
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-                <button class="btn" style="background:#3a0ca3; color:white; padding: 7px 5px;" onclick="showSecureQR('PRE-REG')">📱 Pre-Reg</button>
-                <button class="btn" style="background:linear-gradient(to right, #f72585, #4361ee); color:white; padding: 7px 5px;" onclick="showSecureQR('ON-SITE')">📱 On-Site</button>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-                <input type="text" id="searchBox" placeholder="🔍 Search name..." onkeyup="handleSearch(this.value)">
-                <select id="combinedDropdown"><option value="">Select Participant...</option></select>
+    <!-- SHARED HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <div id="logoPlaceholder" class="logo-placeholder" onclick="openSettingsModal()" title="Click to upload Institution Logo">+ LOGO</div>
+            <img id="hdrLogo1" src="" class="banner-img" alt="Institution Logo" style="display:none;">
+            <img id="hdrLogo2" src="" class="banner-img" alt="Partner Logo" style="display:none;">
+            <div>
+                <span class="event-badge" id="hdrEventType">ACADEMIC & INSTITUTIONAL EVENT PLATFORM</span>
+                <h2 id="hdrTitle" style="margin:0; font-size:1.18rem; color:var(--primary);">CONFERENCE & EVENT MANAGEMENT SYSTEM (CMS)</h2>
+                <p id="hdrSubtitle" style="margin:0; color:var(--gray); font-size: 11px;">Reads Google Sheet URLs directly (no publishing required) or local folder files</p>
             </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="main-content">
-    <div class="panel">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-          <button class="btn btn-success" style="padding: 10px 18px;" id="btnMarkPresent" onclick="togglePresence()">☑ Mark Present</button>
-          <span class="display-name" id="displayName">No Selection</span>
-        </div>
-        <div style="display:flex; gap:20px; align-items:flex-start;">
-          <div class="qr-frame" onclick="handleCurtainClick()">
-              <div id="qrCurtain" class="qr-curtain"></div>
-              <img id="mainQrImg" src="5th Symposium Check-in QR.png" style="width:100%">
-          </div>
-          <div class="info-grid">
-            <div class="info-item"><b>Status</b><div id="valStatus" style="font-weight:bold; color:var(--danger);">-</div></div>
-            <div class="info-item"><b>Category</b><div id="valCategory">-</div></div>
-            <div class="info-item" style="grid-column: span 2;"><b>Institution</b><div id="valInstitution">-</div></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; grid-column: span 2;">
-                <button class="btn" style="background:#2d3436; color:white" onclick="downloadReport()">📄 Report</button>
-                <button class="btn" style="background:#1a3a82; color:white" onclick="openCertLink()">🎓 E-Certs</button>
+        <div class="header-actions">
+            <!-- Separate App Mode Switcher -->
+            <div class="mode-switcher">
+                <button class="mode-btn active" id="tabCms" onclick="switchView('cms')">🖥️ CMS Dashboard</button>
+                <button class="mode-btn" id="tabCerts" onclick="switchView('certs')">🎓 E-Certificate Portal</button>
             </div>
-          </div>
+
+            <button class="btn btn-primary" onclick="openSettingsModal()">⚙️ Setup & Data URLs</button>
+            <button class="btn btn-flow" onclick="startFlow()">▶ Flow</button>
+            <button class="btn btn-dark" onclick="toggleFullScreen()">⛶ Screen</button>
+
+            <div class="status-indicator">
+                <span class="dot dot-idle" id="statusDot"></span>
+                <span id="statusText">READY</span>
+            </div>
         </div>
     </div>
-    
-    <div class="panel">
-      <h4 style="margin:0 0 5px 0; color: var(--secondary); border-bottom: 2px solid #eee; padding-bottom: 3px;">📊 Stats Breakdown</h4>
-      <div id="statsContainer">
-          <div style="height: 130px; margin-bottom: 10px;"><canvas id="statChart"></canvas></div>
-          <div class="stats-grid" id="sidebarStatsList"></div>
-          <div style="text-align: center; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px;">
-              <div id="statTotalPerc" style="font-size: 18px; font-weight: bold; color: var(--primary);"> 0%</div>
-              <span style="font-size: 9px; color: var(--gray);">ATTENDANCE RATE</span>
-          </div>
-          <button class="btn btn-primary" style="width:100%; margin-top:10px; background:var(--secondary);" onclick="showFullscreenStats()">📊 Full Screen Stats</button>
-      </div>
+
+    <!-- =========================================================
+         VIEW 1: CONFERENCE MANAGEMENT SYSTEM (CMS DASHBOARD)
+         ========================================================= -->
+    <div id="cmsView" class="view-section">
+        <div class="controls">
+            <div class="controls-grid">
+                <!-- Column 1: Role Filters -->
+                <div>
+                    <label style="font-size:10px; font-weight:700; color: var(--gray);">ROLE FILTERS</label>
+                    <div class="btn-pair">
+                        <button class="btn btn-primary" onclick="filterRole('All')">All Attendees</button>
+                        <button class="btn btn-primary" onclick="filterRole('Participant')">Participants</button>
+                    </div>
+                    <div class="btn-pair">
+                        <button class="btn btn-primary" onclick="filterRole('Organiser')">Organisers</button>
+                        <button class="btn btn-primary" onclick="filterRole('Speaker')">Speakers</button>
+                    </div>
+                </div>
+
+                <!-- Column 2: Data Sync & Guest Management -->
+                <div>
+                    <label style="font-size:10px; font-weight:700; color: var(--gray);">LIVE DATA SYNC & GUEST MANAGEMENT</label>
+                    <div class="btn-pair">
+                        <button class="btn btn-sync" id="syncBtn" onclick="handleSyncClick()">🔄 Sync URL / Folder</button>
+                        <button class="btn" onclick="document.getElementById('uploadFiles').click()">⬆️ Import CSV/XLSX</button>
+                        <input type="file" id="uploadFiles" style="display:none" accept=".csv,.xlsx,.xls" multiple onchange="handleFileUpload(this)">
+                    </div>
+
+                    <div class="dual-guest-group">
+                        <button class="btn-guest-main" onclick="filterRole('Guest')">👤 Guest List</button>
+                        <button class="btn-guest-arrow" onclick="toggleGuestPanel()">▼ Quick Add</button>
+                    </div>
+
+                    <div id="guestPanel" class="guest-grid">
+                        <button class="btn-mini" onclick="quickAddGuest('VIP Guest', 'Guest')">VIP</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Board Member', 'Guest')">Board/Gov</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Executive Head', 'Guest')">Chancellor/Dir</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Dean/HOD', 'Guest')">Dean/HOD</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Faculty/Staff', 'Staff')">Staff</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Student/Delegate', 'Student')">Student</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Press/Media', 'Guest')">Media</button>
+                        <button class="btn-mini" onclick="customGuest()">+Custom</button>
+                    </div>
+                </div>
+
+                <!-- Column 3: Search & Deep Gradient QR Access -->
+                <div>
+                    <label style="font-size:10px; font-weight:700; color: var(--gray);">SEARCH & QRCODE MONKEY ACCESS</label>
+                    <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; margin-top: 5px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <button class="btn" style="background:linear-gradient(135deg, #1e1b4b, #312e81); color:white; border:none; padding: 7px 4px;" onclick="showGradientQR('PRE-REG')">📱 Pre-Reg QR</button>
+                            <button class="btn" style="background:linear-gradient(135deg, #881337, #4c0519); color:white; border:none; padding: 7px 4px;" onclick="showGradientQR('ON-SITE')">📱 On-Site QR</button>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <input type="text" id="searchBox" placeholder="🔍 Search name, email, country..." onkeyup="handleSearch(this.value)">
+                            <select id="combinedDropdown"><option value="">No records loaded yet...</option></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Panel: Attendee Card & Action Buttons -->
+            <div class="panel">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="btn btn-success" style="padding: 9px 16px;" id="btnMarkPresent" onclick="togglePresence()">☑ Mark Present</button>
+                        <span class="display-name" id="displayName">No Selection</span>
+                    </div>
+                    <button class="btn" style="font-size:10px;" onclick="clearSessionRecords()">🗑️ Clear Records</button>
+                </div>
+
+                <div style="display:flex; gap:18px; align-items:flex-start;">
+                    <!-- Check-in QR Frame -->
+                    <div class="qr-frame" onclick="handleCurtainClick()" title="Click to toggle Check-In QR">
+                        <div id="qrCurtain" class="qr-curtain">Click to Reveal<br>Check-In QR</div>
+                        <div id="mainCheckinQR"></div>
+                    </div>
+
+                    <!-- Attendee Info mapped to exact sheet columns + Report + Feedback QR under Report -->
+                    <div class="info-grid">
+                        <div class="info-item"><b>Status</b><div id="valStatus" style="font-weight:700; color:var(--danger);">-</div></div>
+                        <div class="info-item"><b>Category / Role</b><div id="valCategory" style="font-weight:600;">-</div></div>
+                        <div class="info-item" style="grid-column: span 2;"><b>Institute / Organization</b><div id="valInstitution">-</div></div>
+                        <div class="info-item"><b>Country / State</b><div id="valCountry">-</div></div>
+                        <div class="info-item"><b>Contact Number</b><div id="valContact">-</div></div>
+                        <div class="info-item" style="grid-column: span 2;"><b>Email Address</b><div id="valEmail">-</div></div>
+
+                        <!-- Action Grid: Feedback button strictly under Report button -->
+                        <div class="action-grid">
+                            <div class="report-feedback-col">
+                                <button class="btn btn-dark" onclick="downloadReport()">📄 Report</button>
+                                <button class="btn btn-feedback" onclick="showGradientQR('FEEDBACK')">💬 Feedback</button>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <button class="btn btn-primary" style="height:100%;" onclick="switchView('certs')">🎓 Open E-Certs Portal</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Live Stats Breakdown -->
+            <div class="panel">
+                <h4 style="margin:0 0 6px 0; color: var(--secondary); border-bottom: 2px solid #f1f5f9; padding-bottom: 4px;">📊 Live Stats Breakdown</h4>
+                <div style="height: 135px; margin-bottom: 8px;"><canvas id="statChart"></canvas></div>
+                <div class="stats-grid" id="sidebarStatsList"></div>
+                <div style="text-align: center; margin-top: 6px; border-top: 1px solid #e2e8f0; padding-top: 6px;">
+                    <div id="statTotalPerc" style="font-size: 18px; font-weight: 800; color: var(--primary);">0%</div>
+                    <span style="font-size: 9px; font-weight:700; color: var(--gray);">OVERALL ATTENDANCE RATE</span>
+                </div>
+                <button class="btn btn-sync" style="width:100%; margin-top:8px;" onclick="showFullscreenStats()">📊 Full Screen Analytics</button>
+            </div>
+        </div>
     </div>
-  </div>
-  <footer>
-  <a href="https://www.asu.edu.om/" target="_blank" class="univ-link">A'Sharqiyah University </a>: P.O Box 42, Postal Code:400 Ibra, Sultanate of Oman.
-<a href="https://www.asu.edu.om/Page/Details/25?t=Centre%20for%20Foundation%20Studies">Center For Foundation Studies</a>. Copyright <span class="copyright">&copy; <a href="mailto:h.rehman@asu.edu.om">HURehman</a> <span id="year"></span></span>.
-</footer>
+
+    <!-- =========================================================
+         VIEW 2: SEPARATE SELF-SERVICE E-CERTIFICATE PORTAL
+         ========================================================= -->
+    <div id="certView" class="view-section hidden">
+        <div class="cert-portal-wrapper">
+            <div class="builder-card" id="certCard">
+                <div style="position:absolute; top:12px; right:12px; display:flex; gap:6px;">
+                    <button class="btn" style="font-size:10px;" onclick="openCertInNewTab()" title="Open standalone Certificate Portal tab">↗ Standalone Tab</button>
+                    <button class="btn" style="font-size:10px;" onclick="checkCertAdmin()">Admin Log</button>
+                    <button class="btn btn-primary" id="btnBackToCms" style="font-size:10px;" onclick="switchView('cms')">← Back to CMS</button>
+                </div>
+
+                <div class="cert-header">
+                    <img id="certLogo" src="" alt="Institution Logo" style="display:none;">
+                    <h2 id="certEventTitle" style="margin:4px 0; color:var(--primary);">E-Certificate Verification & Download Portal</h2>
+                    <p id="certUniSubtitle" style="margin:0; color:var(--gray);">Self-Service Digital Certificate Distribution</p>
+                    <span class="expiry-notice" id="certExpiryText"></span>
+                </div>
+
+                <div id="certPortalBody">
+                    <div class="role-section" style="background: #f8fafc;">
+                        <div class="role-name">PARTICIPANTS</div>
+                        <div class="status-msg" id="pdfStatP">Checking same folder / URL...</div>
+                        <div class="status-msg" id="csvStatP">0 Records</div>
+                        <button class="btn btn-primary" id="btnP" onclick="openRoleDownloader('Participant')">PARTICIPANTS PORTAL</button>
+                    </div>
+                    <div class="role-section">
+                        <div class="role-name">ORGANIZERS</div>
+                        <div class="status-msg" id="pdfStatO">Checking same folder / URL...</div>
+                        <div class="status-msg" id="csvStatO">0 Records</div>
+                        <button class="btn btn-primary" id="btnO" onclick="openRoleDownloader('Organiser')">ORGANIZERS PORTAL</button>
+                    </div>
+                    <div class="role-section">
+                        <div class="role-name">SPEAKERS</div>
+                        <div class="status-msg" id="pdfStatS">Checking same folder / URL...</div>
+                        <div class="status-msg" id="csvStatS">0 Records</div>
+                        <button class="btn btn-primary" id="btnS" onclick="openRoleDownloader('Speaker')">SPEAKERS PORTAL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DYNAMIC FOOTER -->
+    <footer id="dynamicFooter"></footer>
 </div>
 
-<div id="regModal" class="modal-overlay">
+<!-- =========================================================
+     QRCODE MONKEY DEEP GRADIENT MODAL
+     ========================================================= -->
+<div id="regModal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h2 id="modalTitle" style="color:var(--primary); margin-bottom:5px;">Registration</h2>
-        <p id="modalAttendee" style="font-weight:bold; color:var(--gray); margin-bottom:15px;"></p>
+        <span id="modalBadge" class="event-badge" style="margin-bottom:6px;">QRCODE MONKEY • DEEP GRADIENT</span>
+        <h2 id="modalTitle" style="color:var(--primary); margin:4px 0;">QR Code</h2>
+        <p id="modalAttendee" style="font-weight:700; color:var(--gray); margin-bottom:12px;"></p>
+
         <div id="regModalQR" class="modal-qr-container"></div>
-        <div style="background: #fff5f5; padding: 10px; border-radius: 8px;">
-            <span style="font-size: 10px; color: #c53030; text-transform: uppercase;">Time Remaining</span>
-            <div id="expiryTimer" style="color:var(--danger); font-size: 22px; font-weight:bold; font-family: monospace;">02:00</div>
+
+        <p id="modalUrlPreview" style="font-size:10px; color:var(--gray); word-break:break-all; margin: 6px 0 10px 0;"></p>
+
+        <div id="timerBox" style="background: #fff1f2; padding: 8px; border-radius: 8px; margin-bottom: 12px;">
+            <span style="font-size: 10px; color: #be123c; font-weight:700; text-transform: uppercase;">Dynamic Session Validity</span>
+            <div id="expiryTimer" style="color:var(--danger); font-size: 20px; font-weight:800; font-family: monospace;">02:00</div>
         </div>
-        <button class="btn btn-primary" style="width:100%; margin-top:15px; padding:10px;" onclick="closeModal()">Close</button>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px;">
+            <button class="btn btn-success" onclick="downloadCurrentModalQR()">⬇️ Save PNG</button>
+            <a id="qrMonkeyExternalLink" href="https://www.qrcode-monkey.com/#" target="_blank" class="btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">🐒 QR Monkey</a>
+            <button class="btn btn-primary" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     PRODUCTION INSTITUTION & DATA SOURCE CONFIGURATOR MODAL
+     ========================================================= -->
+<div id="settingsModal" class="modal-overlay" onclick="closeSettingsModal()">
+    <div class="modal-content wide" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+            <h2 style="margin:0; color:var(--primary);">⚙️ Institution, Event & Data Source Setup</h2>
+            <button class="btn btn-danger" onclick="closeSettingsModal()">✖</button>
+        </div>
+
+        <p style="font-size:11px; color:var(--gray); margin:8px 0;">
+            Paste any standard <b>Google Sheet link</b> (<i>"Anyone with the link can view"</i> — no need to publish to web), GitHub Raw CSV URL, or leave blank to auto-detect files in your hosted folder (<b>Participants.csv</b>, <b>5Check-in Participants.csv</b>, <b>On-Site Participants.csv</b>, <b>Organisers.csv</b>, <b>Speakers.csv</b>, etc.).
+        </p>
+
+        <div class="settings-grid">
+            <!-- 1. Organization & Event Branding -->
+            <div class="settings-group">
+                <h4>1. Institution / Organization Identity</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                    <div class="field-row">
+                        <label>Organization Sector</label>
+                        <select id="cfgOrgSector">
+                            <option value="UNIVERSITY">University / Higher Ed</option>
+                            <option value="COLLEGE">College / Polytechnic</option>
+                            <option value="INSTITUTE">Research Institute / Academy</option>
+                            <option value="SCHOOL">School / K-12 District</option>
+                            <option value="GOVERNMENT">Government / Ministry Office</option>
+                            <option value="CORPORATE">Corporate / Professional Body</option>
+                        </select>
+                    </div>
+                    <div class="field-row">
+                        <label>Gathering Type</label>
+                        <select id="cfgEventType">
+                            <option value="SYMPOSIUM">Symposium</option>
+                            <option value="CONFERENCE">Conference</option>
+                            <option value="SEMINAR">Seminar</option>
+                            <option value="COLLOQUIUM">Colloquium</option>
+                            <option value="WORKSHOP">Workshop / Training</option>
+                            <option value="SUMMIT">Summit / Forum</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <label>Event / Gathering Title</label>
+                    <input type="text" id="cfgEventTitle" placeholder="Enter event title...">
+                </div>
+                <div class="field-row">
+                    <label>Institution / Office Name</label>
+                    <input type="text" id="cfgUniName" placeholder="Enter university, school, or office name...">
+                </div>
+                <div class="field-row">
+                    <label>Department / Address / Contact Line</label>
+                    <input type="text" id="cfgUniAddress" placeholder="Department, Campus Address, City, Country">
+                </div>
+                <div class="field-row">
+                    <label>Primary Institution Logo (URL or Upload)</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="url" id="cfgLogo1" placeholder="Auto-detects local logo if empty...">
+                        <input type="file" accept="image/*" style="width:95px; font-size:10px;" onchange="uploadLocalImage(this, 'cfgLogo1')">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <label>Secondary / Co-Host Logo (Optional)</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="url" id="cfgLogo2" placeholder="Auto-detects secondary local logo if present...">
+                        <input type="file" accept="image/*" style="width:95px; font-size:10px;" onchange="uploadLocalImage(this, 'cfgLogo2')">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1.4fr; gap:6px;">
+                    <div class="field-row">
+                        <label>Primary Color</label>
+                        <input type="color" id="cfgPrimaryColor" style="height:32px; padding:2px;">
+                    </div>
+                    <div class="field-row">
+                        <label>Accent Color</label>
+                        <input type="color" id="cfgAccentColor" style="height:32px; padding:2px;">
+                    </div>
+                    <div class="field-row">
+                        <label>Admin Email</label>
+                        <input type="email" id="cfgAdminEmail" placeholder="admin@institution.edu">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Direct Google Sheets / CSV URLs -->
+            <div class="settings-group">
+                <h4>2. Data Source URLs (Direct Google Sheet Link or CSV)</h4>
+                <div class="field-row">
+                    <label>Pre-Registered Participants URL (Fallback: Participants.csv)</label>
+                    <input type="url" id="cfgUrlParticipants" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+                </div>
+                <div class="field-row">
+                    <label>Live Check-In URL (Fallback: 5Check-in Participants.csv)</label>
+                    <input type="url" id="cfgUrlCheckin" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+                </div>
+                <div class="field-row">
+                    <label>On-Site Walk-In URL (Fallback: On-Site Participants.csv)</label>
+                    <input type="url" id="cfgUrlOnsite" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+                </div>
+                <div class="field-row">
+                    <label>Organisers URL (Fallback: Organisers.csv)</label>
+                    <input type="url" id="cfgUrlOrganisers" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+                </div>
+                <div class="field-row">
+                    <label>Speakers URL (Fallback: Speakers.csv)</label>
+                    <input type="url" id="cfgUrlSpeakers" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+                </div>
+                <div class="field-row">
+                    <label>Auto-Sync Refresh Interval (Seconds, 0 = Manual)</label>
+                    <input type="number" id="cfgAutoSync" min="0" max="600" placeholder="0">
+                </div>
+            </div>
+
+            <!-- 3. Interactive Form Links (QRCode Monkey Gradients & Local QR Images) -->
+            <div class="settings-group">
+                <h4>3. Form URLs & Folder QR Fallback</h4>
+                <div class="field-row">
+                    <label>Pre-Registration / Check-In Form URL (Fallback: Check-in QR.png / Reg QR.png)</label>
+                    <input type="url" id="cfgFormPreReg" placeholder="https://forms.gle/...">
+                </div>
+                <div class="field-row">
+                    <label>On-Site Registration Form URL (Fallback: Reg QR.png)</label>
+                    <input type="url" id="cfgFormOnSite" placeholder="https://forms.gle/...">
+                </div>
+                <div class="field-row">
+                    <label>💬 Feedback Form URL (Fallback: Feedback QR.png)</label>
+                    <input type="url" id="cfgFormFeedback" placeholder="https://forms.gle/...">
+                </div>
+                <div class="field-row">
+                    <label>Program Flow PDF URL (Fallback: Program Flow.pdf)</label>
+                    <input type="url" id="cfgFlowPdf" placeholder="Leave blank to auto-detect Program Flow.pdf">
+                </div>
+            </div>
+
+            <!-- 4. Custom PDF Certificate Templates -->
+            <div class="settings-group">
+                <h4>4. PDF Certificate Templates (Fallback: Folder PDFs)</h4>
+                <div class="field-row">
+                    <label>Participant PDF (Fallback: Participant.pdf)</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="url" id="cfgPdfParticipant" placeholder="Leave blank to use Participant.pdf">
+                        <input type="file" accept="application/pdf" style="width:95px; font-size:10px;" onchange="uploadLocalPdf(this, 'Participant')">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <label>Organiser PDF (Fallback: Organizer.pdf / Organiser.pdf)</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="url" id="cfgPdfOrganiser" placeholder="Leave blank to use Organizer.pdf">
+                        <input type="file" accept="application/pdf" style="width:95px; font-size:10px;" onchange="uploadLocalPdf(this, 'Organiser')">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <label>Speaker PDF (Fallback: Speakers.pdf)</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="url" id="cfgPdfSpeaker" placeholder="Leave blank to use Speakers.pdf">
+                        <input type="file" accept="application/pdf" style="width:95px; font-size:10px;" onchange="uploadLocalPdf(this, 'Speaker')">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1.4fr; gap:6px;">
+                    <div class="field-row">
+                        <label>Name Y-Pos</label>
+                        <input type="number" id="cfgCertY" placeholder="322">
+                    </div>
+                    <div class="field-row">
+                        <label>Font Size</label>
+                        <input type="number" id="cfgCertSize" placeholder="34">
+                    </div>
+                    <div class="field-row">
+                        <label>Portal Expiry Date</label>
+                        <input type="text" id="cfgExpiry" placeholder="e.g., 31 Dec, 2027">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; gap:6px;">
+                <button class="btn" onclick="exportConfigJson()">💾 Export Profile (.json)</button>
+                <button class="btn" onclick="document.getElementById('importCfgFile').click()">📂 Import Profile</button>
+                <input type="file" id="importCfgFile" accept=".json" style="display:none" onchange="importConfigJson(this)">
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-danger" onclick="factoryReset()">Factory Wipe</button>
+                <button class="btn btn-success" style="padding:8px 20px;" onclick="saveSettings()">✅ Save & Apply</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-let attendees = JSON.parse(localStorage.getItem('asuDashboardAttendees')) || [];
-let currentIdx = -1, isGeoFenceEnabled = false;
-let qrExpiryInterval, idleTimer, animId;
-let scrollPos = 0, myChart, fsChart;
+const EMPTY_CONFIG = {
+    orgSector: "UNIVERSITY",
+    eventType: "SYMPOSIUM",
+    eventTitle: "",
+    uniName: "",
+    uniUrl: "",
+    uniAddress: "",
+    adminEmail: "",
+    logo1: "",
+    logo2: "",
+    primaryColor: "#0f172a",
+    accentColor: "#0284c7",
+    expiryDate: "",
+    urlParticipants: "",
+    urlCheckin: "",
+    urlOnsite: "",
+    urlOrganisers: "",
+    urlSpeakers: "",
+    formPreReg: "",
+    formOnSite: "",
+    formFeedback: "",
+    flowPdf: "",
+    pdfParticipant: "",
+    pdfOrganiser: "",
+    pdfSpeaker: "",
+    certY: 322,
+    certSize: 34,
+    autoSyncSec: 0
+};
 
-// High-Contrast Colorful QR Configuration
-const modalQR = new QRCodeStyling({
-    width: 320,
-    height: 320,
+// Same-folder / hosted-directory filenames probed automatically when URLs are empty or fail
+const LOCAL_FOLDER_FILES = {
+    csvFeeds: [
+        { names: ["Participants.csv"], role: "Participant", checkin: false },
+        { names: ["5Check-in Participants.csv", "Check-in Participants.csv"], role: "Participant", checkin: true },
+        { names: ["On-Site Participants.csv"], role: "Participant (New)", checkin: true },
+        { names: ["Organisers.csv", "Organizers.csv"], role: "Organiser", checkin: true },
+        { names: ["Speakers.csv"], role: "Speaker", checkin: false }
+    ],
+    logos: ["ASU-logo.png", "cfsasu.png", "Certi-logo.png", "Symposium Banner.png"],
+    flowPdfs: ["Program Flow.pdf"],
+    certPdfs: {
+        Participant: ["Participant.pdf"],
+        Organiser: ["Organizer.pdf", "Organiser.pdf"],
+        Speaker: ["Speakers.pdf", "Speaker.pdf"]
+    },
+    qrImages: {
+        "CHECK-IN": ["Check-in QR.png", "Reg QR.png"],
+        "PRE-REG": ["Reg QR.png", "Check-in QR.png"],
+        "ON-SITE": ["Reg QR.png"],
+        "FEEDBACK": ["Feedback QR.png"]
+    }
+};
+
+// Deep Color Gradient Profiles per Category (for QRCode Monkey API & Local Vector Fallback)
+const CATEGORY_QR_GRADIENTS = {
+    "PRE-REG": {
+        label: "DEEP INDIGO • PRE-REGISTRATION",
+        title: "PRE-REGISTRATION CHECK-IN",
+        color1: "#1e1b4b",
+        color2: "#3730a3",
+        eyeColor: "#1e1b4b",
+        bodyShape: "round",
+        eyeFrame: "frame13",
+        eyeBall: "ball15"
+    },
+    "ON-SITE": {
+        label: "DEEP CRIMSON • ON-SITE ENTRY",
+        title: "ON-SITE WALK-IN REGISTRATION",
+        color1: "#881337",
+        color2: "#4c0519",
+        eyeColor: "#881337",
+        bodyShape: "mosaic",
+        eyeFrame: "frame14",
+        eyeBall: "ball16"
+    },
+    "FEEDBACK": {
+        label: "DEEP EMERALD-SAPPHIRE • FEEDBACK",
+        title: "EVENT FEEDBACK & EVALUATION",
+        color1: "#064e3b",
+        color2: "#1d4ed8",
+        eyeColor: "#064e3b",
+        bodyShape: "circle",
+        eyeFrame: "frame13",
+        eyeBall: "ball14"
+    },
+    "CHECK-IN": {
+        label: "DEEP SLATE-TEAL • GENERAL CHECK-IN",
+        title: "GENERAL CHECK-IN QR",
+        color1: "#0f172a",
+        color2: "#0f766e",
+        eyeColor: "#0f172a",
+        bodyShape: "round",
+        eyeFrame: "frame13",
+        eyeBall: "ball15"
+    }
+};
+
+let eventConfig = Object.assign({}, EMPTY_CONFIG, JSON.parse(localStorage.getItem('prod_cms_config') || '{}'));
+let attendees = JSON.parse(localStorage.getItem('prod_cms_attendees') || '[]');
+let downloadLog = JSON.parse(localStorage.getItem('prod_cert_logs') || '[]');
+let uploadedPdfBase64 = JSON.parse(localStorage.getItem('prod_cms_pdfs') || '{}');
+let certTemplateCache = { Participant: null, Organiser: null, Speaker: null };
+
+let currentIdx = -1;
+let currentModalImageUrl = "";
+let currentModalTitle = "";
+let activeFlowSource = "";
+let qrExpiryInterval, autoSyncTimer, animId, scrollPos = 0;
+let myChart, fsChart;
+
+const fallbackLocalQR = new QRCodeStyling({
+    width: 285,
+    height: 285,
     type: "svg",
-    data: "",
+    data: "about:blank",
     dotsOptions: {
-        color: "#4361ee",
         type: "extra-rounded",
         gradient: {
             type: "linear",
             rotation: 45,
             colorStops: [
-                { offset: 0, color: "#4361ee" },
-                { offset: 1, color: "#f72585" }
+                { offset: 0, color: "#064e3b" },
+                { offset: 1, color: "#1d4ed8" }
             ]
         }
     },
     backgroundOptions: { color: "#ffffff" },
-    cornersSquareOptions: { type: "extra-rounded", color: "#3a0ca3" },
-    cornersDotOptions: { type: "dot", color: "#7209b7" }
+    cornersSquareOptions: { type: "extra-rounded", color: "#064e3b" },
+    cornersDotOptions: { type: "dot", color: "#1d4ed8" }
 });
 
-function initChart() {
+/* =========================================================
+   SAME-FOLDER / HOSTED DIRECTORY PROBING HELPERS
+   ========================================================= */
+async function probeFirstAvailableFile(candidates) {
+    for (const relPath of candidates) {
+        try {
+            const res = await fetch(encodeURI(relPath), { cache: "no-store" });
+            if (res.ok) {
+                return { path: relPath, response: res };
+            }
+        } catch (_) {}
+    }
+    return null;
+}
+
+async function detectLocalAssets() {
+    if (!eventConfig.logo1 || !eventConfig.logo2) {
+        const foundLogos = [];
+        for (const logoName of LOCAL_FOLDER_FILES.logos) {
+            try {
+                const res = await fetch(encodeURI(logoName), { cache: "no-store" });
+                if (res.ok) foundLogos.push(logoName);
+            } catch (_) {}
+        }
+        if (!eventConfig.logo1 && foundLogos[0]) eventConfig.logo1 = foundLogos[0];
+        if (!eventConfig.logo2 && foundLogos[1]) eventConfig.logo2 = foundLogos[1];
+    }
+
+    if (!eventConfig.flowPdf) {
+        const hit = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.flowPdfs);
+        if (hit) activeFlowSource = hit.path;
+    } else {
+        activeFlowSource = eventConfig.flowPdf;
+    }
+
+    applyBranding();
+}
+
+/* =========================================================
+   QRCODE MONKEY API GENERATOR + LOCAL QR IMAGE FALLBACK
+   ========================================================= */
+function buildQrMonkeyUrl(targetUrl, categoryKey) {
+    const style = CATEGORY_QR_GRADIENTS[categoryKey] || CATEGORY_QR_GRADIENTS["PRE-REG"];
+    const configPayload = {
+        body: style.bodyShape,
+        eye: style.eyeFrame,
+        eyeBall: style.eyeBall,
+        erf1: [], erf2: [], erf3: [],
+        brf1: [], brf2: [], brf3: [],
+        bodyColor: style.color1,
+        bgColor: "#FFFFFF",
+        eye1Color: style.eyeColor,
+        eye2Color: style.eyeColor,
+        eye3Color: style.eyeColor,
+        eyeBall1Color: style.color2,
+        eyeBall2Color: style.color2,
+        eyeBall3Color: style.color2,
+        gradientColor1: style.color1,
+        gradientColor2: style.color2,
+        gradientType: "linear",
+        gradientOnEyes: true,
+        logo: "",
+        logoMode: "default"
+    };
+
+    return `https://api.qrcode-monkey.com/qr/custom?size=600&download=false&file=png&data=${encodeURIComponent(targetUrl)}&config=${encodeURIComponent(JSON.stringify(configPayload))}`;
+}
+
+async function renderCategoryQrIntoElement(containerEl, targetUrl, categoryKey, sizePx = 285) {
+    const style = CATEGORY_QR_GRADIENTS[categoryKey] || CATEGORY_QR_GRADIENTS["PRE-REG"];
+    containerEl.innerHTML = "";
+
+    if (targetUrl) {
+        const qrMonkeyApiUrl = buildQrMonkeyUrl(targetUrl, categoryKey);
+        currentModalImageUrl = qrMonkeyApiUrl;
+
+        const img = document.createElement("img");
+        img.alt = style.title;
+        img.src = qrMonkeyApiUrl;
+
+        img.onerror = async () => {
+            const localQr = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.qrImages[categoryKey] || []);
+            if (localQr) {
+                currentModalImageUrl = localQr.path;
+                containerEl.innerHTML = `<img src="${localQr.path}" alt="${style.title}">`;
+                return;
+            }
+            containerEl.innerHTML = "";
+            fallbackLocalQR.update({
+                width: sizePx,
+                height: sizePx,
+                data: targetUrl,
+                dotsOptions: {
+                    type: "extra-rounded",
+                    gradient: {
+                        type: "linear",
+                        rotation: 45,
+                        colorStops: [
+                            { offset: 0, color: style.color1 },
+                            { offset: 1, color: style.color2 }
+                        ]
+                    }
+                },
+                cornersSquareOptions: { type: "extra-rounded", color: style.eyeColor },
+                cornersDotOptions: { type: "dot", color: style.color2 }
+            });
+            fallbackLocalQR.append(containerEl);
+        };
+
+        containerEl.appendChild(img);
+        return;
+    }
+
+    const localQr = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.qrImages[categoryKey] || []);
+    if (localQr) {
+        currentModalImageUrl = localQr.path;
+        containerEl.innerHTML = `<img src="${localQr.path}" alt="${style.title}">`;
+    } else {
+        currentModalImageUrl = "";
+        containerEl.innerHTML = `<div style="font-size:11px; color:var(--gray); text-align:center; padding:12px;">No URL or local QR image found for <b>${style.title}</b>.</div>`;
+    }
+}
+
+/* =========================================================
+   BRANDING & WHITE-LABEL INITIALIZATION
+   ========================================================= */
+function applyBranding() {
+    document.documentElement.style.setProperty('--primary', eventConfig.primaryColor);
+    document.documentElement.style.setProperty('--bg-grad-1', eventConfig.primaryColor);
+    document.documentElement.style.setProperty('--accent', eventConfig.accentColor);
+
+    const hasTitle = Boolean(eventConfig.eventTitle);
+    const hasUni = Boolean(eventConfig.uniName);
+
+    document.title = hasTitle
+        ? `${eventConfig.eventTitle} — CMS & Certificate Portal`
+        : "Event & Conference Management System (CMS)";
+
+    document.getElementById('hdrEventType').textContent = `${eventConfig.orgSector} • ${eventConfig.eventType}`;
+    document.getElementById('hdrTitle').textContent = hasTitle
+        ? `${eventConfig.eventTitle} — CMS`
+        : "CONFERENCE & EVENT MANAGEMENT SYSTEM (CMS)";
+
+    document.getElementById('hdrSubtitle').textContent = hasUni
+        ? `${eventConfig.uniName}${eventConfig.uniAddress ? ' • ' + eventConfig.uniAddress : ''}`
+        : "Reads Google Sheet URLs directly (no publishing required) or hosted folder files";
+
+    document.getElementById('fsEventHeading').textContent = hasTitle
+        ? `${eventConfig.eventTitle} — Live Analytics`
+        : "Live Event Analytics";
+
+    const l1 = document.getElementById('hdrLogo1');
+    const l2 = document.getElementById('hdrLogo2');
+    const cl = document.getElementById('certLogo');
+    const placeholder = document.getElementById('logoPlaceholder');
+
+    if (eventConfig.logo1) {
+        l1.src = eventConfig.logo1; l1.style.display = 'inline-block';
+        l1.onerror = () => { l1.style.display = 'none'; placeholder.style.display = 'flex'; };
+        cl.src = eventConfig.logo1; cl.style.display = 'inline-block';
+        cl.onerror = () => { cl.style.display = 'none'; };
+        placeholder.style.display = 'none';
+    } else {
+        l1.style.display = 'none';
+        cl.style.display = 'none';
+        placeholder.style.display = 'flex';
+    }
+
+    if (eventConfig.logo2) {
+        l2.src = eventConfig.logo2; l2.style.display = 'inline-block';
+        l2.onerror = () => { l2.style.display = 'none'; };
+    } else {
+        l2.style.display = 'none';
+    }
+
+    document.getElementById('certEventTitle').textContent = hasTitle
+        ? eventConfig.eventTitle
+        : "E-Certificate Verification & Download Portal";
+    document.getElementById('certUniSubtitle').textContent = hasUni
+        ? eventConfig.uniName
+        : "Self-Service Digital Certificate Distribution";
+    document.getElementById('certExpiryText').textContent = eventConfig.expiryDate
+        ? `Portal Valid Until: ${eventConfig.expiryDate}`
+        : "";
+
+    const flowTarget = eventConfig.flowPdf || activeFlowSource;
+    document.getElementById('flowIframe').src = flowTarget
+        ? `${encodeURI(flowTarget)}#toolbar=0&navpanes=0`
+        : "";
+
+    const checkInTarget = eventConfig.formPreReg || eventConfig.formOnSite;
+    const mainQrContainer = document.getElementById('mainCheckinQR');
+    if (checkInTarget) {
+        renderCategoryQrIntoElement(mainQrContainer, checkInTarget, "CHECK-IN", 196);
+    } else {
+        probeFirstAvailableFile(LOCAL_FOLDER_FILES.qrImages["CHECK-IN"]).then(hit => {
+            if (hit) {
+                mainQrContainer.innerHTML = `<img src="${encodeURI(hit.path)}" alt="Check-in QR">`;
+            } else {
+                mainQrContainer.innerHTML = `<div style="font-size:11px; color:var(--gray); text-align:center; padding:12px;">Add a Form URL in <b>Setup</b> or place <b>Check-in QR.png</b> in this folder.</div>`;
+            }
+        });
+    }
+
+    const year = new Date().getFullYear();
+    const footerEl = document.getElementById('dynamicFooter');
+    if (hasUni || eventConfig.adminEmail) {
+        footerEl.innerHTML = `
+            <strong>${eventConfig.uniName || 'Academic Event Platform'}</strong>
+            ${eventConfig.uniAddress ? ' — ' + eventConfig.uniAddress : ''}
+            ${eventConfig.adminEmail ? ` • Contact: <a href="mailto:${eventConfig.adminEmail}">${eventConfig.adminEmail}</a>` : ''}
+            • &copy; ${year}
+        `;
+    } else {
+        footerEl.innerHTML = `Universal Academic & Institutional Event Management System &copy; ${year}`;
+    }
+
+    updateConnectionBadge();
+    setupAutoSync();
+}
+
+function updateConnectionBadge() {
+    const dot = document.getElementById('statusDot');
+    const txt = document.getElementById('statusText');
+    if (attendees.length > 0) {
+        dot.className = 'dot dot-online';
+        txt.textContent = `ACTIVE (${attendees.length} RECORDS)`;
+    } else {
+        dot.className = 'dot dot-idle';
+        txt.textContent = 'NO RECORDS';
+    }
+}
+
+function setupAutoSync() {
+    clearInterval(autoSyncTimer);
+    const sec = parseInt(eventConfig.autoSyncSec, 10);
+    if (sec && sec >= 10) {
+        autoSyncTimer = setInterval(() => syncAllSources(true), sec * 1000);
+    }
+}
+
+/* =========================================================
+   SEPARATE WORKSPACE SWITCHER (CMS vs E-CERTIFICATES)
+   ========================================================= */
+function switchView(view) {
+    const cmsView = document.getElementById('cmsView');
+    const certView = document.getElementById('certView');
+    const tabCms = document.getElementById('tabCms');
+    const tabCerts = document.getElementById('tabCerts');
+
+    if (view === 'certs') {
+        cmsView.classList.add('hidden');
+        certView.classList.remove('hidden');
+        tabCms.classList.remove('active');
+        tabCerts.classList.add('active');
+        prepareCertificatePortal();
+    } else {
+        certView.classList.add('hidden');
+        cmsView.classList.remove('hidden');
+        tabCerts.classList.remove('active');
+        tabCms.classList.add('active');
+    }
+}
+
+function openCertInNewTab() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', 'certs');
+    window.open(url.toString(), '_blank');
+}
+
+/* =========================================================
+   DIRECT GOOGLE SHEET READER (NO PUBLISH NEEDED) & EXACT SCHEMA MAPPER
+   ========================================================= */
+function buildCandidateDataUrls(rawUrl) {
+    if (!rawUrl) return [];
+    const url = rawUrl.trim();
+
+    const sheetMatch = url.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (sheetMatch) {
+        const sheetId = sheetMatch[1];
+        const gidMatch = url.match(/[?&#]gid=([0-9]+)/);
+        const gid = gidMatch ? gidMatch[1] : null;
+        const gidQuery = gid ? `&gid=${gid}` : '';
+
+        const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv${gidQuery}`;
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv${gidQuery}`;
+
+        if (url.includes('output=csv') || url.includes('format=csv') || url.includes('tqx=out:csv')) {
+            return [url, gvizUrl, exportUrl];
+        }
+        return [gvizUrl, exportUrl];
+    }
+
+    return [url];
+}
+
+function parseSpreadsheetBuffer(arrayBuffer, defaultRole, isCheckinFeed = false) {
+    const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+    rows.forEach(row => {
+        const keys = Object.keys(row);
+
+        // Exact header matching for:
+        // Timestamp | Email address | Column 2 | Title | Full Name | Institute/Organization | Country/State | Contact Number:
+        const emailKey   = keys.find(k => /^email\s*address$|^e-?mail$/i.test(k.trim())) || keys.find(k => /e-?mail/i.test(k));
+        const titleKey   = keys.find(k => /^title$|^salutation$|^honorific$/i.test(k.trim()));
+        const nameKey    = keys.find(k => /^full\s*name$|^participant\s*name$|^attendee\s*name$|^name$/i.test(k.trim())) || keys.find(k => /name/i.test(k) && !/user/i.test(k));
+        const instKey    = keys.find(k => /institute|organization|institution|university|college|school|affiliation|department/i.test(k));
+        const countryKey = keys.find(k => /country|state|region|city|location/i.test(k));
+        const contactKey = keys.find(k => /contact|phone|mobile|whatsapp|tel/i.test(k));
+        const roleKey    = keys.find(k => /^role$|^category$|^column\s*2$|participant\s*type/i.test(k.trim()));
+        const timeKey    = keys.find(k => /timestamp|date|time/i.test(k));
+
+        let rawName = nameKey ? String(row[nameKey]).trim() : "";
+        if (!rawName) {
+            const vals = Object.values(row);
+            if (vals.length > 4) rawName = String(vals[4]).trim();
+        }
+        if (!rawName || /^full\s*name$|^name$/i.test(rawName)) return;
+
+        const titlePrefix = titleKey ? String(row[titleKey]).trim() : "";
+        const fullName = (titlePrefix && !rawName.toLowerCase().startsWith(titlePrefix.toLowerCase()))
+            ? `${titlePrefix} ${rawName}`.trim()
+            : rawName;
+
+        const email = emailKey ? String(row[emailKey]).toLowerCase().trim() : "";
+        const institute = (instKey && row[instKey]) ? String(row[instKey]).trim() : (eventConfig.uniName || "-");
+        const country = (countryKey && row[countryKey]) ? String(row[countryKey]).trim() : "-";
+        const contact = (contactKey && row[contactKey]) ? String(row[contactKey]).trim() : "-";
+        const timestamp = (timeKey && row[timeKey]) ? String(row[timeKey]).trim() : "";
+
+        let detectedRole = defaultRole;
+        if (roleKey && row[roleKey]) {
+            const cellVal = String(row[roleKey]).trim();
+            if (/speaker/i.test(cellVal)) detectedRole = "Speaker";
+            else if (/organis|organiz/i.test(cellVal)) detectedRole = "Organiser";
+            else if (/guest|vip/i.test(cellVal)) detectedRole = "Guest";
+            else if (/staff/i.test(cellVal)) detectedRole = "Staff";
+            else if (/student/i.test(cellVal)) detectedRole = "Student";
+            else if (/on-?site|new/i.test(cellVal)) detectedRole = "Participant (New)";
+        }
+
+        const autoPresent = isCheckinFeed || detectedRole.includes('New') || detectedRole === 'Organiser';
+        const status = autoPresent ? "✅ Present" : "❌ Pending";
+
+        const existing = attendees.find(a =>
+            (email && a.email && a.email === email) ||
+            a.name.toLowerCase() === fullName.toLowerCase()
+        );
+
+        if (!existing) {
+            attendees.push({
+                name: fullName,
+                email: email,
+                institute: institute,
+                country: country,
+                contact: contact,
+                timestamp: timestamp,
+                role: detectedRole,
+                status: status
+            });
+        } else {
+            if (email && !existing.email) existing.email = email;
+            if (institute && institute !== "-" && (!existing.institute || existing.institute === "-")) existing.institute = institute;
+            if (country && country !== "-" && (!existing.country || existing.country === "-")) existing.country = country;
+            if (contact && contact !== "-" && (!existing.contact || existing.contact === "-")) existing.contact = contact;
+            if (detectedRole === 'Organiser' || detectedRole === 'Speaker') existing.role = detectedRole;
+            if (autoPresent) existing.status = "✅ Present";
+        }
+    });
+}
+
+function handleSyncClick() {
+    syncAllSources(false);
+}
+
+async function syncAllSources(silent = false) {
+    const dot = document.getElementById('statusDot');
+    const stText = document.getElementById('statusText');
+    dot.className = 'dot dot-sync';
+    stText.textContent = 'SYNCING...';
+
+    const configuredFeeds = [
+        { rawUrl: eventConfig.urlParticipants, role: 'Participant', checkin: false, fallbackNames: ["Participants.csv"] },
+        { rawUrl: eventConfig.urlCheckin, role: 'Participant', checkin: true, fallbackNames: ["5Check-in Participants.csv", "Check-in Participants.csv"] },
+        { rawUrl: eventConfig.urlOnsite, role: 'Participant (New)', checkin: true, fallbackNames: ["On-Site Participants.csv"] },
+        { rawUrl: eventConfig.urlOrganisers, role: 'Organiser', checkin: true, fallbackNames: ["Organisers.csv", "Organizers.csv"] },
+        { rawUrl: eventConfig.urlSpeakers, role: 'Speaker', checkin: false, fallbackNames: ["Speakers.csv"] }
+    ];
+
+    let loadedCount = 0;
+    let usedLocalFallbackCount = 0;
+
+    for (const feed of configuredFeeds) {
+        let fetched = false;
+
+        const candidateUrls = buildCandidateDataUrls(feed.rawUrl);
+        for (const url of candidateUrls) {
+            try {
+                const res = await fetch(url);
+                if (res.ok) {
+                    const buf = await res.arrayBuffer();
+                    parseSpreadsheetBuffer(buf, feed.role, feed.checkin);
+                    loadedCount++;
+                    fetched = true;
+                    break;
+                }
+            } catch (_) {}
+        }
+
+        if (!fetched && feed.fallbackNames && feed.fallbackNames.length > 0) {
+            const localHit = await probeFirstAvailableFile(feed.fallbackNames);
+            if (localHit) {
+                try {
+                    const buf = await localHit.response.arrayBuffer();
+                    parseSpreadsheetBuffer(buf, feed.role, feed.checkin);
+                    loadedCount++;
+                    usedLocalFallbackCount++;
+                } catch (_) {}
+            }
+        }
+    }
+
+    localStorage.setItem('prod_cms_attendees', JSON.stringify(attendees));
+    filterRole('All');
+    updateStats();
+    updateConnectionBadge();
+
+    if (!silent) {
+        if (loadedCount > 0) {
+            const suffix = usedLocalFallbackCount > 0 ? ` (${usedLocalFallbackCount} from hosted folder)` : "";
+            alert(`Sync Complete! Loaded ${loadedCount} source(s)${suffix} • ${attendees.length} total records.`);
+        } else {
+            alert("No data loaded. Check that your Google Sheet link sharing is set to 'Anyone with the link can view' or place CSV files in the same hosted folder.");
+        }
+    }
+}
+
+function handleFileUpload(input) {
+    Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const fname = file.name.toLowerCase();
+            let role = "Participant";
+            let isCheckin = false;
+            if (fname.includes("speaker")) role = "Speaker";
+            else if (fname.includes("organis") || fname.includes("organiz")) { role = "Organiser"; isCheckin = true; }
+            else if (fname.includes("onsite") || fname.includes("on-site")) { role = "Participant (New)"; isCheckin = true; }
+            else if (fname.includes("check")) { isCheckin = true; }
+
+            parseSpreadsheetBuffer(e.target.result, role, isCheckin);
+            localStorage.setItem('prod_cms_attendees', JSON.stringify(attendees));
+            filterRole('All');
+            updateStats();
+            updateConnectionBadge();
+        };
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+/* =========================================================
+   CHARTS & ANALYTICS
+   ========================================================= */
+function initCharts() {
     const ctx = document.getElementById('statChart').getContext('2d');
     const fsCtx = document.getElementById('fsStatChart').getContext('2d');
     const labels = ['Pre-Reg', 'On-Site', 'Guests', 'Staff', 'Students', 'Speakers', 'Organisers'];
-    
-    const chartConfig = {
+
+    const baseConfig = {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [
                 {
                     label: 'Present',
-                    backgroundColor: ['#10b981', '#f72585', '#7209b7', '#f39c12', '#00b4d8', '#212529', '#6c757d'],
+                    backgroundColor: ['#059669', '#be123c', '#3b0764', '#d97706', '#0284c7', '#0f172a', '#64748b'],
                     data: new Array(7).fill(0),
                     borderRadius: 4
                 },
                 {
                     label: 'Pending',
-                    backgroundColor: ['#ef4444', 'transparent', 'transparent', 'transparent', 'transparent', 'transparent', 'transparent'],
+                    backgroundColor: ['#e11d48', 'transparent', 'transparent', 'transparent', 'transparent', 'transparent', 'transparent'],
                     data: new Array(7).fill(0),
                     borderRadius: 4
                 }
@@ -348,11 +1565,11 @@ function initChart() {
         }
     };
 
-    const fsChartConfig = JSON.parse(JSON.stringify(chartConfig));
-    fsChartConfig.options.scales.x.ticks.font = { size: 14, weight: 'bold' };
+    const fsConfig = JSON.parse(JSON.stringify(baseConfig));
+    fsConfig.options.scales.x.ticks.font = { size: 13, weight: 'bold' };
 
-    myChart = new Chart(ctx, chartConfig);
-    fsChart = new Chart(fsCtx, fsChartConfig);
+    myChart = new Chart(ctx, baseConfig);
+    fsChart = new Chart(fsCtx, fsConfig);
 }
 
 function updateStats() {
@@ -360,10 +1577,11 @@ function updateStats() {
     const preRegTotal = preRegGroup.length;
     const preRegPresent = preRegGroup.filter(p => p.status.includes('✅')).length;
     const preRegPending = preRegTotal - preRegPresent;
+
     const onSiteGroup = attendees.filter(p => p.role.includes('New'));
     const onSitePresent = onSiteGroup.filter(p => p.status.includes('✅')).length;
-    
-    const stats = {
+
+    const counts = {
         onSite: onSiteGroup.length,
         guests: attendees.filter(p => p.role === 'Guest').length,
         staff: attendees.filter(p => p.role === 'Staff').length,
@@ -373,209 +1591,619 @@ function updateStats() {
     };
 
     const totalCheckIn = attendees.filter(p => p.status.includes('✅')).length;
-    const rate = (attendees.length > 0 ? (totalCheckIn/attendees.length*100).toFixed(1) : 0) + "%";
-    
-    document.getElementById('fsCalculationLabel').innerHTML = `Total Present: <b> = ${totalCheckIn} (ATTENDANCE RATE: ${rate})</b>`;
+    const rate = (attendees.length > 0 ? (totalCheckIn / attendees.length * 100).toFixed(1) : 0) + "%";
+
+    document.getElementById('fsCalculationLabel').innerHTML = `Total Present: <b>${totalCheckIn} / ${attendees.length}</b> (ATTENDANCE RATE: <b>${rate}</b>)`;
     document.getElementById('sidebarStatsList').innerHTML = `
-        <p>Pre-Reg Total: <b>${preRegTotal}</b> (Pending: <span style="color:red">${preRegPending}</span>)</p>
-        <p>On-Site Reg: <b>${stats.onSite}</b></p>
-        <p>Guests: <b>${stats.guests}</b></p>
-        <p>Staff: <b>${stats.staff}</b></p>
-        <p>Students: <b>${stats.students}</b></p>
-        <p>Speakers: <b>${stats.speakers}</b></p>
-        <p>Organisers: <b>${stats.organisers}</b></p>
-        <hr style="border:0; border-top:1px solid #eee; margin: 5px 0;">
+        <p>Pre-Reg Total: <b>${preRegTotal}</b> (Pending: <span style="color:#be123c">${preRegPending}</span>)</p>
+        <p>On-Site Reg: <b>${counts.onSite}</b></p>
+        <p>Guests: <b>${counts.guests}</b></p>
+        <p>Staff: <b>${counts.staff}</b></p>
+        <p>Students: <b>${counts.students}</b></p>
+        <p>Speakers: <b>${counts.speakers}</b></p>
+        <p>Organisers: <b>${counts.organisers}</b></p>
+        <hr style="border:0; border-top:1px solid #e2e8f0; margin: 5px 0;">
         <p>Total Check-ins: <b style="color:var(--success)">${totalCheckIn}</b></p>
     `;
 
-    const presentDataset = [preRegPresent, onSitePresent, stats.guests, stats.staff, stats.students, stats.speakers, stats.organisers];
-    const pendingDataset = [preRegPending, 0, 0, 0, 0, 0, 0];
-    [myChart, fsChart].forEach(chart => {
-        chart.data.datasets[0].data = presentDataset;
-        chart.data.datasets[1].data = pendingDataset;
-        chart.update();
+    const presentData = [preRegPresent, onSitePresent, counts.guests, counts.staff, counts.students, counts.speakers, counts.organisers];
+    const pendingData = [preRegPending, 0, 0, 0, 0, 0, 0];
+
+    [myChart, fsChart].forEach(c => {
+        if (!c) return;
+        c.data.datasets[0].data = presentData;
+        c.data.datasets[1].data = pendingData;
+        c.update();
     });
 
     document.getElementById('fsPreReg').textContent = preRegTotal;
     document.getElementById('fsCheckIn').textContent = totalCheckIn;
-    document.getElementById('fsOnsite').textContent = stats.onSite;
-    document.getElementById('fsGuestStat').textContent = stats.guests;
-    document.getElementById('fsStaffStat').textContent = stats.staff;
-    document.getElementById('fsStudentStat').textContent = stats.students;
-    document.getElementById('fsSpeakerStat').textContent = stats.speakers;
-    document.getElementById('fsOrgStat').textContent = stats.organisers;
+    document.getElementById('fsOnsite').textContent = counts.onSite;
+    document.getElementById('fsGuestStat').textContent = counts.guests;
+    document.getElementById('fsStaffStat').textContent = counts.staff;
+    document.getElementById('fsStudentStat').textContent = counts.students;
+    document.getElementById('fsSpeakerStat').textContent = counts.speakers;
+    document.getElementById('fsOrgStat').textContent = counts.organisers;
     document.getElementById('statTotalPerc').textContent = rate;
 }
 
-function handleDataAction() { if (confirm("Sync from Cloud?")) syncAll(); else document.getElementById('uploadFiles').click(); }
-function toggleGuestPanel() { const p = document.getElementById('guestPanel'); p.style.display = p.style.display === 'grid' ? 'none' : 'grid'; }
+/* =========================================================
+   ATTENDEE CONTROLS & DEEP-GRADIENT QR MODAL
+   ========================================================= */
+function toggleGuestPanel() {
+    const p = document.getElementById('guestPanel');
+    p.style.display = p.style.display === 'grid' ? 'none' : 'grid';
+}
 
 function quickAddGuest(label, roleType) {
-    const name = `${label} ${(attendees.filter(a => a.name.startsWith(label)).length + 1).toString().padStart(2, '0')}`;
-    attendees.push({ name: name, status: "✅ Present", institute: "ASU Guest", role: roleType });
+    const count = attendees.filter(a => a.name.startsWith(label)).length + 1;
+    const name = `${label} ${String(count).padStart(2, '0')}`;
+    attendees.push({
+        name,
+        email: "",
+        status: "✅ Present",
+        institute: eventConfig.uniName || "Guest",
+        country: "-",
+        contact: "-",
+        role: roleType
+    });
     saveAndRefresh(name);
 }
 
-function customGuest() { 
-    const name = prompt("Enter Custom Guest Name:"); 
-    if(name) {
-        attendees.push({ name: name, status: "✅ Present", institute: "External", role: "Guest" });
-        saveAndRefresh(name);
+function customGuest() {
+    const name = prompt("Enter Custom Guest / Delegate Name:");
+    if (name && name.trim()) {
+        attendees.push({
+            name: name.trim(),
+            email: "",
+            status: "✅ Present",
+            institute: "External Guest",
+            country: "-",
+            contact: "-",
+            role: "Guest"
+        });
+        saveAndRefresh(name.trim());
     }
 }
 
-function saveAndRefresh(name) {
-    localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
-    filterRole('All'); updateStats(); selectUserByName(name);
+function saveAndRefresh(selectName) {
+    localStorage.setItem('prod_cms_attendees', JSON.stringify(attendees));
+    filterRole('All');
+    updateStats();
+    updateConnectionBadge();
+    if (selectName) selectUserByName(selectName);
 }
 
-async function syncAll() {
-    const dot = document.getElementById('statusDot'); dot.className = 'dot dot-sync';
-    const baseUrl = "https://raw.githubusercontent.com/hameedktk09/cms/main/";
-    const files = [
-        {n:"5th Symposium 2027 Participants.csv", r:"Participant"}, 
-        {n:"5th Symposium 2027 Check-in Participants.csv", r:"Participant"}, 
-        {n:"5th Symposium 2027 On-Site Participants.csv", r:"Participant (New)"}, 
-        {n:"5th Symposium 2027 Organisers.csv", r:"Organiser"}, 
-        {n:"5th Symposium 2027 Speakers.csv", r:"Speaker"}
-    ];
-    try {
-        for(let f of files) { 
-            const res = await fetch(baseUrl + encodeURIComponent(f.n)); 
-            if(res.ok) processSyncData(await res.text(), f.r); 
-        }
-        localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
-        filterRole('All'); updateStats(); dot.className = 'dot dot-online'; alert("Sync Done!");
-    } catch(e) { dot.className = 'dot dot-offline'; }
-}
-
-function processSyncData(csv, role) {
-    csv.split('\n').forEach((row, idx) => {
-        if(idx === 0 || !row.trim()) return;
-        const cols = row.split(',');
-        if(cols.length > 4) {
-            const n = cols[4].trim();
-            let status = (role.includes('New') || role === 'Organiser') ? "✅ Present" : "❌ Pending";
-            const existing = attendees.find(a => a.name === n);
-            if(!existing) {
-                attendees.push({ name: n, status: status, institute: cols[7]?.trim() || "ASU", role: role });
-            } else {
-                if(role === 'Organiser' || role === 'Speaker') existing.role = role;
-                if(status === "✅ Present") existing.status = status;
-            }
-        }
-    });
-}
-
-function handleFileUpload(input) {
-    Array.from(input.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            let fname = file.name.toLowerCase();
-            let r = "Participant";
-            if(fname.includes("speaker")) r = "Speaker";
-            else if(fname.includes("organiser")) r = "Organiser";
-            else if(fname.includes("onsite") || fname.includes("on-site")) r = "Participant (New)";
-            processSyncData(e.target.result, r);
-            localStorage.setItem('asuDashboardAttendees', JSON.stringify(attendees));
-            filterRole('All'); updateStats();
-        };
-        reader.readAsText(file);
-    });
-}
-
-function showSecureQR(type) {
-    if(type === 'PRE-REG' && currentIdx === -1) return alert("Select participant first!");
-    const modal = document.getElementById('regModal');
-    let qrData = type === 'PRE-REG' ? 
-        "https://forms.gle/izxwf4pbgJb1UXhTA?id=" + encodeURIComponent(attendees[currentIdx].name) : 
-        "https://forms.gle/FtuEVmusMqCerHqC7";
-
-    // UPDATED: Changed to PRE-REGISTRATION
-    document.getElementById('modalTitle').textContent = type === 'PRE-REG' ? "PRE-REGISTRATION" : type + " REGISTRATION";
-    document.getElementById('modalAttendee').textContent = type === 'PRE-REG' ? attendees[currentIdx].name : "NEW ENTRY";
-    modal.style.display = 'flex';
-    
-    // UPDATED: 2 Minute Timer
-    clearInterval(qrExpiryInterval);
-    let timeLeft = 120;
-    document.getElementById('expiryTimer').textContent = "02:00";
-
-    qrExpiryInterval = setInterval(() => {
-        timeLeft--;
-        let m = Math.floor(timeLeft/60), s = timeLeft%60;
-        document.getElementById('expiryTimer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
-        if(timeLeft <= 0) closeModal();
-    }, 1000);
-
-    modalQR.update({ data: qrData });
-    document.getElementById('regModalQR').classList.add('active');
-}
-
-function togglePresence() {
-    if(currentIdx === -1) return;
-    attendees[currentIdx].status = attendees[currentIdx].status.includes('✅') ? "❌ Pending" : "✅ Present";
-    saveAndRefresh(attendees[currentIdx].name);
+function clearSessionRecords() {
+    if (confirm("Clear all loaded attendee records from this browser session?")) {
+        attendees = [];
+        localStorage.removeItem('prod_cms_attendees');
+        currentIdx = -1;
+        document.getElementById('displayName').textContent = "No Selection";
+        document.getElementById('valStatus').textContent = "-";
+        document.getElementById('valCategory').textContent = "-";
+        document.getElementById('valInstitution').textContent = "-";
+        document.getElementById('valCountry').textContent = "-";
+        document.getElementById('valContact').textContent = "-";
+        document.getElementById('valEmail').textContent = "-";
+        filterRole('All');
+        updateStats();
+        updateConnectionBadge();
+    }
 }
 
 function selectUserByName(name) {
     const p = attendees.find(u => u.name === name);
-    if(!p) return;
+    if (!p) return;
     currentIdx = attendees.indexOf(p);
     document.getElementById('displayName').textContent = p.name;
     document.getElementById('valStatus').textContent = p.status;
-    document.getElementById('valStatus').style.color = p.status.includes('✅') ? '#10b981' : '#f72585';
+    document.getElementById('valStatus').style.color = p.status.includes('✅') ? '#059669' : '#be123c';
     document.getElementById('btnMarkPresent').textContent = p.status.includes('✅') ? "☒ Un-Present" : "☑ Mark Present";
     document.getElementById('btnMarkPresent').className = p.status.includes('✅') ? "btn btn-danger" : "btn btn-success";
-    document.getElementById('valInstitution').textContent = p.institute;
-    document.getElementById('valCategory').textContent = p.role;
+    document.getElementById('valInstitution').textContent = p.institute || "-";
+    document.getElementById('valCountry').textContent = p.country || "-";
+    document.getElementById('valContact').textContent = p.contact || "-";
+    document.getElementById('valCategory').textContent = p.role || "-";
+    document.getElementById('valEmail').textContent = p.email || "-";
     document.getElementById('combinedDropdown').value = p.name;
 }
 
-function handleSearch(val) { const f = attendees.filter(p => p.name.toLowerCase().includes(val.toLowerCase())); if(f.length > 0) selectUserByName(f[0].name); }
+function togglePresence() {
+    if (currentIdx === -1) return alert("Select a participant first.");
+    attendees[currentIdx].status = attendees[currentIdx].status.includes('✅') ? "❌ Pending" : "✅ Present";
+    saveAndRefresh(attendees[currentIdx].name);
+}
+
+function handleSearch(val) {
+    const q = val.toLowerCase().trim();
+    if (!q) return;
+    const match = attendees.find(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.email && p.email.toLowerCase().includes(q)) ||
+        (p.institute && p.institute.toLowerCase().includes(q)) ||
+        (p.country && p.country.toLowerCase().includes(q))
+    );
+    if (match) selectUserByName(match.name);
+}
 
 function filterRole(role) {
     const dd = document.getElementById('combinedDropdown');
-    dd.innerHTML = '<option value="">Select Participant...</option>';
+    dd.innerHTML = attendees.length > 0
+        ? '<option value="">Select Participant...</option>'
+        : '<option value="">No records loaded yet...</option>';
+
     attendees.forEach(p => {
-        if(role === 'All' || p.role.includes(role)) {
-            const o = document.createElement('option'); o.value = p.name; o.textContent = p.name; dd.appendChild(o);
+        if (role === 'All' || (p.role && p.role.includes(role))) {
+            const o = document.createElement('option');
+            o.value = p.name;
+            o.textContent = `${p.name} (${p.role})`;
+            dd.appendChild(o);
         }
     });
 }
 
-function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-function showFullscreenStats() { document.getElementById('statsOverlay').style.display = 'flex'; updateStats(); }
-function closeStats() { document.getElementById('statsOverlay').style.display = 'none'; }
-function resetIdleTimer() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if(document.getElementById('regModal').style.display !== 'flex') startFlow(); }, 120000); }
+async function showGradientQR(categoryKey) {
+    const style = CATEGORY_QR_GRADIENTS[categoryKey];
+    const modal = document.getElementById('regModal');
+    const qrBox = document.getElementById('regModalQR');
+    const timerBox = document.getElementById('timerBox');
 
-function startFlow() { 
-    const overlay = document.getElementById('flowOverlay');
-    const scroller = document.getElementById('scroller');
-    overlay.style.display = 'block'; 
-    
-    // Reset position to bottom of screen
-    scrollPos = window.innerHeight; 
-    
-    function move() { 
-        scrollPos -= 0.8; // Slower, smoother speed (0.8 pixels per frame)
-        scroller.style.transform = `translateY(${scrollPos}px)`; 
-        
-        // If the top of the content leaves the top of the screen, reset
-        if (Math.abs(scrollPos) > scroller.offsetHeight) {
-            scrollPos = window.innerHeight;
+    let qrData = "";
+
+    if (categoryKey === 'PRE-REG') {
+        if (eventConfig.formPreReg) {
+            if (currentIdx === -1) return alert("Select a participant from the dropdown first!");
+            const sep = eventConfig.formPreReg.includes('?') ? '&' : '?';
+            qrData = `${eventConfig.formPreReg}${sep}id=${encodeURIComponent(attendees[currentIdx].name)}`;
+            document.getElementById('modalAttendee').textContent = attendees[currentIdx].name;
+        } else {
+            document.getElementById('modalAttendee').textContent = currentIdx !== -1 ? attendees[currentIdx].name : "Local QR Fallback";
         }
-        
-        animId = requestAnimationFrame(move); 
-    } 
-    cancelAnimationFrame(animId); // Prevent double animation
-    move(); 
+        timerBox.style.display = "block";
+    } else if (categoryKey === 'ON-SITE') {
+        qrData = eventConfig.formOnSite || "";
+        document.getElementById('modalAttendee').textContent = eventConfig.eventTitle || "Walk-In Registration";
+        timerBox.style.display = "block";
+    } else if (categoryKey === 'FEEDBACK') {
+        qrData = eventConfig.formFeedback || "";
+        document.getElementById('modalAttendee').textContent = eventConfig.eventTitle || "Scan to Submit Feedback";
+        timerBox.style.display = "none";
+    }
+
+    currentModalTitle = style.title;
+    document.getElementById('modalBadge').textContent = style.label;
+    document.getElementById('modalTitle').textContent = style.title;
+    document.getElementById('modalUrlPreview').textContent = qrData || "Using same-folder QR image fallback";
+    document.getElementById('qrMonkeyExternalLink').href = qrData
+        ? `https://www.qrcode-monkey.com/#${encodeURIComponent(qrData)}`
+        : "https://www.qrcode-monkey.com/#";
+
+    modal.style.display = 'flex';
+
+    clearInterval(qrExpiryInterval);
+    if (timerBox.style.display === "block") {
+        let timeLeft = 120;
+        document.getElementById('expiryTimer').textContent = "02:00";
+        qrExpiryInterval = setInterval(() => {
+            timeLeft--;
+            const m = Math.floor(timeLeft / 60);
+            const s = timeLeft % 60;
+            document.getElementById('expiryTimer').textContent = `${m}:${String(s).padStart(2, '0')}`;
+            if (timeLeft <= 0) closeModal();
+        }, 1000);
+    }
+
+    await renderCategoryQrIntoElement(qrBox, qrData, categoryKey, 285);
 }
 
-function stopFlow() { 
-    document.getElementById('flowOverlay').style.display = 'none'; 
-    cancelAnimationFrame(animId); 
-    resetIdleTimer(); 
+function downloadCurrentModalQR() {
+    if (!currentModalImageUrl) return alert("No QR image available to save.");
+    const safeName = (currentModalTitle || "QR_Code").replace(/\s+/g, '_');
+    const a = document.createElement('a');
+    a.href = currentModalImageUrl;
+    a.target = "_blank";
+    a.download = `${safeName}.png`;
+    a.click();
+}
+
+function closeModal() {
+    document.getElementById('regModal').style.display = 'none';
+    clearInterval(qrExpiryInterval);
+}
+
+function handleCurtainClick() {
+    document.getElementById('qrCurtain').classList.toggle('open');
+}
+
+function downloadReport() {
+    if (attendees.length === 0) return alert("No attendance data available to export.");
+    let csv = "Full Name,Email Address,Role,Institute/Organization,Country/State,Contact Number,Status\n";
+    attendees.forEach(p => {
+        csv += `"${p.name}","${p.email || ''}","${p.role}","${p.institute || ''}","${p.country || ''}","${p.contact || ''}","${p.status}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const prefix = (eventConfig.eventTitle || "Event").replace(/\s+/g, '_');
+    a.download = `${prefix}_Attendance_Report.csv`;
+    a.click();
+}
+
+/* =========================================================
+   SEPARATE E-CERTIFICATE PORTAL (URL + SAME-FOLDER PDF FALLBACK)
+   ========================================================= */
+async function prepareCertificatePortal() {
+    const roles = [
+        { key: 'Participant', short: 'P', url: eventConfig.pdfParticipant, filter: a => a.role.includes('Participant') },
+        { key: 'Organiser', short: 'O', url: eventConfig.pdfOrganiser, filter: a => a.role === 'Organiser' },
+        { key: 'Speaker', short: 'S', url: eventConfig.pdfSpeaker, filter: a => a.role === 'Speaker' }
+    ];
+
+    for (const r of roles) {
+        const count = attendees.filter(r.filter).length;
+        document.getElementById(`csvStat${r.short}`).innerHTML = `<span style="color:#059669; font-weight:600;">✓ ${count} Records</span>`;
+
+        if (uploadedPdfBase64[r.key]) {
+            certTemplateCache[r.key] = uploadedPdfBase64[r.key];
+            document.getElementById(`pdfStat${r.short}`).innerHTML = `<span style="color:#059669; font-weight:600;">✓ PDF Ready</span>`;
+            continue;
+        }
+
+        let pdfLoaded = false;
+        if (r.url) {
+            try {
+                const res = await fetch(r.url);
+                if (res.ok) {
+                    const blob = await res.blob();
+                    certTemplateCache[r.key] = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                        reader.readAsDataURL(blob);
+                    });
+                    document.getElementById(`pdfStat${r.short}`).innerHTML = `<span style="color:#059669; font-weight:600;">✓ PDF Ready</span>`;
+                    pdfLoaded = true;
+                }
+            } catch (_) {}
+        }
+
+        if (!pdfLoaded) {
+            const localPdfHit = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.certPdfs[r.key] || []);
+            if (localPdfHit) {
+                try {
+                    const blob = await localPdfHit.response.blob();
+                    certTemplateCache[r.key] = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                        reader.readAsDataURL(blob);
+                    });
+                    document.getElementById(`pdfStat${r.short}`).innerHTML = `<span style="color:#059669; font-weight:600;">✓ ${localPdfHit.path}</span>`;
+                    pdfLoaded = true;
+                } catch (_) {}
+            }
+        }
+
+        if (!pdfLoaded) {
+            document.getElementById(`pdfStat${r.short}`).innerHTML = `<span style="color:var(--gray);">No PDF found</span>`;
+        }
+    }
+}
+
+function openRoleDownloader(roleKey) {
+    const body = document.getElementById('certPortalBody');
+    const records = attendees.filter(a => {
+        if (roleKey === 'Participant') return a.role.includes('Participant');
+        return a.role === roleKey;
+    });
+
+    body.innerHTML = `
+        <div style="text-align:center; padding: 15px 10px;">
+            <span class="event-badge">${roleKey.toUpperCase()} CERTIFICATE</span>
+            <h3 style="margin:8px 0; color:var(--primary);">Download Your E-Certificate</h3>
+            <p style="color:var(--gray); font-size:12px;">Enter the email address used during registration (${records.length} registered ${roleKey.toLowerCase()}s).</p>
+            <input type="email" id="certUserEmail" placeholder="name@domain.com" style="max-width:420px; text-align:center; margin:12px auto; display:block; padding:11px;">
+            <button id="btnGenerateCert" class="btn btn-primary" style="width:100%; max-width:420px; padding:12px; font-size:13px;">⬇️ GENERATE & DOWNLOAD PDF</button>
+            <p id="certStatusMsg" style="margin-top:12px; font-size:12px; font-weight:700;"></p>
+            <button onclick="resetCertPortalBody()" style="margin-top:14px; background:none; border:none; color:var(--primary); cursor:pointer; text-decoration:underline; font-weight:600;">← Back to Role Selection</button>
+        </div>
+    `;
+
+    document.getElementById('btnGenerateCert').onclick = async () => {
+        const email = document.getElementById('certUserEmail').value.toLowerCase().trim();
+        const msg = document.getElementById('certStatusMsg');
+        const user = records.find(u => u.email && u.email.toLowerCase() === email);
+
+        if (!user) {
+            msg.style.color = "#be123c";
+            msg.textContent = "Email not found in this role category. Please verify your registration email.";
+            return;
+        }
+
+        const pdfBase64 = certTemplateCache[roleKey];
+        if (!pdfBase64) {
+            msg.style.color = "#be123c";
+            msg.textContent = "Certificate PDF template is not available yet.";
+            return;
+        }
+
+        msg.style.color = "#d97706";
+        msg.textContent = "Rendering personalized certificate...";
+
+        try {
+            const pdfBytes = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
+            const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+            const font = await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRomanBoldItalic);
+            const page = pdfDoc.getPages()[0];
+
+            const fontSize = Number(eventConfig.certSize) || 34;
+            const yPos = Number(eventConfig.certY) || 322;
+            const textWidth = font.widthOfTextAtSize(user.name, fontSize);
+
+            page.drawText(user.name, {
+                x: (page.getSize().width / 2) - (textWidth / 2),
+                y: yPos,
+                size: fontSize,
+                font,
+                color: PDFLib.rgb(0.08, 0.12, 0.25)
+            });
+
+            const finalPdf = await pdfDoc.save();
+            downloadLog.push({
+                name: user.name,
+                email: user.email,
+                role: roleKey,
+                event: eventConfig.eventTitle || "Event",
+                time: new Date().toLocaleString()
+            });
+            localStorage.setItem('prod_cert_logs', JSON.stringify(downloadLog));
+
+            const blob = new Blob([finalPdf], { type: "application/pdf" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${user.name.replace(/\s+/g, '_')}_Certificate.pdf`;
+            link.click();
+
+            msg.style.color = "#059669";
+            msg.textContent = "Success! Your certificate download has started.";
+        } catch (err) {
+            msg.style.color = "#be123c";
+            msg.textContent = "Error generating PDF certificate.";
+        }
+    };
+}
+
+function resetCertPortalBody() {
+    document.getElementById('certPortalBody').innerHTML = `
+        <div class="role-section" style="background: #f8fafc;">
+            <div class="role-name">PARTICIPANTS</div>
+            <div class="status-msg" id="pdfStatP">Checking same folder / URL...</div>
+            <div class="status-msg" id="csvStatP">0 Records</div>
+            <button class="btn btn-primary" id="btnP" onclick="openRoleDownloader('Participant')">PARTICIPANTS PORTAL</button>
+        </div>
+        <div class="role-section">
+            <div class="role-name">ORGANIZERS</div>
+            <div class="status-msg" id="pdfStatO">Checking same folder / URL...</div>
+            <div class="status-msg" id="csvStatO">0 Records</div>
+            <button class="btn btn-primary" id="btnO" onclick="openRoleDownloader('Organiser')">ORGANIZERS PORTAL</button>
+        </div>
+        <div class="role-section">
+            <div class="role-name">SPEAKERS</div>
+            <div class="status-msg" id="pdfStatS">Checking same folder / URL...</div>
+            <div class="status-msg" id="csvStatS">0 Records</div>
+            <button class="btn btn-primary" id="btnS" onclick="openRoleDownloader('Speaker')">SPEAKERS PORTAL</button>
+        </div>
+    `;
+    prepareCertificatePortal();
+}
+
+function checkCertAdmin() {
+    if (!eventConfig.adminEmail) {
+        alert("Set an Admin Email in '⚙️ Setup & Data URLs' first to protect the audit log.");
+        return;
+    }
+    const email = prompt("Enter Admin Email to view Certificate Download Log:");
+    if (email && email.toLowerCase().trim() === eventConfig.adminEmail.toLowerCase().trim()) {
+        const rows = downloadLog.map(l => `<tr><td>${l.name}</td><td>${l.email}</td><td>${l.role}</td><td>${l.time}</td></tr>`).join('');
+        document.getElementById('certPortalBody').innerHTML = `
+            <h3 style="color:var(--primary); margin-top:0;">Certificate Download Audit Log</h3>
+            <div style="max-height:300px; overflow-y:auto;">
+                <table class="report-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Downloaded At</th></tr></thead>
+                    <tbody>${rows || '<tr><td colspan="4" style="text-align:center;">No certificates downloaded yet.</td></tr>'}</tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="resetCertPortalBody()">← Back to Portal</button>
+        `;
+    } else if (email !== null) {
+        alert("Access Denied.");
+    }
+}
+
+/* =========================================================
+   SETUP & DATA SOURCES CONFIGURATOR MODAL
+   ========================================================= */
+function openSettingsModal() {
+    document.getElementById('cfgOrgSector').value = eventConfig.orgSector;
+    document.getElementById('cfgEventType').value = eventConfig.eventType;
+    document.getElementById('cfgEventTitle').value = eventConfig.eventTitle;
+    document.getElementById('cfgUniName').value = eventConfig.uniName;
+    document.getElementById('cfgUniAddress').value = eventConfig.uniAddress;
+    document.getElementById('cfgLogo1').value = eventConfig.logo1;
+    document.getElementById('cfgLogo2').value = eventConfig.logo2;
+    document.getElementById('cfgPrimaryColor').value = eventConfig.primaryColor;
+    document.getElementById('cfgAccentColor').value = eventConfig.accentColor;
+    document.getElementById('cfgAdminEmail').value = eventConfig.adminEmail;
+
+    document.getElementById('cfgUrlParticipants').value = eventConfig.urlParticipants;
+    document.getElementById('cfgUrlCheckin').value = eventConfig.urlCheckin;
+    document.getElementById('cfgUrlOnsite').value = eventConfig.urlOnsite;
+    document.getElementById('cfgUrlOrganisers').value = eventConfig.urlOrganisers;
+    document.getElementById('cfgUrlSpeakers').value = eventConfig.urlSpeakers;
+    document.getElementById('cfgAutoSync').value = eventConfig.autoSyncSec;
+
+    document.getElementById('cfgFormPreReg').value = eventConfig.formPreReg;
+    document.getElementById('cfgFormOnSite').value = eventConfig.formOnSite;
+    document.getElementById('cfgFormFeedback').value = eventConfig.formFeedback;
+    document.getElementById('cfgFlowPdf').value = eventConfig.flowPdf;
+
+    document.getElementById('cfgPdfParticipant').value = eventConfig.pdfParticipant;
+    document.getElementById('cfgPdfOrganiser').value = eventConfig.pdfOrganiser;
+    document.getElementById('cfgPdfSpeaker').value = eventConfig.pdfSpeaker;
+    document.getElementById('cfgCertY').value = eventConfig.certY;
+    document.getElementById('cfgCertSize').value = eventConfig.certSize;
+    document.getElementById('cfgExpiry').value = eventConfig.expiryDate;
+
+    document.getElementById('settingsModal').style.display = 'flex';
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').style.display = 'none';
+}
+
+async function saveSettings() {
+    eventConfig.orgSector = document.getElementById('cfgOrgSector').value;
+    eventConfig.eventType = document.getElementById('cfgEventType').value;
+    eventConfig.eventTitle = document.getElementById('cfgEventTitle').value.trim();
+    eventConfig.uniName = document.getElementById('cfgUniName').value.trim();
+    eventConfig.uniAddress = document.getElementById('cfgUniAddress').value.trim();
+    eventConfig.logo1 = document.getElementById('cfgLogo1').value.trim();
+    eventConfig.logo2 = document.getElementById('cfgLogo2').value.trim();
+    eventConfig.primaryColor = document.getElementById('cfgPrimaryColor').value;
+    eventConfig.accentColor = document.getElementById('cfgAccentColor').value;
+    eventConfig.adminEmail = document.getElementById('cfgAdminEmail').value.trim();
+
+    eventConfig.urlParticipants = document.getElementById('cfgUrlParticipants').value.trim();
+    eventConfig.urlCheckin = document.getElementById('cfgUrlCheckin').value.trim();
+    eventConfig.urlOnsite = document.getElementById('cfgUrlOnsite').value.trim();
+    eventConfig.urlOrganisers = document.getElementById('cfgUrlOrganisers').value.trim();
+    eventConfig.urlSpeakers = document.getElementById('cfgUrlSpeakers').value.trim();
+    eventConfig.autoSyncSec = parseInt(document.getElementById('cfgAutoSync').value, 10) || 0;
+
+    eventConfig.formPreReg = document.getElementById('cfgFormPreReg').value.trim();
+    eventConfig.formOnSite = document.getElementById('cfgFormOnSite').value.trim();
+    eventConfig.formFeedback = document.getElementById('cfgFormFeedback').value.trim();
+    eventConfig.flowPdf = document.getElementById('cfgFlowPdf').value.trim();
+
+    eventConfig.pdfParticipant = document.getElementById('cfgPdfParticipant').value.trim();
+    eventConfig.pdfOrganiser = document.getElementById('cfgPdfOrganiser').value.trim();
+    eventConfig.pdfSpeaker = document.getElementById('cfgPdfSpeaker').value.trim();
+    eventConfig.certY = parseInt(document.getElementById('cfgCertY').value, 10) || 322;
+    eventConfig.certSize = parseInt(document.getElementById('cfgCertSize').value, 10) || 34;
+    eventConfig.expiryDate = document.getElementById('cfgExpiry').value.trim();
+
+    localStorage.setItem('prod_cms_config', JSON.stringify(eventConfig));
+    await detectLocalAssets();
+    closeSettingsModal();
+    await syncAllSources(true);
+}
+
+function uploadLocalImage(input, targetInputId) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { document.getElementById(targetInputId).value = e.target.result; };
+    reader.readAsDataURL(file);
+}
+
+function uploadLocalPdf(input, roleKey) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const base64 = e.target.result.split(',')[1];
+        uploadedPdfBase64[roleKey] = base64;
+        certTemplateCache[roleKey] = base64;
+        localStorage.setItem('prod_cms_pdfs', JSON.stringify(uploadedPdfBase64));
+        alert(`${roleKey} PDF template loaded!`);
+    };
+    reader.readAsDataURL(file);
+}
+
+function exportConfigJson() {
+    const blob = new Blob([JSON.stringify(eventConfig, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const name = (eventConfig.eventTitle || "Event_Profile").replace(/\s+/g, '_');
+    a.download = `${name}_Config.json`;
+    a.click();
+}
+
+function importConfigJson(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const parsed = JSON.parse(e.target.result);
+            eventConfig = Object.assign({}, EMPTY_CONFIG, parsed);
+            localStorage.setItem('prod_cms_config', JSON.stringify(eventConfig));
+            openSettingsModal();
+            applyBranding();
+            alert("Event profile imported!");
+        } catch (err) {
+            alert("Invalid JSON configuration file.");
+        }
+    };
+    reader.readAsText(file);
+}
+
+function factoryReset() {
+    if (confirm("Wipe all configuration, logos, URLs, and cached attendee data?")) {
+        eventConfig = Object.assign({}, EMPTY_CONFIG);
+        attendees = [];
+        downloadLog = [];
+        uploadedPdfBase64 = {};
+        activeFlowSource = "";
+        localStorage.removeItem('prod_cms_config');
+        localStorage.removeItem('prod_cms_attendees');
+        localStorage.removeItem('prod_cert_logs');
+        localStorage.removeItem('prod_cms_pdfs');
+        openSettingsModal();
+        applyBranding();
+        filterRole('All');
+        updateStats();
+    }
+}
+
+/* =========================================================
+   FULLSCREEN, STATS OVERLAY & PROGRAM FLOW SCROLLER
+   ========================================================= */
+function toggleFullScreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+}
+function showFullscreenStats() { document.getElementById('statsOverlay').style.display = 'flex'; updateStats(); }
+function closeStats() { document.getElementById('statsOverlay').style.display = 'none'; }
+
+async function startFlow() {
+    let target = eventConfig.flowPdf || activeFlowSource;
+    if (!target) {
+        const hit = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.flowPdfs);
+        if (hit) target = hit.path;
+    }
+    if (!target) {
+        alert("No Program Flow PDF found. Place 'Program Flow.pdf' in this folder or set its URL in Setup.");
+        return;
+    }
+    document.getElementById('flowIframe').src = `${encodeURI(target)}#toolbar=0&navpanes=0`;
+    const overlay = document.getElementById('flowOverlay');
+    const scroller = document.getElementById('scroller');
+    overlay.style.display = 'block';
+    scrollPos = window.innerHeight;
+
+    function move() {
+        scrollPos -= 0.8;
+        scroller.style.transform = `translateY(${scrollPos}px)`;
+        if (Math.abs(scrollPos) > scroller.offsetHeight) scrollPos = window.innerHeight;
+        animId = requestAnimationFrame(move);
+    }
+    cancelAnimationFrame(animId);
+    move();
+}
+
+function stopFlow() {
+    document.getElementById('flowOverlay').style.display = 'none';
+    cancelAnimationFrame(animId);
 }
 
 document.addEventListener('keydown', (e) => {
@@ -583,17 +2211,27 @@ document.addEventListener('keydown', (e) => {
         stopFlow();
         closeStats();
         closeModal();
+        closeSettingsModal();
     }
 });
 
-function toggleGeoFence() { isGeoFenceEnabled = !isGeoFenceEnabled; document.getElementById('geoBtn').textContent = isGeoFenceEnabled ? "📍 Location: ON" : "📍 Location: OFF"; }
-function handleCurtainClick() { document.getElementById('qrCurtain').classList.toggle('open'); }
-function closeModal() { document.getElementById('regModal').style.display='none'; clearInterval(qrExpiryInterval); }
-function openCertLink() { window.open('5th Symposium Certificates.html'); }
-function downloadReport() { let csv = "Name,Role,Status\n"; attendees.forEach(p => csv += `"${p.name}","${p.role}","${p.status}"\n`); window.open(URL.createObjectURL(new Blob([csv], {type:'text/csv'}))); }
-
 document.getElementById('combinedDropdown').onchange = (e) => selectUserByName(e.target.value);
-window.onload = () => { initChart(); filterRole('All'); updateStats(); modalQR.append(document.getElementById("regModalQR")); resetIdleTimer(); };
+
+window.onload = async () => {
+    initCharts();
+    filterRole('All');
+    updateStats();
+    await detectLocalAssets();
+
+    if (attendees.length === 0) {
+        await syncAllSources(true);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'certs') {
+        switchView('certs');
+    }
+};
 </script>
 </body>
 </html>
