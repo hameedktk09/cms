@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event & Conference Management System (CMS)</title>
+    <title>5th International Symposium 2027 (ASU-CFS) — CMS & Certificate Portal</title>
 
     <!-- Production Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -42,7 +42,6 @@
             overflow-x: hidden;
         }
 
-        /* Full-screen feel, slightly smaller than PC screen (94vw x 92vh) */
         .app-shell {
             width: 94vw;
             height: 92vh;
@@ -118,7 +117,6 @@
             flex-wrap: wrap;
         }
 
-        /* SEPARATE APP MODE SWITCHER */
         .mode-switcher {
             display: flex;
             background: #f1f5f9;
@@ -185,7 +183,6 @@
         .btn-flow { background: #b45309; color: white; border: none; }
         .btn-dark { background: #1e293b; color: white; border: none; }
 
-        /* Deep Gradient Feedback Button */
         .btn-feedback {
             background: linear-gradient(135deg, #064e3b 0%, #0f766e 50%, #1d4ed8 100%);
             color: white;
@@ -347,7 +344,6 @@
         }
         .info-item b { font-size: 9.5px; text-transform: uppercase; color: var(--gray); display: block; margin-bottom: 2px; }
 
-        /* Action Grid: Feedback button placed directly under Report */
         .action-grid {
             grid-column: span 2;
             display: grid;
@@ -372,9 +368,7 @@
 
         .stats-grid p { margin: 4px 0; display: flex; justify-content: space-between; font-size: 11px; }
 
-        /* =========================================================
-           SEPARATE CERTIFICATE PORTAL VIEW
-           ========================================================= */
+        /* CERTIFICATE PORTAL VIEW */
         .cert-portal-wrapper {
             flex: 1;
             background: #f1f5f9;
@@ -433,7 +427,7 @@
             max-height: 92vh; overflow-y: auto;
             box-shadow: 0 25px 50px rgba(0,0,0,0.4);
         }
-        .modal-content.wide { max-width: 860px; text-align: left; }
+        .modal-content.wide { max-width: 880px; text-align: left; }
         .modal-qr-container {
             width: 310px; height: 310px; margin: 0 auto 12px auto;
             display: flex; align-items: center; justify-content: center;
@@ -447,14 +441,31 @@
             object-fit: contain;
         }
 
-        /* SETTINGS GRID */
         .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
         .settings-group { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .settings-group h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 12px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
         .field-row { margin-bottom: 8px; }
         .field-row label { display: block; font-size: 10px; font-weight: 700; color: var(--gray); margin-bottom: 3px; text-transform: uppercase; }
 
-        /* FULLSCREEN ANALYTICS & PROGRAM FLOW */
+        .auto-scan-banner {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .auto-scan-status {
+            font-size: 11px;
+            color: #1e3a8a;
+            font-weight: 600;
+            width: 100%;
+        }
+
         #flowOverlay, #statsOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; z-index: 9999; display: none; overflow: hidden;
@@ -530,14 +541,13 @@
             <img id="hdrLogo1" src="" class="banner-img" alt="Institution Logo" style="display:none;">
             <img id="hdrLogo2" src="" class="banner-img" alt="Partner Logo" style="display:none;">
             <div>
-                <span class="event-badge" id="hdrEventType">ACADEMIC & INSTITUTIONAL EVENT PLATFORM</span>
-                <h2 id="hdrTitle" style="margin:0; font-size:1.18rem; color:var(--primary);">CONFERENCE & EVENT MANAGEMENT SYSTEM (CMS)</h2>
-                <p id="hdrSubtitle" style="margin:0; color:var(--gray); font-size: 11px;">Reads Google Sheet URLs directly (no publishing required) or local folder files</p>
+                <span class="event-badge" id="hdrEventType">UNIVERSITY • SYMPOSIUM</span>
+                <h2 id="hdrTitle" style="margin:0; font-size:1.18rem; color:var(--primary);">5th International Symposium 2027 (ASU-CFS) — CMS</h2>
+                <p id="hdrSubtitle" style="margin:0; color:var(--gray); font-size: 11px;">A'Sharqiyah University (ASU) • Auto-fills from same folder & Google Sheets</p>
             </div>
         </div>
 
         <div class="header-actions">
-            <!-- Separate App Mode Switcher -->
             <div class="mode-switcher">
                 <button class="mode-btn active" id="tabCms" onclick="switchView('cms')">🖥️ CMS Dashboard</button>
                 <button class="mode-btn" id="tabCerts" onclick="switchView('certs')">🎓 E-Certificate Portal</button>
@@ -554,13 +564,10 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         VIEW 1: CONFERENCE MANAGEMENT SYSTEM (CMS DASHBOARD)
-         ========================================================= -->
+    <!-- VIEW 1: CONFERENCE MANAGEMENT SYSTEM (CMS DASHBOARD) -->
     <div id="cmsView" class="view-section">
         <div class="controls">
             <div class="controls-grid">
-                <!-- Column 1: Role Filters -->
                 <div>
                     <label style="font-size:10px; font-weight:700; color: var(--gray);">ROLE FILTERS</label>
                     <div class="btn-pair">
@@ -573,7 +580,6 @@
                     </div>
                 </div>
 
-                <!-- Column 2: Data Sync & Guest Management -->
                 <div>
                     <label style="font-size:10px; font-weight:700; color: var(--gray);">LIVE DATA SYNC & GUEST MANAGEMENT</label>
                     <div class="btn-pair">
@@ -599,7 +605,6 @@
                     </div>
                 </div>
 
-                <!-- Column 3: Search & Deep Gradient QR Access -->
                 <div>
                     <label style="font-size:10px; font-weight:700; color: var(--gray);">SEARCH & QRCODE MONKEY ACCESS</label>
                     <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; margin-top: 5px;">
@@ -617,7 +622,6 @@
         </div>
 
         <div class="main-content">
-            <!-- Left Panel: Attendee Card & Action Buttons -->
             <div class="panel">
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
                     <div style="display:flex; align-items:center; gap:10px;">
@@ -628,13 +632,11 @@
                 </div>
 
                 <div style="display:flex; gap:18px; align-items:flex-start;">
-                    <!-- Check-in QR Frame -->
                     <div class="qr-frame" onclick="handleCurtainClick()" title="Click to toggle Check-In QR">
                         <div id="qrCurtain" class="qr-curtain">Click to Reveal<br>Check-In QR</div>
                         <div id="mainCheckinQR"></div>
                     </div>
 
-                    <!-- Attendee Info mapped to exact sheet columns + Report + Feedback QR under Report -->
                     <div class="info-grid">
                         <div class="info-item"><b>Status</b><div id="valStatus" style="font-weight:700; color:var(--danger);">-</div></div>
                         <div class="info-item"><b>Category / Role</b><div id="valCategory" style="font-weight:600;">-</div></div>
@@ -643,7 +645,6 @@
                         <div class="info-item"><b>Contact Number</b><div id="valContact">-</div></div>
                         <div class="info-item" style="grid-column: span 2;"><b>Email Address</b><div id="valEmail">-</div></div>
 
-                        <!-- Action Grid: Feedback button strictly under Report button -->
                         <div class="action-grid">
                             <div class="report-feedback-col">
                                 <button class="btn btn-dark" onclick="downloadReport()">📄 Report</button>
@@ -657,7 +658,6 @@
                 </div>
             </div>
 
-            <!-- Right Panel: Live Stats Breakdown -->
             <div class="panel">
                 <h4 style="margin:0 0 6px 0; color: var(--secondary); border-bottom: 2px solid #f1f5f9; padding-bottom: 4px;">📊 Live Stats Breakdown</h4>
                 <div style="height: 135px; margin-bottom: 8px;"><canvas id="statChart"></canvas></div>
@@ -671,9 +671,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         VIEW 2: SEPARATE SELF-SERVICE E-CERTIFICATE PORTAL
-         ========================================================= -->
+    <!-- VIEW 2: SEPARATE SELF-SERVICE E-CERTIFICATE PORTAL -->
     <div id="certView" class="view-section hidden">
         <div class="cert-portal-wrapper">
             <div class="builder-card" id="certCard">
@@ -685,8 +683,8 @@
 
                 <div class="cert-header">
                     <img id="certLogo" src="" alt="Institution Logo" style="display:none;">
-                    <h2 id="certEventTitle" style="margin:4px 0; color:var(--primary);">E-Certificate Verification & Download Portal</h2>
-                    <p id="certUniSubtitle" style="margin:0; color:var(--gray);">Self-Service Digital Certificate Distribution</p>
+                    <h2 id="certEventTitle" style="margin:4px 0; color:var(--primary);">5th International Symposium 2027 (ASU-CFS)</h2>
+                    <p id="certUniSubtitle" style="margin:0; color:var(--gray);">A'Sharqiyah University (ASU)</p>
                     <span class="expiry-notice" id="certExpiryText"></span>
                 </div>
 
@@ -714,13 +712,10 @@
         </div>
     </div>
 
-    <!-- DYNAMIC FOOTER -->
     <footer id="dynamicFooter"></footer>
 </div>
 
-<!-- =========================================================
-     QRCODE MONKEY DEEP GRADIENT MODAL
-     ========================================================= -->
+<!-- QRCODE MONKEY DEEP GRADIENT MODAL -->
 <div id="regModal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span id="modalBadge" class="event-badge" style="margin-bottom:6px;">QRCODE MONKEY • DEEP GRADIENT</span>
@@ -744,9 +739,7 @@
     </div>
 </div>
 
-<!-- =========================================================
-     PRODUCTION INSTITUTION & DATA SOURCE CONFIGURATOR MODAL
-     ========================================================= -->
+<!-- SETUP & DATA SOURCE CONFIGURATOR MODAL -->
 <div id="settingsModal" class="modal-overlay" onclick="closeSettingsModal()">
     <div class="modal-content wide" onclick="event.stopPropagation()">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
@@ -754,9 +747,16 @@
             <button class="btn btn-danger" onclick="closeSettingsModal()">✖</button>
         </div>
 
-        <p style="font-size:11px; color:var(--gray); margin:8px 0;">
-            Paste any standard <b>Google Sheet link</b> (<i>"Anyone with the link can view"</i> — no need to publish to web), GitHub Raw CSV URL, or leave blank to auto-detect files in your hosted folder (<b>Participants.csv</b>, <b>5Check-in Participants.csv</b>, <b>On-Site Participants.csv</b>, <b>Organisers.csv</b>, <b>Speakers.csv</b>, etc.).
-        </p>
+        <div class="auto-scan-banner" style="margin-top:10px;">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; flex:1;">
+                <button type="button" class="btn btn-sync" onclick="autoFillSetupFromFolder(true)">✨ Auto-Fill from Same Folder</button>
+                <div style="display:flex; gap:6px; align-items:center; flex:1; min-width:240px;">
+                    <input type="text" id="cfgGitHubRepoPath" placeholder="GitHub folder: hameedktk09/cms (or owner/repo/subfolder)" style="padding:5px 8px; font-size:11px;">
+                    <button type="button" class="btn btn-primary" onclick="scanGitHubFolderAndFill(true)" style="white-space:nowrap;">🔎 Scan GitHub Folder</button>
+                </div>
+            </div>
+            <div id="autoFillStatus" class="auto-scan-status">Ready to auto-fill from the current folder or GitHub repository folder.</div>
+        </div>
 
         <div class="settings-grid">
             <!-- 1. Organization & Event Branding -->
@@ -801,14 +801,14 @@
                 <div class="field-row">
                     <label>Primary Institution Logo (URL or Upload)</label>
                     <div style="display:flex; gap:5px;">
-                        <input type="url" id="cfgLogo1" placeholder="Auto-detects local logo if empty...">
+                        <input type="url" id="cfgLogo1" placeholder="Auto-fills from same folder...">
                         <input type="file" accept="image/*" style="width:95px; font-size:10px;" onchange="uploadLocalImage(this, 'cfgLogo1')">
                     </div>
                 </div>
                 <div class="field-row">
                     <label>Secondary / Co-Host Logo (Optional)</label>
                     <div style="display:flex; gap:5px;">
-                        <input type="url" id="cfgLogo2" placeholder="Auto-detects secondary local logo if present...">
+                        <input type="url" id="cfgLogo2" placeholder="Auto-fills secondary logo if present...">
                         <input type="file" accept="image/*" style="width:95px; font-size:10px;" onchange="uploadLocalImage(this, 'cfgLogo2')">
                     </div>
                 </div>
@@ -857,7 +857,7 @@
                 </div>
             </div>
 
-            <!-- 3. Interactive Form Links (QRCode Monkey Gradients & Local QR Images) -->
+            <!-- 3. Interactive Form Links -->
             <div class="settings-group">
                 <h4>3. Form URLs & Folder QR Fallback</h4>
                 <div class="field-row">
@@ -874,7 +874,7 @@
                 </div>
                 <div class="field-row">
                     <label>Program Flow PDF URL (Fallback: Program Flow.pdf)</label>
-                    <input type="url" id="cfgFlowPdf" placeholder="Leave blank to auto-detect Program Flow.pdf">
+                    <input type="url" id="cfgFlowPdf" placeholder="Auto-fills Program Flow.pdf if found in folder...">
                 </div>
             </div>
 
@@ -884,21 +884,21 @@
                 <div class="field-row">
                     <label>Participant PDF (Fallback: Participant.pdf)</label>
                     <div style="display:flex; gap:5px;">
-                        <input type="url" id="cfgPdfParticipant" placeholder="Leave blank to use Participant.pdf">
+                        <input type="url" id="cfgPdfParticipant" placeholder="Auto-fills Participant.pdf if found in folder...">
                         <input type="file" accept="application/pdf" style="width:95px; font-size:10px;" onchange="uploadLocalPdf(this, 'Participant')">
                     </div>
                 </div>
                 <div class="field-row">
                     <label>Organiser PDF (Fallback: Organizer.pdf / Organiser.pdf)</label>
                     <div style="display:flex; gap:5px;">
-                        <input type="url" id="cfgPdfOrganiser" placeholder="Leave blank to use Organizer.pdf">
+                        <input type="url" id="cfgPdfOrganiser" placeholder="Auto-fills Organizer.pdf if found in folder...">
                         <input type="file" accept="application/pdf" style="width:95px; font-size:10px;" onchange="uploadLocalPdf(this, 'Organiser')">
                     </div>
                 </div>
                 <div class="field-row">
                     <label>Speaker PDF (Fallback: Speakers.pdf)</label>
                     <div style="display:flex; gap:5px;">
-                        <input type="url" id="cfgPdfSpeaker" placeholder="Leave blank to use Speakers.pdf">
+                        <input type="url" id="cfgPdfSpeaker" placeholder="Auto-fills Speakers.pdf if found in folder...">
                         <input type="file" accept="application/pdf" style="width:95px; font-size:10px;" onchange="uploadLocalPdf(this, 'Speaker')">
                     </div>
                 </div>
@@ -934,20 +934,21 @@
 </div>
 
 <script>
-const EMPTY_CONFIG = {
+const DEFAULT_CONFIG = {
     orgSector: "UNIVERSITY",
     eventType: "SYMPOSIUM",
-    eventTitle: "",
-    uniName: "",
+    eventTitle: "5th International Symposium 2027 (ASU-CFS)",
+    uniName: "A'Sharqiyah University (ASU)",
     uniUrl: "",
-    uniAddress: "",
+    uniAddress: "Center for Foundation Studies (CFS), Ibra, Sultanate of Oman",
     adminEmail: "",
     logo1: "",
     logo2: "",
     primaryColor: "#0f172a",
     accentColor: "#0284c7",
     expiryDate: "",
-    urlParticipants: "",
+    githubRepoPath: "hameedktk09/cms",
+    urlParticipants: "https://docs.google.com/spreadsheets/d/1r_yGN5CLYOrmjtDEViqVCdwKbN1WGDEN0exVT2vfRVc/edit?usp=sharing",
     urlCheckin: "",
     urlOnsite: "",
     urlOrganisers: "",
@@ -964,21 +965,20 @@ const EMPTY_CONFIG = {
     autoSyncSec: 0
 };
 
-// Same-folder / hosted-directory filenames probed automatically when URLs are empty or fail
 const LOCAL_FOLDER_FILES = {
     csvFeeds: [
-        { names: ["Participants.csv"], role: "Participant", checkin: false },
-        { names: ["5Check-in Participants.csv", "Check-in Participants.csv"], role: "Participant", checkin: true },
-        { names: ["On-Site Participants.csv"], role: "Participant (New)", checkin: true },
-        { names: ["Organisers.csv", "Organizers.csv"], role: "Organiser", checkin: true },
-        { names: ["Speakers.csv"], role: "Speaker", checkin: false }
+        { field: "urlParticipants", names: ["Participants.csv"], role: "Participant", checkin: false },
+        { field: "urlCheckin", names: ["5Check-in Participants.csv", "Check-in Participants.csv"], role: "Participant", checkin: true },
+        { field: "urlOnsite", names: ["On-Site Participants.csv"], role: "Participant (New)", checkin: true },
+        { field: "urlOrganisers", names: ["Organisers.csv", "Organizers.csv"], role: "Organiser", checkin: true },
+        { field: "urlSpeakers", names: ["Speakers.csv"], role: "Speaker", checkin: false }
     ],
     logos: ["ASU-logo.png", "cfsasu.png", "Certi-logo.png", "Symposium Banner.png"],
     flowPdfs: ["Program Flow.pdf"],
     certPdfs: {
-        Participant: ["Participant.pdf"],
-        Organiser: ["Organizer.pdf", "Organiser.pdf"],
-        Speaker: ["Speakers.pdf", "Speaker.pdf"]
+        Participant: { field: "pdfParticipant", names: ["Participant.pdf"] },
+        Organiser: { field: "pdfOrganiser", names: ["Organizer.pdf", "Organiser.pdf"] },
+        Speaker: { field: "pdfSpeaker", names: ["Speakers.pdf", "Speaker.pdf"] }
     },
     qrImages: {
         "CHECK-IN": ["Check-in QR.png", "Reg QR.png"],
@@ -988,7 +988,6 @@ const LOCAL_FOLDER_FILES = {
     }
 };
 
-// Deep Color Gradient Profiles per Category (for QRCode Monkey API & Local Vector Fallback)
 const CATEGORY_QR_GRADIENTS = {
     "PRE-REG": {
         label: "DEEP INDIGO • PRE-REGISTRATION",
@@ -1032,7 +1031,12 @@ const CATEGORY_QR_GRADIENTS = {
     }
 };
 
-let eventConfig = Object.assign({}, EMPTY_CONFIG, JSON.parse(localStorage.getItem('prod_cms_config') || '{}'));
+let savedConfig = JSON.parse(localStorage.getItem('prod_cms_config') || '{}');
+let eventConfig = Object.assign({}, DEFAULT_CONFIG, savedConfig);
+if (!eventConfig.urlParticipants) {
+    eventConfig.urlParticipants = DEFAULT_CONFIG.urlParticipants;
+}
+
 let attendees = JSON.parse(localStorage.getItem('prod_cms_attendees') || '[]');
 let downloadLog = JSON.parse(localStorage.getItem('prod_cert_logs') || '[]');
 let uploadedPdfBase64 = JSON.parse(localStorage.getItem('prod_cms_pdfs') || '{}');
@@ -1067,8 +1071,17 @@ const fallbackLocalQR = new QRCodeStyling({
 });
 
 /* =========================================================
-   SAME-FOLDER / HOSTED DIRECTORY PROBING HELPERS
+   SAME-FOLDER & GITHUB DIRECTORY AUTO-FILL ENGINE
    ========================================================= */
+function getCurrentDirectoryBaseUrl() {
+    const loc = window.location;
+    if (!loc.origin || loc.origin === "null") return "";
+    const dirPath = loc.pathname.endsWith("/")
+        ? loc.pathname
+        : loc.pathname.substring(0, loc.pathname.lastIndexOf("/") + 1);
+    return `${loc.origin}${dirPath}`;
+}
+
 async function probeFirstAvailableFile(candidates) {
     for (const relPath of candidates) {
         try {
@@ -1081,27 +1094,240 @@ async function probeFirstAvailableFile(candidates) {
     return null;
 }
 
-async function detectLocalAssets() {
-    if (!eventConfig.logo1 || !eventConfig.logo2) {
-        const foundLogos = [];
-        for (const logoName of LOCAL_FOLDER_FILES.logos) {
+function setAutoFillStatus(text, isError = false) {
+    const el = document.getElementById('autoFillStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = isError ? "#be123c" : "#1e3a8a";
+}
+
+function populateSetupFormFromConfig() {
+    document.getElementById('cfgOrgSector').value = eventConfig.orgSector;
+    document.getElementById('cfgEventType').value = eventConfig.eventType;
+    document.getElementById('cfgEventTitle').value = eventConfig.eventTitle;
+    document.getElementById('cfgUniName').value = eventConfig.uniName;
+    document.getElementById('cfgUniAddress').value = eventConfig.uniAddress;
+    document.getElementById('cfgLogo1').value = eventConfig.logo1;
+    document.getElementById('cfgLogo2').value = eventConfig.logo2;
+    document.getElementById('cfgPrimaryColor').value = eventConfig.primaryColor;
+    document.getElementById('cfgAccentColor').value = eventConfig.accentColor;
+    document.getElementById('cfgAdminEmail').value = eventConfig.adminEmail;
+    document.getElementById('cfgGitHubRepoPath').value = eventConfig.githubRepoPath || "hameedktk09/cms";
+
+    document.getElementById('cfgUrlParticipants').value = eventConfig.urlParticipants;
+    document.getElementById('cfgUrlCheckin').value = eventConfig.urlCheckin;
+    document.getElementById('cfgUrlOnsite').value = eventConfig.urlOnsite;
+    document.getElementById('cfgUrlOrganisers').value = eventConfig.urlOrganisers;
+    document.getElementById('cfgUrlSpeakers').value = eventConfig.urlSpeakers;
+    document.getElementById('cfgAutoSync').value = eventConfig.autoSyncSec;
+
+    document.getElementById('cfgFormPreReg').value = eventConfig.formPreReg;
+    document.getElementById('cfgFormOnSite').value = eventConfig.formOnSite;
+    document.getElementById('cfgFormFeedback').value = eventConfig.formFeedback;
+    document.getElementById('cfgFlowPdf').value = eventConfig.flowPdf;
+
+    document.getElementById('cfgPdfParticipant').value = eventConfig.pdfParticipant;
+    document.getElementById('cfgPdfOrganiser').value = eventConfig.pdfOrganiser;
+    document.getElementById('cfgPdfSpeaker').value = eventConfig.pdfSpeaker;
+    document.getElementById('cfgCertY').value = eventConfig.certY;
+    document.getElementById('cfgCertSize').value = eventConfig.certSize;
+    document.getElementById('cfgExpiry').value = eventConfig.expiryDate;
+}
+
+async function autoFillSetupFromFolder(updateInputs = true) {
+    const baseUrl = getCurrentDirectoryBaseUrl();
+    const toResolvedPath = (rel) => baseUrl ? `${baseUrl}${encodeURI(rel)}` : encodeURI(rel);
+    const matched = [];
+
+    // 1. Logos in same folder
+    const foundLogos = [];
+    for (const logoName of LOCAL_FOLDER_FILES.logos) {
+        const hit = await probeFirstAvailableFile([logoName]);
+        if (hit) foundLogos.push(toResolvedPath(hit.path));
+    }
+    if (!eventConfig.logo1 && foundLogos[0]) {
+        eventConfig.logo1 = foundLogos[0];
+        matched.push("Logo 1");
+    }
+    if (!eventConfig.logo2 && foundLogos[1]) {
+        eventConfig.logo2 = foundLogos[1];
+        matched.push("Logo 2");
+    }
+
+    // 2. CSV feeds in same folder (fill empty fields; only replace default sheet if a local Participants.csv exists)
+    for (const feed of LOCAL_FOLDER_FILES.csvFeeds) {
+        const hit = await probeFirstAvailableFile(feed.names);
+        if (hit) {
+            const resolved = toResolvedPath(hit.path);
+            const isDefaultSheet = eventConfig[feed.field] === DEFAULT_CONFIG.urlParticipants;
+            if (!eventConfig[feed.field] || (feed.field === "urlParticipants" && isDefaultSheet)) {
+                eventConfig[feed.field] = resolved;
+                matched.push(`${hit.path}`);
+            }
+        }
+    }
+
+    // 3. Program Flow PDF in same folder
+    if (!eventConfig.flowPdf) {
+        const flowHit = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.flowPdfs);
+        if (flowHit) {
+            eventConfig.flowPdf = toResolvedPath(flowHit.path);
+            activeFlowSource = eventConfig.flowPdf;
+            matched.push(flowHit.path);
+        }
+    }
+
+    // 4. Certificate PDFs in same folder
+    for (const roleKey of Object.keys(LOCAL_FOLDER_FILES.certPdfs)) {
+        const info = LOCAL_FOLDER_FILES.certPdfs[roleKey];
+        if (!eventConfig[info.field]) {
+            const pdfHit = await probeFirstAvailableFile(info.names);
+            if (pdfHit) {
+                eventConfig[info.field] = toResolvedPath(pdfHit.path);
+                matched.push(pdfHit.path);
+            }
+        }
+    }
+
+    // 5. Optional config.json or event-config.json in the same folder
+    const cfgHit = await probeFirstAvailableFile(["config.json", "event-config.json", "cms-config.json"]);
+    if (cfgHit) {
+        try {
+            const jsonCfg = await cfgHit.response.json();
+            const merged = Object.assign({}, eventConfig, jsonCfg);
+            merged.urlParticipants = merged.urlParticipants || DEFAULT_CONFIG.urlParticipants;
+            eventConfig = merged;
+            matched.push(cfgHit.path);
+        } catch (_) {}
+    }
+
+    localStorage.setItem('prod_cms_config', JSON.stringify(eventConfig));
+    applyBranding();
+    if (updateInputs && document.getElementById('settingsModal').style.display === 'flex') {
+        populateSetupFormFromConfig();
+    }
+
+    if (matched.length > 0) {
+        setAutoFillStatus(`Auto-filled from same folder: ${matched.join(", ")}`);
+    } else {
+        setAutoFillStatus("No extra matching files detected in current folder; keeping current settings & Google Sheet URL.");
+    }
+}
+
+async function scanGitHubFolderAndFill(updateInputs = true) {
+    const inputVal = (document.getElementById('cfgGitHubRepoPath')?.value || eventConfig.githubRepoPath || "hameedktk09/cms").trim();
+    eventConfig.githubRepoPath = inputVal;
+
+    // Supports: "owner/repo", "owner/repo/sub/folder", or "https://github.com/owner/repo/tree/main/folder"
+    let owner = "", repo = "", branch = "", subPath = "";
+    const urlMatch = inputVal.match(/github\.com\/([^/]+)\/([^/]+)(?:\/tree\/([^/]+)\/(.+))?/i);
+    if (urlMatch) {
+        owner = urlMatch[1];
+        repo = urlMatch[2].replace(/\.git$/i, "");
+        branch = urlMatch[3] || "";
+        subPath = (urlMatch[4] || "").replace(/^\/+|\/+$/g, "");
+    } else {
+        const parts = inputVal.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+        owner = parts[0] || "";
+        repo = (parts[1] || "").replace(/\.git$/i, "");
+        subPath = parts.slice(2).join("/");
+    }
+
+    if (!owner || !repo) {
+        setAutoFillStatus("Enter a valid GitHub path such as hameedktk09/cms", true);
+        return;
+    }
+
+    setAutoFillStatus(`Scanning GitHub folder ${owner}/${repo}${subPath ? "/" + subPath : ""}...`);
+
+    try {
+        const apiPath = subPath ? `/contents/${encodeURIComponent(subPath).replace(/%2F/g, "/")}` : "/contents";
+        const refQuery = branch ? `?ref=${encodeURIComponent(branch)}` : "";
+        const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}${apiPath}${refQuery}`;
+
+        const res = await fetch(apiUrl, { headers: { Accept: "application/vnd.github+json" } });
+        if (!res.ok) {
+            throw new Error(`GitHub API returned ${res.status} (check if repo/folder exists and is public)`);
+        }
+
+        const items = await res.json();
+        if (!Array.isArray(items)) {
+            throw new Error("Target path is a single file rather than a folder");
+        }
+
+        const fileMap = new Map();
+        items.forEach(item => {
+            if (item.type === "file" && item.name && item.download_url) {
+                fileMap.set(item.name.toLowerCase(), item.download_url);
+            }
+        });
+
+        const matched = [];
+        const findByNames = (names) => {
+            for (const n of names) {
+                const hit = fileMap.get(n.toLowerCase());
+                if (hit) return hit;
+            }
+            return "";
+        };
+
+        // Match CSVs
+        for (const feed of LOCAL_FOLDER_FILES.csvFeeds) {
+            const rawUrl = findByNames(feed.names);
+            if (rawUrl) {
+                eventConfig[feed.field] = rawUrl;
+                matched.push(feed.names[0]);
+            }
+        }
+
+        // Match Logos
+        const logoHits = LOCAL_FOLDER_FILES.logos.map(n => fileMap.get(n.toLowerCase())).filter(Boolean);
+        if (logoHits[0]) { eventConfig.logo1 = logoHits[0]; matched.push("Logo 1"); }
+        if (logoHits[1]) { eventConfig.logo2 = logoHits[1]; matched.push("Logo 2"); }
+
+        // Match Program Flow PDF
+        const flowHit = findByNames(LOCAL_FOLDER_FILES.flowPdfs);
+        if (flowHit) {
+            eventConfig.flowPdf = flowHit;
+            activeFlowSource = flowHit;
+            matched.push("Program Flow.pdf");
+        }
+
+        // Match Certificate PDFs
+        for (const roleKey of Object.keys(LOCAL_FOLDER_FILES.certPdfs)) {
+            const info = LOCAL_FOLDER_FILES.certPdfs[roleKey];
+            const pdfHit = findByNames(info.names);
+            if (pdfHit) {
+                eventConfig[info.field] = pdfHit;
+                matched.push(`${roleKey} PDF`);
+            }
+        }
+
+        // Optional config.json in GitHub folder
+        const cfgUrl = findByNames(["config.json", "event-config.json", "cms-config.json"]);
+        if (cfgUrl) {
             try {
-                const res = await fetch(encodeURI(logoName), { cache: "no-store" });
-                if (res.ok) foundLogos.push(logoName);
+                const cfgRes = await fetch(cfgUrl);
+                if (cfgRes.ok) {
+                    const cfgJson = await cfgRes.json();
+                    eventConfig = Object.assign({}, eventConfig, cfgJson);
+                    matched.push("config.json");
+                }
             } catch (_) {}
         }
-        if (!eventConfig.logo1 && foundLogos[0]) eventConfig.logo1 = foundLogos[0];
-        if (!eventConfig.logo2 && foundLogos[1]) eventConfig.logo2 = foundLogos[1];
-    }
 
-    if (!eventConfig.flowPdf) {
-        const hit = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.flowPdfs);
-        if (hit) activeFlowSource = hit.path;
-    } else {
-        activeFlowSource = eventConfig.flowPdf;
-    }
+        localStorage.setItem('prod_cms_config', JSON.stringify(eventConfig));
+        applyBranding();
+        if (updateInputs) populateSetupFormFromConfig();
 
-    applyBranding();
+        if (matched.length > 0) {
+            setAutoFillStatus(`Auto-filled from GitHub (${owner}/${repo}): ${matched.join(", ")}`);
+        } else {
+            setAutoFillStatus(`Connected to ${owner}/${repo}, but no matching CSV/PDF/logo filenames were found in that folder.`);
+        }
+    } catch (err) {
+        setAutoFillStatus(`GitHub scan note: ${err.message}. Same-folder probing remains active.`, true);
+    }
 }
 
 /* =========================================================
@@ -1211,7 +1437,7 @@ function applyBranding() {
 
     document.getElementById('hdrSubtitle').textContent = hasUni
         ? `${eventConfig.uniName}${eventConfig.uniAddress ? ' • ' + eventConfig.uniAddress : ''}`
-        : "Reads Google Sheet URLs directly (no publishing required) or hosted folder files";
+        : "Auto-fills from same folder & Google Sheets";
 
     document.getElementById('fsEventHeading').textContent = hasTitle
         ? `${eventConfig.eventTitle} — Live Analytics`
@@ -1337,41 +1563,85 @@ function openCertInNewTab() {
 }
 
 /* =========================================================
-   DIRECT GOOGLE SHEET READER (NO PUBLISH NEEDED) & EXACT SCHEMA MAPPER
+   THREE-TIER GOOGLE SHEET READER + SAME-FOLDER CSV FALLBACK
    ========================================================= */
+function extractGoogleSheetMeta(rawUrl) {
+    if (!rawUrl) return null;
+    const url = rawUrl.trim();
+    const sheetMatch = url.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!sheetMatch) return null;
+    const gidMatch = url.match(/[?&#]gid=([0-9]+)/);
+    return {
+        sheetId: sheetMatch[1],
+        gid: gidMatch ? gidMatch[1] : null
+    };
+}
+
 function buildCandidateDataUrls(rawUrl) {
     if (!rawUrl) return [];
     const url = rawUrl.trim();
-
-    const sheetMatch = url.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-    if (sheetMatch) {
-        const sheetId = sheetMatch[1];
-        const gidMatch = url.match(/[?&#]gid=([0-9]+)/);
-        const gid = gidMatch ? gidMatch[1] : null;
-        const gidQuery = gid ? `&gid=${gid}` : '';
-
-        const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv${gidQuery}`;
-        const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv${gidQuery}`;
-
+    const meta = extractGoogleSheetMeta(url);
+    if (meta) {
+        const gidQuery = meta.gid ? `&gid=${meta.gid}` : '';
+        const gvizUrl = `https://docs.google.com/spreadsheets/d/${meta.sheetId}/gviz/tq?tqx=out:csv${gidQuery}`;
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${meta.sheetId}/export?format=csv${gidQuery}`;
         if (url.includes('output=csv') || url.includes('format=csv') || url.includes('tqx=out:csv')) {
             return [url, gvizUrl, exportUrl];
         }
         return [gvizUrl, exportUrl];
     }
-
     return [url];
 }
 
-function parseSpreadsheetBuffer(arrayBuffer, defaultRole, isCheckinFeed = false) {
-    const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+function fetchGoogleSheetViaJsonp(sheetId, gid) {
+    return new Promise((resolve, reject) => {
+        const cbName = `_gvizCb_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+        const gidQuery = gid ? `&gid=${gid}` : '';
+        const scriptUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:${cbName}${gidQuery}`;
 
+        const script = document.createElement('script');
+        const timeout = setTimeout(() => {
+            cleanup();
+            reject(new Error("JSONP timeout"));
+        }, 9000);
+
+        function cleanup() {
+            clearTimeout(timeout);
+            delete window[cbName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[cbName] = (resp) => {
+            cleanup();
+            if (!resp || resp.status === 'error' || !resp.table) {
+                reject(new Error("Google Visualization query failed"));
+                return;
+            }
+            const cols = resp.table.cols.map((c, idx) => (c.label || c.id || `Column ${idx + 1}`).trim());
+            const rows = (resp.table.rows || []).map(r => {
+                const obj = {};
+                (r.c || []).forEach((cell, idx) => {
+                    const key = cols[idx] || `Column ${idx + 1}`;
+                    obj[key] = cell ? (cell.f !== undefined && cell.f !== null ? cell.f : (cell.v !== null ? cell.v : "")) : "";
+                });
+                return obj;
+            });
+            resolve(rows);
+        };
+
+        script.src = scriptUrl;
+        script.onerror = () => {
+            cleanup();
+            reject(new Error("Script load error"));
+        };
+        document.head.appendChild(script);
+    });
+}
+
+function ingestNormalizedRows(rows, defaultRole, isCheckinFeed = false) {
     rows.forEach(row => {
         const keys = Object.keys(row);
 
-        // Exact header matching for:
-        // Timestamp | Email address | Column 2 | Title | Full Name | Institute/Organization | Country/State | Contact Number:
         const emailKey   = keys.find(k => /^email\s*address$|^e-?mail$/i.test(k.trim())) || keys.find(k => /e-?mail/i.test(k));
         const titleKey   = keys.find(k => /^title$|^salutation$|^honorific$/i.test(k.trim()));
         const nameKey    = keys.find(k => /^full\s*name$|^participant\s*name$|^attendee\s*name$|^name$/i.test(k.trim())) || keys.find(k => /name/i.test(k) && !/user/i.test(k));
@@ -1440,6 +1710,13 @@ function parseSpreadsheetBuffer(arrayBuffer, defaultRole, isCheckinFeed = false)
     });
 }
 
+function parseSpreadsheetBuffer(arrayBuffer, defaultRole, isCheckinFeed = false) {
+    const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    ingestNormalizedRows(rows, defaultRole, isCheckinFeed);
+}
+
 function handleSyncClick() {
     syncAllSources(false);
 }
@@ -1469,13 +1746,30 @@ async function syncAllSources(silent = false) {
             try {
                 const res = await fetch(url);
                 if (res.ok) {
-                    const buf = await res.arrayBuffer();
-                    parseSpreadsheetBuffer(buf, feed.role, feed.checkin);
-                    loadedCount++;
-                    fetched = true;
-                    break;
+                    const textCheck = await res.clone().text();
+                    if (!textCheck.trim().startsWith('<!DOCTYPE html') && !textCheck.trim().startsWith('<html')) {
+                        const buf = await res.arrayBuffer();
+                        parseSpreadsheetBuffer(buf, feed.role, feed.checkin);
+                        loadedCount++;
+                        fetched = true;
+                        break;
+                    }
                 }
             } catch (_) {}
+        }
+
+        if (!fetched && feed.rawUrl) {
+            const meta = extractGoogleSheetMeta(feed.rawUrl);
+            if (meta) {
+                try {
+                    const jsonpRows = await fetchGoogleSheetViaJsonp(meta.sheetId, meta.gid);
+                    if (jsonpRows && jsonpRows.length > 0) {
+                        ingestNormalizedRows(jsonpRows, feed.role, feed.checkin);
+                        loadedCount++;
+                        fetched = true;
+                    }
+                } catch (_) {}
+            }
         }
 
         if (!fetched && feed.fallbackNames && feed.fallbackNames.length > 0) {
@@ -1498,10 +1792,10 @@ async function syncAllSources(silent = false) {
 
     if (!silent) {
         if (loadedCount > 0) {
-            const suffix = usedLocalFallbackCount > 0 ? ` (${usedLocalFallbackCount} from hosted folder)` : "";
+            const suffix = usedLocalFallbackCount > 0 ? ` (${usedLocalFallbackCount} from folder)` : "";
             alert(`Sync Complete! Loaded ${loadedCount} source(s)${suffix} • ${attendees.length} total records.`);
         } else {
-            alert("No data loaded. Check that your Google Sheet link sharing is set to 'Anyone with the link can view' or place CSV files in the same hosted folder.");
+            alert("No data loaded. Check Google Sheet access or place CSV files in the same folder.");
         }
     }
 }
@@ -1831,7 +2125,7 @@ function downloadReport() {
 }
 
 /* =========================================================
-   SEPARATE E-CERTIFICATE PORTAL (URL + SAME-FOLDER PDF FALLBACK)
+   SEPARATE E-CERTIFICATE PORTAL
    ========================================================= */
 async function prepareCertificatePortal() {
     const roles = [
@@ -1868,7 +2162,7 @@ async function prepareCertificatePortal() {
         }
 
         if (!pdfLoaded) {
-            const localPdfHit = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.certPdfs[r.key] || []);
+            const localPdfHit = await probeFirstAvailableFile(LOCAL_FOLDER_FILES.certPdfs[r.key].names);
             if (localPdfHit) {
                 try {
                     const blob = await localPdfHit.response.blob();
@@ -2022,38 +2316,10 @@ function checkCertAdmin() {
 /* =========================================================
    SETUP & DATA SOURCES CONFIGURATOR MODAL
    ========================================================= */
-function openSettingsModal() {
-    document.getElementById('cfgOrgSector').value = eventConfig.orgSector;
-    document.getElementById('cfgEventType').value = eventConfig.eventType;
-    document.getElementById('cfgEventTitle').value = eventConfig.eventTitle;
-    document.getElementById('cfgUniName').value = eventConfig.uniName;
-    document.getElementById('cfgUniAddress').value = eventConfig.uniAddress;
-    document.getElementById('cfgLogo1').value = eventConfig.logo1;
-    document.getElementById('cfgLogo2').value = eventConfig.logo2;
-    document.getElementById('cfgPrimaryColor').value = eventConfig.primaryColor;
-    document.getElementById('cfgAccentColor').value = eventConfig.accentColor;
-    document.getElementById('cfgAdminEmail').value = eventConfig.adminEmail;
-
-    document.getElementById('cfgUrlParticipants').value = eventConfig.urlParticipants;
-    document.getElementById('cfgUrlCheckin').value = eventConfig.urlCheckin;
-    document.getElementById('cfgUrlOnsite').value = eventConfig.urlOnsite;
-    document.getElementById('cfgUrlOrganisers').value = eventConfig.urlOrganisers;
-    document.getElementById('cfgUrlSpeakers').value = eventConfig.urlSpeakers;
-    document.getElementById('cfgAutoSync').value = eventConfig.autoSyncSec;
-
-    document.getElementById('cfgFormPreReg').value = eventConfig.formPreReg;
-    document.getElementById('cfgFormOnSite').value = eventConfig.formOnSite;
-    document.getElementById('cfgFormFeedback').value = eventConfig.formFeedback;
-    document.getElementById('cfgFlowPdf').value = eventConfig.flowPdf;
-
-    document.getElementById('cfgPdfParticipant').value = eventConfig.pdfParticipant;
-    document.getElementById('cfgPdfOrganiser').value = eventConfig.pdfOrganiser;
-    document.getElementById('cfgPdfSpeaker').value = eventConfig.pdfSpeaker;
-    document.getElementById('cfgCertY').value = eventConfig.certY;
-    document.getElementById('cfgCertSize').value = eventConfig.certSize;
-    document.getElementById('cfgExpiry').value = eventConfig.expiryDate;
-
+async function openSettingsModal() {
+    populateSetupFormFromConfig();
     document.getElementById('settingsModal').style.display = 'flex';
+    await autoFillSetupFromFolder(true);
 }
 
 function closeSettingsModal() {
@@ -2071,6 +2337,7 @@ async function saveSettings() {
     eventConfig.primaryColor = document.getElementById('cfgPrimaryColor').value;
     eventConfig.accentColor = document.getElementById('cfgAccentColor').value;
     eventConfig.adminEmail = document.getElementById('cfgAdminEmail').value.trim();
+    eventConfig.githubRepoPath = document.getElementById('cfgGitHubRepoPath').value.trim() || "hameedktk09/cms";
 
     eventConfig.urlParticipants = document.getElementById('cfgUrlParticipants').value.trim();
     eventConfig.urlCheckin = document.getElementById('cfgUrlCheckin').value.trim();
@@ -2092,7 +2359,7 @@ async function saveSettings() {
     eventConfig.expiryDate = document.getElementById('cfgExpiry').value.trim();
 
     localStorage.setItem('prod_cms_config', JSON.stringify(eventConfig));
-    await detectLocalAssets();
+    applyBranding();
     closeSettingsModal();
     await syncAllSources(true);
 }
@@ -2135,7 +2402,7 @@ function importConfigJson(input) {
     reader.onload = e => {
         try {
             const parsed = JSON.parse(e.target.result);
-            eventConfig = Object.assign({}, EMPTY_CONFIG, parsed);
+            eventConfig = Object.assign({}, DEFAULT_CONFIG, parsed);
             localStorage.setItem('prod_cms_config', JSON.stringify(eventConfig));
             openSettingsModal();
             applyBranding();
@@ -2148,8 +2415,8 @@ function importConfigJson(input) {
 }
 
 function factoryReset() {
-    if (confirm("Wipe all configuration, logos, URLs, and cached attendee data?")) {
-        eventConfig = Object.assign({}, EMPTY_CONFIG);
+    if (confirm("Reset configuration to defaults and clear cached attendee data?")) {
+        eventConfig = Object.assign({}, DEFAULT_CONFIG);
         attendees = [];
         downloadLog = [];
         uploadedPdfBase64 = {};
@@ -2221,11 +2488,8 @@ window.onload = async () => {
     initCharts();
     filterRole('All');
     updateStats();
-    await detectLocalAssets();
-
-    if (attendees.length === 0) {
-        await syncAllSources(true);
-    }
+    await autoFillSetupFromFolder(false);
+    await syncAllSources(true);
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('mode') === 'certs') {
