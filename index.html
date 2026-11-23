@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event & Conference Management System (CMS)</title>
+
+<!-- Libraries (pinned versions) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+<style>
+:root {
+    --primary: #1a3a82;      /* navy        (Setup > Primary colour)   */
+    --accent: #f5a623;       /* gold bar    (Setup > Accent colour)    */
+    --secondary: #7209b7;    /* purple      (Setup > Highlight colour) */
+    --success: #10b981;
+    --danger: #e11d48;
+    --pending: #ef4444;
+    --dark: #1e293b;
+    --ink: #0f172a;
+    --gray: #64748b;
+    --line: #e2e8f0;
+    --bg1: #1e3a8a;
+    --bg2: #4361ee;
+}
+* { box-sizing: border-box; }
+body {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
+    margin: 0; display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; font-size: 13px; color: var(--ink); overflow-x: hidden;
+}
+
+/* Full-screen feel, slightly smaller than the monitor */
+.app-shell {
+    width: 94vw; height: 92vh; max-width: 1700px; background: #fff; border-radius: 14px;
+    box-shadow: 0 25px 60px rgba(0,0,0,.4); display: flex; flex-direction: column;
+    overflow: hidden; border-top: 5px solid var(--accent);
+}
+
+/* ---------- HEADER ---------- */
+.header { padding: 10px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); flex-shrink: 0; flex-wrap: nowrap; }
+.header-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 auto; }
+.header-left > div:last-child { min-width: 0; }
+#hdrTitle { line-height: 1.15; }
+#hdrSubtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.banner-img { height: 56px; max-width: 170px; object-fit: contain; }
+.logo-placeholder { width: 52px; height: 52px; border-radius: 10px; background: #f1f5f9; border: 1.5px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--gray); cursor: pointer; text-align: center; }
+.event-badge { display: inline-block; background: #eef1fb; color: var(--primary); border: 1px solid #d6dcf2; font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 12px; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 3px; }
+#hdrTitle { margin: 0; font-size: 1.35rem; font-weight: 800; color: var(--primary); letter-spacing: -.2px; }
+#hdrSubtitle { margin: 1px 0 0; color: var(--gray); font-size: 11.5px; }
+.header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; flex: 0 0 auto; margin-left: auto; white-space: nowrap; }
+.mode-switcher { display: flex; background: #f1f5f9; padding: 3px; border-radius: 9px; border: 1px solid var(--line); }
+.mode-btn { padding: 7px 14px; border: none; background: transparent; border-radius: 7px; font: 700 11px 'Inter', sans-serif; cursor: pointer; color: var(--gray); transition: .2s; }
+.mode-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.status-indicator { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; padding: 6px 12px; border-radius: 20px; background: #f8fafc; border: 1px solid var(--line); text-transform: uppercase; }
+.dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; }
+.dot-idle { background: #94a3b8; } .dot-online { background: var(--success); box-shadow: 0 0 8px var(--success); }
+.dot-offline { background: var(--danger); } .dot-sync { background: #d97706; box-shadow: 0 0 6px #d97706; animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+
+/* ---------- BUTTONS ---------- */
+.btn { padding: 8px 12px; border-radius: 7px; border: 1px solid #cbd5e1; font: 600 11.5px 'Inter', sans-serif; cursor: pointer; transition: .15s; background: #fff; color: var(--ink); text-align: center; }
+.btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
+.btn-primary { background: var(--primary); color: #fff; border: none; }
+.btn-sync    { background: var(--secondary); color: #fff; border: none; }
+.btn-success { background: var(--success); color: #fff; border: none; }
+.btn-danger  { background: var(--danger); color: #fff; border: none; }
+.btn-flow    { background: #f59e0b; color: #fff; border: none; }
+.btn-dark    { background: var(--dark); color: #fff; border: none; }
+.btn-slate   { background: #334155; color: #fff; border: none; }
+.btn-nav     { background: var(--primary); color: #fff; border: none; padding: 9px 10px; font-weight: 700; }
+.btn-nav.active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent); }
+.btn-preQR   { background: linear-gradient(135deg, #1e1b4b, #3730a3); color: #fff; border: none; }
+.btn-onQR    { background: linear-gradient(90deg, #f72585, #4361ee); color: #fff; border: none; }
+.btn-feedback { background: linear-gradient(90deg, #f72585 0%, #7209b7 45%, #4361ee 100%); color: #fff; border: none; box-shadow: 0 3px 10px rgba(114,9,183,.25); }
+
+/* ---------- VIEWS ---------- */
+.view-section { flex: 1; display: flex; flex-direction: column; overflow-y: auto; min-height: 0; }
+.hidden { display: none !important; }
+.controls { padding: 10px 22px 12px; background: #f8fafc; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.controls-grid { display: grid; grid-template-columns: 1fr 1.25fr 1.45fr; gap: 18px; align-items: start; }
+.ctl-label { font-size: 10px; font-weight: 800; color: var(--gray); letter-spacing: .6px; text-transform: uppercase; }
+.btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 5px; }
+.dual-guest-group { display: flex; margin-top: 6px; height: 36px; }
+.btn-guest-main { flex: 1; border-radius: 7px 0 0 7px; background: var(--primary); color: #fff; border: none; font: 700 11.5px 'Inter', sans-serif; cursor: pointer; }
+.btn-guest-arrow { width: 100px; border-radius: 0 7px 7px 0; background: #14295f; color: #fff; border: none; border-left: 1px solid rgba(255,255,255,.2); font: 700 10.5px 'Inter', sans-serif; cursor: pointer; }
+.guest-grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; background: #f1f5f9; padding: 8px; border-radius: 9px; border: 1px solid #cbd5e1; }
+.btn-mini { padding: 7px 2px; font: 600 10px 'Inter', sans-serif; background: #fff; color: var(--primary); border: 1px solid #94a3b8; border-radius: 6px; cursor: pointer; }
+.btn-mini:hover { background: var(--primary); color: #fff; }
+
+.main-content { flex: 1; display: grid; grid-template-columns: 1.4fr .6fr; gap: 14px; padding: 14px 22px; }
+.panel { background: #fff; padding: 16px; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(15,23,42,.04); display: flex; flex-direction: column; }
+.display-name { color: var(--primary); font-weight: 800; font-size: 1.45rem; border: 1px solid var(--line); background: #f8fafc; border-radius: 9px; padding: 5px 16px; min-width: 300px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 560px; }
+.qr-frame { width: 250px; height: 250px; padding: 10px; border: 2px solid var(--primary); border-radius: 14px; background: #fff; position: relative; overflow: hidden; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.qr-frame img, .qr-frame canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+.qr-curtain { position: absolute; inset: 0; background: linear-gradient(135deg, var(--primary), #0f1f4d); transition: transform .5s ease; z-index: 10; transform-origin: top; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 13px; text-align: center; padding: 12px; line-height: 1.4; }
+.qr-curtain.open { transform: scaleY(0); pointer-events: none; }
+.info-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; align-content: start; min-width: 0; }
+.info-item { background: #f8fafc; padding: 9px 13px; border-radius: 9px; border: 1px solid var(--line); min-width: 0; }
+.info-item b { font-size: 9.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); display: block; margin-bottom: 3px; }
+.info-item div { overflow-wrap: anywhere; }
+.span2 { grid-column: span 2; }
+.action-grid { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 2px; }
+.report-feedback-col { display: flex; flex-direction: column; gap: 7px; }
+.action-grid .btn { padding: 10px; }
+
+input[type=text], input[type=email], input[type=url], input[type=number], input[type=date], select, textarea { width: 100%; padding: 8px 11px; border-radius: 7px; border: 1px solid #cbd5e1; font: 12px 'Inter', sans-serif; background: #fff; }
+input:focus, select:focus { outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent); border-color: var(--primary); }
+.stats-grid p { margin: 5px 0; display: flex; justify-content: space-between; font-size: 11.5px; }
+.pend { color: var(--pending); font-weight: 600; }
+.panel-title { margin: 0 0 6px; color: var(--secondary); border-bottom: 2px solid #f1f5f9; padding-bottom: 5px; font-size: 14px; }
+
+/* ---------- CERTIFICATE PORTAL VIEW ---------- */
+.cert-portal-wrapper { flex: 1; background: #f1f5f9; padding: 22px; display: flex; justify-content: center; align-items: flex-start; overflow-y: auto; }
+.builder-card { background: #fff; padding: 26px 32px; border-radius: 12px; width: 100%; max-width: 860px; box-shadow: 0 10px 30px rgba(0,0,0,.06); border-top: 5px solid var(--primary); }
+.cert-toolbar { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.cert-header { text-align: center; margin-bottom: 20px; }
+.cert-header h2 { margin: 4px 0; color: var(--primary); }
+.expiry-notice { color: var(--danger); font-weight: 700; font-size: 12px; margin-top: 6px; display: block; }
+.role-section { display: grid; grid-template-columns: 150px 1fr 1fr 180px auto; gap: 12px; align-items: center; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: 9px; margin-bottom: 10px; }
+.role-section:first-child { background: #fdfaf3; }
+.role-name { font-weight: 800; color: var(--primary); font-size: 12px; border-left: 4px solid var(--accent); padding-left: 10px; }
+.status-msg { font-size: 11px; color: var(--gray); }
+.ok { color: #059669; font-weight: 600; } .bad { color: var(--danger); font-weight: 600; }
+.report-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+.report-table th, .report-table td { border: 1px solid var(--line); padding: 8px; text-align: left; }
+.report-table th { background: var(--primary); color: #fff; }
+
+/* ---------- MODALS ---------- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.85); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
+.modal-content { background: #fff; padding: 24px; border-radius: 16px; text-align: center; max-width: 500px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,.4); }
+.modal-content.wide { max-width: 1020px; text-align: left; }
+.modal-qr-container { width: 330px; height: 330px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: 14px; background: #fff; border: 1px solid var(--line); box-shadow: 0 8px 25px rgba(0,0,0,.08); }
+.modal-qr-container img, .modal-qr-container canvas { max-width: 100%; max-height: 100%; }
+.qr-empty { font-size: 11.5px; color: var(--gray); text-align: center; padding: 14px; }
+.settings-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 12px; margin-top: 10px; }
+.settings-group { background: #f8fafc; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); }
+.settings-group h4 { margin: 0 0 8px; color: var(--primary); font-size: 12.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; }
+.g-id { grid-column: 1; } .g-src { grid-column: 2; grid-row: span 2; } .g-forms { grid-column: 1; } .g-cert { grid-column: 1 / -1; }
+.field-row { margin-bottom: 8px; }
+.field-row label { display: block; font-size: 10px; font-weight: 700; color: var(--gray); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .3px; }
+.hint { font-size: 10.5px; color: var(--gray); margin: 3px 0 0; line-height: 1.45; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.file-in { width: 100px !important; font-size: 10px !important; padding: 4px !important; }
+.src-row { background: #fff; border: 1px solid var(--line); border-radius: 9px; padding: 8px; margin-bottom: 8px; display: grid; grid-template-columns: 1fr 150px auto 34px; gap: 6px; align-items: center; }
+.src-row .s-url { grid-column: 1 / -1; }
+.src-row .src-status { grid-column: 1 / -1; font-size: 10.5px; }
+.chk { font-size: 11px; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 4px; margin: 0 !important; text-transform: none !important; color: var(--ink) !important; }
+.chk input { width: auto; }
+.sources-scroll { max-height: 420px; overflow-y: auto; padding-right: 2px; }
+
+/* ---------- OVERLAYS / TOASTS ---------- */
+#flowOverlay, #statsOverlay { position: fixed; inset: 0; z-index: 9999; display: none; overflow: hidden; }
+#flowOverlay { background: rgba(2,6,23,.985); }
+#statsOverlay { background: #e8edf5; padding: 58px 3vw 3vh; flex-direction: column; align-items: stretch; justify-content: flex-start; }
+.close-flow { position: fixed; top: 20px; right: 20px; padding: 10px 18px; background: var(--danger); color: #fff; border: none; cursor: pointer; z-index: 10000; border-radius: 7px; font-weight: 700; }
+.fs-stats-card { background: #fff; border-radius: 18px; padding: 2.2vh 2vw; width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,.14); text-align: center; border-top: 6px solid var(--accent); }
+.fs-head { display: flex; align-items: center; justify-content: center; gap: 18px; }
+.fs-head img { height: clamp(40px, 7vh, 80px); max-width: 160px; object-fit: contain; display: none; }
+.fs-live { display: inline-flex; align-items: center; gap: 7px; background: #fee2e2; color: #b91c1c; font-weight: 800; font-size: 12px; letter-spacing: .6px; padding: 5px 12px; border-radius: 999px; }
+.fs-live::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #ef4444; animation: pulse 1.4s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+.chartbox { position: relative; flex: 1; min-height: 0; }
+.fs-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-top: 18px; }
+.fs-val { font-size: clamp(1.6rem, 2.8vw, 3.2rem); font-weight: 800; color: var(--primary); display: block; }
+.fs-label { color: var(--gray); text-transform: uppercase; font-size: 9px; letter-spacing: .5px; font-weight: 700; }
+.flow-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 64px 0 48px; scrollbar-width: thin; }
+.flow-pages { width: min(92%, 1000px); margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.flow-pages canvas { width: 100%; height: auto; background: #fff; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.45); display: block; }
+.flow-msg { color: #cbd5e1; text-align: center; padding: 40px; font-size: 15px; }
+.flow-fallback { display: none; position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: #fff; }
+#toasts { position: fixed; right: 18px; bottom: 18px; z-index: 20000; display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+.toast { background: #0f172a; color: #fff; padding: 11px 15px; border-radius: 10px; font-size: 12px; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,.3); border-left: 4px solid var(--accent); }
+.toast.ok { border-left-color: var(--success); } .toast.err { border-left-color: var(--pending); }
+
+footer { padding: 9px 20px; text-align: center; font-size: 11.5px; color: var(--gray); border-top: 1px solid var(--line); background: #f8fafc; flex-shrink: 0; }
+footer a { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+/* ---------- PAID-EDITION LAYER ---------- */
+.plan-chip { border: 1px solid #fde68a; background: linear-gradient(135deg,#fffbeb,#fef3c7); color: #92400e; font: 800 10.5px 'Inter',sans-serif; padding: 7px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap; }
+.plan-chip.paid { border-color: #a7f3d0; background: linear-gradient(135deg,#ecfdf5,#d1fae5); color: #065f46; }
+.plan-chip:hover { filter: brightness(.97); }
+.plan-banner { display: flex; align-items: center; gap: 12px; padding: 7px 22px; font-size: 11.5px; background: linear-gradient(90deg,#fffbeb,#fff); border-bottom: 1px solid #fde68a; color: #78350f; flex-shrink: 0; }
+.plan-banner.warn { background: linear-gradient(90deg,#fff1f2,#fff); border-bottom-color: #fecdd3; color: #9f1239; }
+.plan-banner .meter { width: 110px; height: 6px; background: #fde68a; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+.plan-banner .meter i { display: block; height: 100%; background: #f59e0b; }
+.plan-banner.warn .meter { background: #fecdd3; } .plan-banner.warn .meter i { background: #e11d48; }
+.plan-banner .btn { padding: 4px 12px; margin-left: auto; }
+.kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 12px 22px 0; }
+.kpi { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px 10px 18px; position: relative; overflow: hidden; box-shadow: 0 4px 14px rgba(15,23,42,.04); }
+.kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--kc, var(--primary)); }
+.kpi b { display: block; font-size: 9.5px; letter-spacing: .6px; text-transform: uppercase; color: var(--gray); }
+.kpi > span { font-size: 1.6rem; font-weight: 800; color: var(--kc, var(--primary)); line-height: 1.25; }
+.kpi small { color: var(--gray); font-size: 10.5px; margin-left: 8px; }
+.kpi .bar { height: 5px; background: #eef2f7; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+.kpi .bar i { display: block; height: 100%; width: 0; background: var(--kc, var(--primary)); transition: width .5s; }
+.quick-row { display: flex; gap: 10px; align-items: center; background: linear-gradient(90deg,#f5f3ff,#eff6ff); border: 1px solid #ddd6fe; border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
+.quick-row label { font: 800 10px 'Inter', sans-serif; letter-spacing: .5px; text-transform: uppercase; color: var(--secondary); white-space: nowrap; }
+.quick-row input { flex: 1; }
+.activity { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.activity h5 { margin: 0 0 6px; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--gray); display: flex; justify-content: space-between; }
+.act-item { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 7px; cursor: pointer; font-size: 12px; }
+.act-item:hover { background: #f1f5f9; }
+.act-item b { font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act-item small { color: var(--gray); } .act-time { font-variant-numeric: tabular-nums; color: var(--gray); font-size: 11px; }
+.via { font-size: 9px; font-weight: 800; padding: 1px 7px; border-radius: 8px; background: #eef2ff; color: #3730a3; text-transform: uppercase; }
+.via.sheet { background: #ecfeff; color: #155e75; }
+.plans-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: #f1f5f9; padding: 3px; border-radius: 9px; border: 1px solid var(--line); }
+.seg button { border: none; background: transparent; font: 700 11px 'Inter', sans-serif; padding: 6px 16px; border-radius: 7px; cursor: pointer; color: var(--gray); }
+.seg button.on { background: var(--primary); color: #fff; }
+.plan-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+.plan-card { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: #fff; display: flex; flex-direction: column; position: relative; }
+.plan-card.featured { border: 2px solid var(--secondary); box-shadow: 0 12px 30px rgba(114,9,183,.14); }
+.plan-card.current { border: 2px solid var(--success); }
+.ribbon { position: absolute; top: -11px; right: 14px; background: var(--secondary); color: #fff; font: 800 9.5px 'Inter', sans-serif; padding: 3px 10px; border-radius: 10px; letter-spacing: .5px; text-transform: uppercase; }
+.plan-card h3 { margin: 0; color: var(--primary); font-size: 15px; }
+.plan-card .tag { font-size: 10.5px; color: var(--gray); margin: 2px 0 8px; min-height: 14px; }
+.plan-price { font-size: 1.9rem; font-weight: 800; color: var(--ink); line-height: 1.1; }
+.plan-per { font-size: 10.5px; color: var(--gray); margin-bottom: 10px; min-height: 26px; }
+.plan-card ul { list-style: none; padding: 0; margin: 0 0 12px; font-size: 11.5px; flex: 1; }
+.plan-card li { padding: 3px 0 3px 20px; position: relative; color: #334155; }
+.plan-card li::before { content: "✓"; position: absolute; left: 0; color: var(--success); font-weight: 800; }
+.plan-card li.no { color: #94a3b8; } .plan-card li.no::before { content: "—"; color: #cbd5e1; }
+.addon-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+.addon-table td { border-bottom: 1px solid var(--line); padding: 9px 6px; vertical-align: middle; }
+.addon-table td:last-child { text-align: right; white-space: nowrap; }
+.addon-table small { color: var(--gray); display: block; }
+.lic-box { background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 16px; }
+.lic-box .row { display: flex; gap: 8px; margin-top: 6px; }
+.quick-start { background: linear-gradient(135deg,#eef2ff,#faf5ff); border: 1px solid #c7d2fe; border-radius: 12px; padding: 12px 14px; margin: 12px 0 4px; }
+.repo-list { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 12px; align-items: baseline; }
+.repo-list b { color: var(--primary); } .repo-list .skip { color: #94a3b8; }
+.fs-two { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); gap: 2vw; align-items: stretch; flex: 1; min-height: 0; }
+.fs-two > div { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.fs-two .hint { margin-top: 4px; }
+#statsOverlay .btn-pd { position: fixed; top: 20px; right: calc(3vw + 130px); padding: 10px 18px; background: var(--primary); color: #fff; border: none; cursor: pointer; z-index: 10000; border-radius: 7px; font-weight: 700; }
+/* ---------- PUBLIC DISPLAY: ?mode=live ---------- */
+body.live-mode .app-shell, body.live-mode #toasts { display: none !important; }
+body.live-mode #statsOverlay .close-flow, body.live-mode #statsOverlay .btn-pd { display: none !important; }
+body.live-mode #statsOverlay { padding-top: 3vh; background: linear-gradient(135deg, var(--bg1), var(--bg2)); }
+.lock-panel { flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 2px dashed #cbd5e1; border-radius: 12px; color: var(--gray); padding: 20px; gap: 8px; }
+@media (max-width: 1600px) { .plan-chip { padding: 6px 9px; font-size: 10px; } }
+@media (max-width: 1000px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } .plan-grid { grid-template-columns: 1fr 1fr; } .fs-two { grid-template-columns: 1fr; } }
+
+/* ---------- PUBLIC (participant) MODE: ?mode=certs ---------- */
+body.public-mode .header-actions, body.public-mode .admin-only { display: none !important; }
+
+@media (max-width: 1600px) {
+    .header-actions .btn { padding: 7px 9px; font-size: 10.5px; }
+    .mode-btn { padding: 6px 9px; font-size: 10.5px; }
+    .header-actions { gap: 6px; }
+    .banner-img { height: 44px; max-width: 100px; }
+    #hdrTitle { font-size: 1.1rem; }
+}
+@media (max-width: 1000px) {
+    .header { flex-wrap: wrap; }
+    .header-actions { margin-left: 0; flex-wrap: wrap; }
+    .controls-grid, .main-content, .settings-grid { grid-template-columns: 1fr; }
+    .g-src, .g-id, .g-forms, .g-cert { grid-column: 1; grid-row: auto; }
+    .role-section { grid-template-columns: 1fr; }
+    .fs-grid { grid-template-columns: repeat(4, 1fr); }
+    .app-shell { width: 100vw; height: 100vh; border-radius: 0; }
+}
+</style>
+</head>
+<body>
+
+<div id="toasts"></div>
+
+<!-- PROGRAM FLOW OVERLAY -->
+<div id="flowOverlay">
+    <button class="close-flow" onclick="stopFlow()">✖ Close (Esc)</button>
+    <div id="flowScroll" class="flow-scroll"><div id="flowPages" class="flow-pages"></div></div>
+    <iframe id="flowIframe" class="flow-fallback" src=""></iframe>
+</div>
+
+<!-- FULLSCREEN ANALYTICS OVERLAY -->
+<div id="statsOverlay">
+    <button class="btn-pd" onclick="openPublicDisplay()" title="Opens a read-only screen for the audience">📺 Public display ↗</button>
+    <button class="close-flow" onclick="closeStats()">✖ Close (Esc)</button>
+    <div class="fs-stats-card">
+        <div class="fs-head"><img id="fsLogo1" alt=""><div><h1 id="fsEventHeading" style="color:var(--primary); margin:0; font-size:clamp(1.5rem,2.6vw,2.8rem);">Live Symposium Analytics</h1><div id="fsSub" style="color:var(--gray); font-size:clamp(.8rem,1.1vw,1.2rem); margin-top:2px;"></div></div><img id="fsLogo2" alt=""><span class="fs-live">LIVE <span id="fsClock" style="font-variant-numeric:tabular-nums;"></span></span></div>
+        <p id="fsCalculationLabel" style="color:var(--gray); font-size:clamp(1rem,1.6vw,1.8rem); margin:1vh 0; font-weight:700;"></p>
+        <div class="fs-two" style="margin:10px 0;">
+            <div><div class="chartbox"><canvas id="fsStatChart"></canvas></div><div class="hint">Side by side per category: coloured bar = present · <span style="color:var(--pending); font-weight:700;">red bar</span> = still pending</div></div>
+            <div>
+                <div class="chartbox" id="tlWrap"><canvas id="fsTimeline"></canvas></div><div id="tlNote" style="font-size:11px;color:#64748b;margin-top:6px;"></div>
+                <div class="hint">Check-in timeline — cumulative people checked in over time</div>
+            </div>
+        </div>
+        <div class="fs-grid">
+            <div><span class="fs-val" id="fsPreReg">0</span><span class="fs-label">Pre-Reg</span></div>
+            <div><span class="fs-val" id="fsCheckIn" style="color:var(--success)">0</span><span class="fs-label">Check-in</span></div>
+            <div><span class="fs-val" id="fsOnsite" style="color:#f72585">0</span><span class="fs-label">On-Site Reg</span></div>
+            <div><span class="fs-val" id="fsGuestStat" style="color:var(--secondary)">0</span><span class="fs-label">Guests</span></div>
+            <div><span class="fs-val" id="fsStaffStat" style="color:#d97706">0</span><span class="fs-label">Staff</span></div>
+            <div><span class="fs-val" id="fsStudentStat" style="color:#0284c7">0</span><span class="fs-label">Students</span></div>
+            <div><span class="fs-val" id="fsSpeakerStat" style="color:var(--primary)">0</span><span class="fs-label">Speakers</span></div>
+            <div><span class="fs-val" id="fsOrgStat" style="color:var(--gray)">0</span><span class="fs-label">Organisers</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================= APP SHELL ======================= -->
+<div class="app-shell" id="appShell">
+
+    <div class="header">
+        <div class="header-left">
+            <div id="logoPlaceholder" class="logo-placeholder admin-only" onclick="openSettingsModal()" title="Click to add your institution logo">+ LOGO</div>
+            <img id="hdrLogo1" class="banner-img" alt="Institution logo" style="display:none;">
+            <img id="hdrLogo2" class="banner-img" alt="Partner logo" style="display:none;">
+            <div style="min-width:0;">
+                <span class="event-badge" id="hdrEventType"></span>
+                <h2 id="hdrTitle"></h2>
+                <p id="hdrSubtitle"></p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="mode-switcher">
+                <button class="mode-btn active" id="tabCms" onclick="switchView('cms')">🖥️ CMS Dashboard</button>
+                <button class="mode-btn" id="tabCerts" onclick="switchView('certs')">🎓 E-Certificate Portal</button>
+            </div>
+            <button class="btn btn-dark" onclick="openSettingsModal()">⚙️ Event Setup & URLs</button>
+            <button class="btn btn-flow" onclick="startFlow()">▶ Flow</button>
+            <button class="btn btn-slate" onclick="toggleFullScreen()">⛶ Screen</button>
+            <button class="plan-chip admin-only" id="planChip" onclick="openPlans()" title="Plans & license"></button>
+            <div class="status-indicator" id="statusPill" title=""><span class="dot dot-idle" id="statusDot"></span><span id="statusText">READY</span></div>
+        </div>
+    </div>
+
+    <div class="plan-banner admin-only hidden" id="planBanner"></div>
+
+    <!-- ============ VIEW 1: CMS DASHBOARD ============ -->
+    <div id="cmsView" class="view-section">
+        <div class="controls">
+            <div class="controls-grid">
+                <div>
+                    <div class="ctl-label">Role Filters</div>
+                    <div class="btn-pair">
+                        <button class="btn btn-nav" data-filter="All" onclick="filterRole('All')">All Attendees</button>
+                        <button class="btn btn-nav" data-filter="Participant" onclick="filterRole('Participant')">Participants</button>
+                        <button class="btn btn-nav" data-filter="Organiser" onclick="filterRole('Organiser')">Organisers</button>
+                        <button class="btn btn-nav" data-filter="Speaker" onclick="filterRole('Speaker')">Speakers</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="ctl-label">Live Data Sync & Guest Management</div>
+                    <div class="btn-pair">
+                        <button class="btn btn-sync" id="syncBtn" onclick="syncAllSources(false)">🔄 Fetch Live URLs</button>
+                        <button class="btn" onclick="$('uploadFiles').click()">⬆️ Upload CSV/XLSX</button>
+                        <input type="file" id="uploadFiles" style="display:none" accept=".csv,.xlsx,.xls" multiple onchange="handleFileUpload(this)">
+                    </div>
+                    <div class="dual-guest-group">
+                        <button class="btn-guest-main" onclick="filterRole('Guest')">👤 Guest List</button>
+                        <button class="btn-guest-arrow" onclick="toggleGuestPanel()">▼ Quick Add</button>
+                    </div>
+                    <div id="guestPanel" class="guest-grid">
+                        <button class="btn-mini" onclick="quickAddGuest('VIP Guest','Guest')">VIP</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Board Member','Guest')">Board/Gov</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Executive Head','Guest')">Chancellor/Dir</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Dean/HOD','Guest')">Dean/HOD</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Faculty/Staff','Staff')">Staff</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Student/Delegate','Student')">Student</button>
+                        <button class="btn-mini" onclick="quickAddGuest('Press/Media','Guest')">Media</button>
+                        <button class="btn-mini" onclick="customGuest()">+ Custom</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="ctl-label">Search & Live Registration QR</div>
+                    <div style="display:grid; grid-template-columns:135px 1fr; gap:8px; margin-top:5px;">
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <button class="btn btn-preQR" onclick="showGradientQR('PRE-REG')">📱 Pre-Reg QR</button>
+                            <button class="btn btn-onQR" onclick="showGradientQR('ON-SITE')">📱 On-Site QR</button>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <input type="text" id="searchBox" placeholder="🔍 Search name, email, institute, country…" oninput="handleSearch()">
+                            <select id="combinedDropdown"><option value="">No records loaded yet...</option></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-strip">
+            <div class="kpi" style="--kc:var(--primary)"><b>Registered</b><span id="kpiTotal">0</span></div>
+            <div class="kpi" style="--kc:var(--success)"><b>Checked-in</b><span id="kpiPresent">0</span><div class="bar"><i id="kpiBar"></i></div></div>
+            <div class="kpi" style="--kc:var(--pending)"><b>Pending</b><span id="kpiPending">0</span></div>
+            <div class="kpi" style="--kc:var(--secondary)"><b>Attendance rate</b><span id="kpiRate">0%</span><small id="kpiLast"></small></div>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                        <button class="btn btn-success" style="padding:11px 18px;" id="btnMarkPresent" onclick="togglePresence()">☑ Mark Present</button>
+                        <span class="display-name" id="displayName">No Selection</span>
+                    </div>
+                    <button class="btn" style="font-size:10.5px;" onclick="clearSessionRecords()">🗑️ Reset Session Data</button>
+                </div>
+
+                <div class="quick-row">
+                    <label for="quickInput">⚡ Quick check-in</label>
+                    <input type="text" id="quickInput" placeholder="Scan or type an email / full name, then press Enter" onkeydown="quickCheckin(event)" autocomplete="off">
+                </div>
+
+                <div style="display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap;">
+                    <div class="qr-frame" onclick="$('qrCurtain').classList.toggle('open')" title="Click to show / hide the Check-In QR">
+                        <div id="qrCurtain" class="qr-curtain">Click to Reveal<br>Check-In QR</div>
+                        <div id="mainCheckinQR" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-item"><b>Status</b><div id="valStatus" style="font-weight:700; color:var(--danger);">-</div></div>
+                        <div class="info-item"><b>Category / Role</b><div id="valCategory" style="font-weight:600;">-</div></div>
+                        <div class="info-item span2"><b>Institution / Affiliation</b><div id="valInstitution">-</div></div>
+                        <div class="info-item"><b>Country / State</b><div id="valCountry">-</div></div>
+                        <div class="info-item"><b>Contact Number</b><div id="valContact">-</div></div>
+                        <div class="info-item span2"><b>Email</b><div id="valEmail">-</div></div>
+
+                        <div class="action-grid">
+                            <div class="report-feedback-col">
+                                <button class="btn btn-dark" onclick="openReports()">📄 Report</button>
+                                <!-- Feedback sits directly under Report -->
+                                <button class="btn btn-feedback" onclick="showGradientQR('FEEDBACK')">💬 Feedback</button>
+                            </div>
+                            <button class="btn btn-nav" style="font-size:12.5px;" onclick="switchView('certs')">🎓 Open E-Certs Portal</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="activity">
+                    <h5><span>🕒 Live Activity</span><span id="actCount"></span></h5>
+                    <div id="activityList"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h4 class="panel-title">📊 Live Stats Breakdown</h4>
+                <div style="height:150px; margin-bottom:8px;"><canvas id="statChart"></canvas></div>
+                <div class="stats-grid" id="sidebarStatsList"></div>
+                <div style="text-align:center; margin-top:8px; border-top:1px solid var(--line); padding-top:8px;">
+                    <div id="statTotalPerc" style="font-size:22px; font-weight:800; color:var(--primary);">0%</div>
+                    <span style="font-size:9px; font-weight:800; color:var(--gray); letter-spacing:.5px;">OVERALL ATTENDANCE RATE</span>
+                </div>
+                <div style="margin-top:auto; display:flex; flex-direction:column; gap:6px;"><button class="btn btn-sync" style="width:100%;" onclick="showFullscreenStats()">📊 Full Screen Analytics</button><button class="btn" style="width:100%; background:var(--secondary); color:#fff;" onclick="openPublicDisplay()" title="Audience screen: shows only Live Event Analytics">📺 Public Display</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ VIEW 2: E-CERTIFICATE PORTAL ============ -->
+    <div id="certView" class="view-section hidden">
+        <div class="cert-portal-wrapper">
+            <div class="builder-card">
+                <div class="cert-toolbar admin-only">
+                    <button class="btn" style="font-size:10.5px;" onclick="openPublicPortal()" title="Open the participant-facing page in a new tab">↗ Public Portal Tab</button>
+                    <button class="btn" style="font-size:10.5px;" onclick="copyPublicLink()">🔗 Copy Public Link</button>
+                    <button class="btn" style="font-size:10.5px;" onclick="showCertLog()">📋 Download Log</button>
+                    <button class="btn btn-primary" style="font-size:10.5px;" onclick="switchView('cms')">← Back to CMS</button>
+                </div>
+                <div class="cert-header">
+                    <h2>E-Certificate Verification & Download Portal</h2>
+                    <p id="certUniSubtitle" style="margin:0; color:var(--gray);"></p>
+                    <span class="expiry-notice" id="certExpiryText"></span>
+                </div>
+                <div id="certPortalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer id="dynamicFooter"></footer>
+</div>
+
+<!-- ======================= REPORTS MODAL ======================= -->
+<div id="reportModal" class="modal-overlay" onclick="closeReports()">
+    <div class="modal-content" onclick="event.stopPropagation()" style="text-align:left;">
+        <h2 style="margin:0; color:var(--primary);">📄 Reports & Exports</h2>
+        <p class="hint" id="reportCounts" style="margin:4px 0 12px;"></p>
+        <div style="display:grid; gap:8px;">
+            <button class="btn btn-dark" style="padding:11px;" onclick="exportCsv('all')">⬇ Full attendance list (CSV)</button>
+            <button class="btn" style="padding:11px; background:var(--secondary); color:#fff;" onclick="exportAttendanceFile()" title="Upload next to the page so the public certificate portal knows who attended">🎓 Attendance file for the certificate portal</button>
+            <button class="btn" style="padding:11px;" onclick="exportCsv('present')">✅ Checked-in only (CSV)</button>
+            <button class="btn" style="padding:11px;" onclick="exportCsv('pending')">❌ Pending / no-show list (CSV)</button>
+            <button class="btn btn-sync" style="padding:11px;" onclick="exportXlsx()">📊 Excel workbook — summary + all + present + pending <span id="xlsxLock"></span></button>
+        </div>
+        <button class="btn btn-primary" style="width:100%; margin-top:12px; padding:10px;" onclick="closeReports()">Close</button>
+    </div>
+</div>
+
+<!-- ======================= PLANS & PRICING MODAL ======================= -->
+<div id="plansModal" class="modal-overlay" onclick="closePlans()">
+    <div class="modal-content wide" onclick="event.stopPropagation()" style="max-width:1140px;"><div id="plansBody"></div></div>
+</div>
+
+<!-- ======================= QR MODAL ======================= -->
+<div id="regModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span id="modalBadge" class="event-badge"></span>
+        <h2 id="modalTitle" style="color:var(--primary); margin:4px 0;">QR Code</h2>
+        <p id="modalAttendee" style="font-weight:700; color:var(--gray); margin:0 0 12px;"></p>
+
+        <div id="modalUrlSetup" style="display:none; text-align:left; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px;">
+            <div class="field-row" style="margin:0;">
+                <label id="modalUrlSetupLabel">Form link</label>
+                <input type="url" id="modalUrlInput" placeholder="https://forms.gle/…  (Google Forms, Microsoft Forms, SurveyMonkey…)">
+                <button class="btn btn-success" style="width:100%; margin-top:8px;" onclick="saveModalUrl()">Save link & generate QR</button>
+            </div>
+        </div>
+
+        <div id="regModalQR" class="modal-qr-container"></div>
+        <p id="modalUrlPreview" class="hint" style="word-break:break-all; margin:4px 0 10px;"></p>
+
+        <div id="timerBox" style="background:#fff1f2; padding:8px; border-radius:9px; margin-bottom:12px;">
+            <span style="font-size:10px; color:#be123c; font-weight:700; text-transform:uppercase;">QR valid for</span>
+            <div id="expiryTimer" style="color:var(--danger); font-size:20px; font-weight:800; font-family:monospace;">2:00</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+            <button class="btn btn-success" onclick="downloadCurrentModalQR()">⬇️ Save PNG</button>
+            <button class="btn" onclick="copyModalLink()">📋 Copy Link</button>
+            <button class="btn btn-primary" onclick="closeModal()">Close</button>
+        </div>
+        <p class="hint" style="margin-top:10px;">Want a logo in the middle? Design it free at <a href="https://www.qrcode-monkey.com/" target="_blank" rel="noopener" id="qrMonkeyExternalLink">QR Monkey ↗</a></p>
+    </div>
+</div>
+
+<!-- ======================= SETUP MODAL ======================= -->
+<div id="settingsModal" class="modal-overlay" onclick="closeSettingsModal()">
+    <div class="modal-content wide" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:10px;">
+            <h2 style="margin:0; color:var(--primary);">⚙️ Institution, Event & Data Source Setup</h2>
+            <button class="btn btn-danger" onclick="closeSettingsModal()">✖</button>
+        </div>
+
+        <div class="quick-start">
+            <div style="font-weight:800; color:var(--primary); margin-bottom:4px;">⚡ Quick start — auto-detect your files from GitHub</div>
+            <div class="hint" style="margin:0 0 8px;">Paste a <b>public</b> GitHub repository or folder link. The app lists the files and matches them by name: <i>Participants / Organisers / Speakers / Check-in / On-Site</i> sheets, certificate PDFs (<i>Participant, Organizer, Speakers</i>), <i>Program Flow</i> PDF, logos &amp; banner, and the event title.</div>
+            <div style="display:flex; gap:6px;"><input type="url" id="cfgRepoUrl" placeholder="https://github.com/owner/repository   (or …/tree/main/folder)" style="flex:1;"><button class="btn btn-sync" id="btnRepo" onclick="autoDetectRepo()">🔎 Auto-detect &amp; load</button></div>
+            <div id="repoResult" style="margin-top:8px;"></div>
+        </div>
+        <div class="settings-grid">
+            <!-- 1. Identity -->
+            <div class="settings-group g-id">
+                <h4>1. Institution / Event Identity</h4>
+                <div class="row2">
+                    <div class="field-row"><label>Organization sector</label>
+                        <select id="cfgOrgSector">
+                            <option value="UNIVERSITY">University / Higher Ed</option><option value="COLLEGE">College / Polytechnic</option>
+                            <option value="INSTITUTE">Research Institute / Academy</option><option value="SCHOOL">School / K-12</option>
+                            <option value="GOVERNMENT">Government / Ministry</option><option value="CORPORATE">Corporate / Professional Body</option>
+                        </select></div>
+                    <div class="field-row"><label>Gathering type</label>
+                        <select id="cfgEventType">
+                            <option value="SYMPOSIUM">Symposium</option><option value="CONFERENCE">Conference</option><option value="SEMINAR">Seminar</option>
+                            <option value="COLLOQUIUM">Colloquium</option><option value="WORKSHOP">Workshop / Training</option><option value="SUMMIT">Summit / Forum</option>
+                        </select></div>
+                </div>
+                <div class="field-row"><label>Event title</label><input type="text" id="cfgEventTitle" placeholder="e.g. 5th International Symposium 2027"></div>
+                <div class="row2"><div class="field-row"><label>Event date</label><input type="date" id="cfgEventDate"></div><div class="field-row"><label>Venue / city</label><input type="text" id="cfgVenue" placeholder="e.g. Main Auditorium, Muscat"></div></div>
+                <div class="field-row"><label>Institution name</label><input type="text" id="cfgUniName" placeholder="University, school or office name"></div>
+                <div class="field-row"><label>Website (optional)</label><input type="url" id="cfgUniUrl" placeholder="https://www.university.edu"></div>
+                <div class="field-row"><label>Department / address line</label><input type="text" id="cfgUniAddress" placeholder="Department · P.O Box · City, Country"></div>
+                <div class="field-row"><label>Primary logo (URL or upload)</label>
+                    <div style="display:flex; gap:5px;"><input type="text" id="cfgLogo1" placeholder="Logo image URL, or use Choose File"><input type="file" accept="image/*" class="file-in" onchange="uploadLocalImage(this,'cfgLogo1')"></div></div>
+                <div class="field-row"><label>Secondary / co-host logo (optional)</label>
+                    <div style="display:flex; gap:5px;"><input type="text" id="cfgLogo2"><input type="file" accept="image/*" class="file-in" onchange="uploadLocalImage(this,'cfgLogo2')"></div></div>
+                <div class="row3">
+                    <div class="field-row"><label>Primary colour</label><input type="color" id="cfgPrimaryColor" style="height:34px; padding:2px;"></div>
+                    <div class="field-row"><label>Accent (top bar)</label><input type="color" id="cfgAccentColor" style="height:34px; padding:2px;"></div>
+                    <div class="field-row"><label>Highlight</label><input type="color" id="cfgSecondaryColor" style="height:34px; padding:2px;"></div>
+                </div>
+                <div class="field-row"><label>Admin / contact email (shown in footer)</label><input type="email" id="cfgAdminEmail" placeholder="admin@institution.edu"></div>
+            </div>
+
+            <!-- 2. Data sources -->
+            <div class="settings-group g-src">
+                <h4>2. Live Data Sources — Google Forms responses & others</h4>
+                <p class="hint" style="margin:0 0 8px;">
+                    <b>Google Forms:</b> open the form → <i>Responses</i> → <i>Link to Sheets</i> → in the sheet click <i>Share → Anyone with the link: Viewer</i> → paste that sheet link here (a <code>forms.gle</code> link only <u>fills</u> the form, it can’t be read).
+                    Published-to-web CSV links, GitHub raw CSVs, direct .csv / .xlsx URLs also work. Tick <b>Present</b> for check-in / on-site / organiser sheets (everybody in them is marked present automatically).
+                </p>
+                <div class="sources-scroll" id="srcRows"></div>
+                <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                    <button class="btn btn-success" onclick="addSourceRow()">＋ Add data source</button>
+                    <button class="btn btn-sync" onclick="testSources()">🔌 Save & test sources</button>
+                </div>
+                <div class="row2" style="margin-top:10px;">
+                    <div class="field-row"><label>Auto-refresh every (seconds, 0 = manual)</label><input type="number" id="cfgAutoSync" min="0" max="3600" placeholder="60"></div>
+                    <div class="field-row"><label>Auto-play program flow after idle (min, 0 = off)</label><input type="number" id="cfgIdleFlow" min="0" max="60" placeholder="2"></div>
+                </div>
+            </div>
+
+            <!-- 3. Forms -->
+            <div class="settings-group g-forms">
+                <h4>3. Form Links (QR codes are generated from these)</h4>
+                <div class="field-row"><label>Pre-registration / check-in form</label><input type="url" id="cfgFormPreReg" placeholder="https://forms.gle/…">
+                    <div class="hint">Optional prefill: put <code>{name}</code> or <code>{email}</code> in the link (e.g. …viewform?entry.123={name}). Otherwise <code>?id=name</code> is appended.</div></div>
+                <div class="field-row"><label>On-site (walk-in) registration form</label><input type="url" id="cfgFormOnSite" placeholder="https://forms.gle/…"></div>
+                <div class="field-row"><label>💬 Feedback form</label><input type="url" id="cfgFormFeedback" placeholder="https://forms.gle/…"></div>
+                <div class="field-row"><label>Program-flow PDF — upload or URL</label>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;"><input type="text" id="cfgFlowPdf" placeholder="PDF URL (optional) — or upload a file" style="flex:1; min-width:150px;">
+                        <label class="btn btn-mini" style="cursor:pointer; margin:0; display:inline-flex; align-items:center;">⬆ Upload PDF<input type="file" accept="application/pdf,.pdf" hidden onchange="uploadFlowPdf(this)"></label>
+                        <button class="btn btn-mini" type="button" onclick="readFlowFromField()" title="Read the title, date and venue from the PDF">🔎 Read title</button></div>
+                    <div id="flowNote" class="hint"></div><div id="flowExtract" class="hint"></div></div>
+            </div>
+
+            <!-- 4. Certificates -->
+            <div class="settings-group g-cert">
+                <h4>4. Certificate Templates (PDF, PNG or JPG) & Name Placement</h4>
+                <div class="row3">
+                    <div class="field-row"><label>Participant template</label>
+                        <div style="display:flex; gap:5px;"><input type="text" id="cfgPdfParticipant" placeholder="URL or file name, e.g. certificate.pdf"><input type="file" accept="application/pdf,image/png,image/jpeg" class="file-in" onchange="uploadTemplate(this,'Participant')"></div><div class="hint" id="upl-Participant"></div></div>
+                    <div class="field-row"><label>Organiser template</label>
+                        <div style="display:flex; gap:5px;"><input type="text" id="cfgPdfOrganiser" placeholder="URL or file name, e.g. certificate.pdf"><input type="file" accept="application/pdf,image/png,image/jpeg" class="file-in" onchange="uploadTemplate(this,'Organiser')"></div><div class="hint" id="upl-Organiser"></div></div>
+                    <div class="field-row"><label>Speaker template</label>
+                        <div style="display:flex; gap:5px;"><input type="text" id="cfgPdfSpeaker" placeholder="URL or file name, e.g. certificate.pdf"><input type="file" accept="application/pdf,image/png,image/jpeg" class="file-in" onchange="uploadTemplate(this,'Speaker')"></div><div class="hint" id="upl-Speaker"></div></div>
+                </div>
+                <div class="row3" style="grid-template-columns:1fr 1fr 1fr 1.3fr;">
+                    <div class="field-row"><label>Name Y position</label><input type="number" id="cfgCertY" placeholder="322"></div>
+                    <div class="field-row"><label>Font size</label><input type="number" id="cfgCertSize" placeholder="34"></div>
+                    <div class="field-row"><label>Name colour</label><input type="color" id="cfgCertColor" style="height:34px; padding:2px;"></div>
+                    <div class="field-row"><label>Portal expiry date</label><input type="date" id="cfgExpiry"></div>
+                    <div class="field-row" style="grid-column:1/-1;"><label style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-size:12px;"><input type="checkbox" id="cfgAttendedOnly" style="width:auto;"> <b>Issue certificates only to people recorded as present at the venue</b></label><div class="hint">On: registered people who were never checked in cannot download a certificate. Check-ins come from the desk, quick check-in, or a source marked “check-in”. Off: everyone registered can download.</div></div>
+                </div>
+                <div class="hint">Nothing is loaded automatically — set a URL / file name, or upload a file. Uploaded templates stay in <b>this browser only</b>; for the public participant portal use a URL or a file hosted next to this page. Use <b>Test</b> in the E-Certificate view to preview the name position.</div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="btn" onclick="exportConfigJson()" title="Save as event-config.json next to this page so every device (incl. the public portal) uses these settings">💾 Export Profile</button>
+                <button class="btn" onclick="$('importCfgFile').click()">📂 Import Profile</button>
+                <input type="file" id="importCfgFile" accept=".json" style="display:none" onchange="importConfigJson(this)">
+                <button class="btn" onclick="newBlankEvent()">🆕 Blank Event</button>
+                <button class="btn" onclick="closeSettingsModal();openPlans()">💎 Plan & License</button>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-danger" onclick="resetToDefaults()">↺ Reset to Defaults</button>
+                <button class="btn btn-success" style="padding:9px 22px;" onclick="saveSettings()">✅ Save & Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ==========================================================================
+   DEFAULT PROFILE  (Symposium-5, A'Sharqiyah University)
+   Everything below can be changed in ⚙️ Event Setup & URLs, or by dropping an
+   exported "event-config.json" next to this file (used by every device that
+   has no local settings, e.g. participants opening the public portal).
+   ========================================================================== */
+const ROLE_OPTS = ["Participant", "Participant (New)", "Organiser", "Speaker", "Guest", "Staff", "Student"];
+
+/* ==========================================================================
+   VENDOR & LICENSING  — the seller fills this block in before distributing.
+   Prices below are SUGGESTED defaults (OMR ≈ USD at the fixed 2.60 peg); change freely.
+   NOTE: a licence check inside a web page is a deterrent, not security — anyone who
+   can read the page source can bypass it. For hard enforcement verify keys on a server.
+   ========================================================================== */
+const VENDOR = {
+    name: "",                    // shown as "Powered by …" on Starter (free) plans; blank = hidden
+    email: "", whatsapp: "96878243835",     // "Get plan" buttons open a pre-filled message here (WhatsApp in international format, digits only)
+    checkout: { day: "", event: "", annual: "" },    // optional direct payment links (Stripe / PayPal / Thawani Pay …) per plan
+    defaultCurrency: "OMR"       // "OMR" or "USD"
+};
+const LICENSE_SALT = "ASU-CMS-41d6c222eb2b8223";     // must be identical in CMS-License-Generator.html
+const PLAN_CODES = { DAY: "day", EVENT: "event", ANNUAL: "annual" };
+const PLAN_CATALOG = {
+    free:   { name: "Starter", tag: "Try it on a small event", price: { OMR: 0, USD: 0 }, per: "free · no card needed", attendees: 50, sources: 1, minRefresh: 60, watermark: true, xlsx: false, timeline: true, whiteLabel: false, support: "Community support", validity: "" },
+    day:    { name: "Event Day Pass", tag: "One event, one day", price: { OMR: 15, USD: 39 }, per: "per event day", attendees: 300, sources: 3, minRefresh: 30, watermark: false, xlsx: true, timeline: true, whiteLabel: false, support: "Email support", validity: "Valid for 1 event day" },
+    event:  { name: "Event Pro", tag: "Multi-day conferences", price: { OMR: 45, USD: 119 }, per: "per event · up to 7 days", attendees: 1500, sources: 10, minRefresh: 10, watermark: false, xlsx: true, timeline: true, whiteLabel: false, support: "Email + WhatsApp, 24h reply", validity: "Valid for up to 7 days", featured: true },
+    annual: { name: "Institution Annual", tag: "Unlimited events for a year", price: { OMR: 289, USD: 749 }, per: "per year · all your events", attendees: 1e9, sources: 50, minRefresh: 10, watermark: false, xlsx: true, timeline: true, whiteLabel: true, support: "Priority support + onboarding call", validity: "Valid for 12 months" }
+};
+const ADDONS = [
+    { id: "onsite",  name: "Managed on-site service", desc: "We run your check-in desk for one event day — operator, laptop, scanner, live dashboard (within our service area).", price: { OMR: 95, USD: 249 }, per: "per day" },
+    { id: "design",  name: "Custom certificate design", desc: "Your branding, layout and signatures, delivered as ready-to-use templates.", price: { OMR: 15, USD: 39 }, per: "per template" },
+    { id: "setup",   name: "Setup & data import by us", desc: "We connect your Google Forms / Sheets, forms and QR codes and test everything with you.", price: { OMR: 23, USD: 59 }, per: "one-off" },
+    { id: "pack",    name: "+500 attendees pack", desc: "Raise the attendee limit of a Day Pass or Event Pro for a single event.", price: { OMR: 10, USD: 25 }, per: "per event" },
+    { id: "support", name: "Priority support", desc: "Same-day answers and help during your event window.", price: { OMR: 11, USD: 29 }, per: "per month" }
+];
+
+/* Nothing is pre-filled: no institution, logos, links, QR images or data.
+   Fill everything in via ⚙️ Event Setup & URLs (or import an event-config.json). */
+const DEFAULT_PROFILE = {
+    orgSector: "UNIVERSITY", eventType: "SYMPOSIUM",
+    eventTitle: "", eventDate: "", venue: "", license: "", uniName: "", uniUrl: "", uniAddress: "", adminEmail: "",
+    logo1: "", logo2: "",
+    primaryColor: "#1a3a82", accentColor: "#f5a623", secondaryColor: "#7209b7",     /* theme colours only */
+    expiryDate: "",
+    certAttendedOnly: true,
+    repoUrl: "",
+    sources: [],
+    formPreReg: "", formOnSite: "", formFeedback: "", flowPdf: "",
+    pdfParticipant: "", pdfOrganiser: "", pdfSpeaker: "",
+    certY: 322, certSize: 34, certColor: "#14204a",
+    autoSyncSec: 60, idleFlowMin: 0
+};
+const BLANK_PROFILE = DEFAULT_PROFILE;
+
+const CERT_TYPES = [
+    { key: "Participant", label: "PARTICIPANTS", cfg: "pdfParticipant",             match: r => /participant/i.test(r) },
+    { key: "Organiser",   label: "ORGANISERS",   cfg: "pdfOrganiser",    match: r => /organi[sz]er/i.test(r) },
+    { key: "Speaker",     label: "SPEAKERS",     cfg: "pdfSpeaker",                         match: r => /speaker/i.test(r) }
+];
+
+/* Multi-colour ("variance") gradients per QR type — generated locally, works offline */
+const QR_STYLES = {
+    "PRE-REG":  { badge: "DEEP INDIGO → MAGENTA",         title: "PRE-REGISTRATION CHECK-IN",       stops: ["#1e1b4b", "#3730a3", "#7209b7", "#f72585"], eye: "#1e1b4b", eyeDot: "#7209b7", key: "formPreReg",   label: "Pre-registration form link" },
+    "ON-SITE":  { badge: "CRIMSON → INDIGO",              title: "ON-SITE WALK-IN REGISTRATION",    stops: ["#f72585", "#b5179e", "#7209b7", "#4361ee"], eye: "#b5179e", eyeDot: "#4361ee", key: "formOnSite",   label: "On-site registration form link" },
+    "FEEDBACK": { badge: "MULTI-COLOUR GRADIENT • FEEDBACK", title: "EVENT FEEDBACK & EVALUATION",  stops: ["#4361ee", "#7209b7", "#f72585", "#ff9f43", "#10b981"], eye: "#3a0ca3", eyeDot: "#f72585", key: "formFeedback", label: "Feedback form link" },
+    "CHECK-IN": { badge: "GENERAL CHECK-IN",              title: "GENERAL CHECK-IN QR",             stops: ["#1a3a82", "#2563eb", "#0ea5e9", "#10b981"], eye: "#1a3a82", eyeDot: "#0ea5e9" }
+};
+
+/* ============================ helpers ============================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const MODE = new URLSearchParams(location.search).get("mode"), PUBLIC = MODE === "certs", LIVE = MODE === "live";
+let liveStandalone = false;
+const PRESENT = "✅ Present", PENDING = "❌ Pending";
+const isPresent = a => String(a.status).includes("✅");
+const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+let _uid = 0; const newId = () => "a" + Date.now().toString(36) + (++_uid).toString(36);
+
+function safeGet(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
+function safeSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { toast("Browser storage is full or blocked — changes may not be saved.", "err"); return false; } }
+function toast(msg, type = "info", ms = 5200) {
+    const t = document.createElement("div"); t.className = "toast " + type; t.textContent = msg;
+    $("toasts").appendChild(t); setTimeout(() => t.remove(), ms);
+}
+function hexToHsl(hex) {
+    hex = String(hex || "#1a3a82").replace("#", ""); if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    const r = parseInt(hex.slice(0, 2), 16) / 255, g = parseInt(hex.slice(2, 4), 16) / 255, b = parseInt(hex.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b); let h = 0, s = 0; const l = (max + min) / 2;
+    if (max !== min) {
+        const d = max - min; s = l > .5 ? d / (2 - max - min) : d / (max + min);
+        h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60;
+    }
+    return [h, s * 100, l * 100];
+}
+
+/* --- IndexedDB for uploaded certificate templates (too big for localStorage) --- */
+const idb = {
+    db: null,
+    open() { return this.db || (this.db = new Promise((res, rej) => { const r = indexedDB.open("cms_assets", 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); })); },
+    async op(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction("files", mode); const rq = fn(tx.objectStore("files")); tx.oncomplete = () => res(rq && rq.result); tx.onerror = () => rej(tx.error); }); },
+    get(k) { return this.op("readonly", s => s.get(k)); }, set(k, v) { return this.op("readwrite", s => s.put(v, k)); }, del(k) { return this.op("readwrite", s => s.delete(k)); }
+};
+
+/* ============================ state ============================ */
+function normalizeConfig(cfg) {
+    const c = Object.assign({}, DEFAULT_PROFILE, cfg || {});
+    if (!Array.isArray(c.sources)) c.sources = [];
+    c.sources = c.sources.map(s => Object.assign({ label: "", role: "Participant", present: false, url: "", id: newId() }, s, { id: s.id || newId() }));
+    return c;
+}
+let eventConfig = normalizeConfig();
+let attendees = [];
+let downloadLog = safeGet("prod_cert_logs", []);
+const sourceState = {};          // source.id -> {state:'ok'|'err'|'skip', n, via, msg}
+const templateCache = {}, templateInfo = {};
+let currentId = null, currentFilter = "All", currentQr = null, currentQrImage = "", currentQrUrl = "", currentQrKey = "";
+let qrExpiryInterval, autoSyncTimer, idleTimer, animId, scrollPos = 0, myChart, fsChart, activeFlowSource = "", syncing = false, lastSync = null;
+
+function persist() { if (!PUBLIC && !LIVE) safeSet("prod_cms_attendees", attendees); }
+function loadAttendees() {
+    return (safeGet("prod_cms_attendees", []) || []).map(a => {
+        a.id = a.id || newId(); a.roles = Array.isArray(a.roles) && a.roles.length ? a.roles : [a.role || "Participant"]; a.role = a.role || a.roles[0]; return a;
+    });
+}
+
+/* ====================== same-folder probing ====================== */
+async function probeFirstAvailableFile(candidates) {
+    for (const rel of candidates || []) {
+        try {
+            const res = await fetch(/^https?:/i.test(rel) ? rel : encodeURI(rel), { cache: "no-store" });
+            if (res.ok) {
+                const ct = res.headers.get("content-type") || "";
+                if (/text\/html/i.test(ct) && !/\.html?$/i.test(rel)) continue;       // SPA hosts answer 404s with HTML
+                return { path: rel, response: res };
+            }
+        } catch (_) {}
+    }
+    return null;
+}
+async function detectLocalAssets() { applyBranding(); }
+
+/* ============================ branding ============================ */
+function applyBranding() {
+    const c = eventConfig, root = document.documentElement.style;
+    root.setProperty("--primary", c.primaryColor); root.setProperty("--accent", c.accentColor); root.setProperty("--secondary", c.secondaryColor || "#7209b7");
+    const [h, s] = hexToHsl(c.primaryColor), sat = Math.max(s, 55);
+    root.setProperty("--bg1", `hsl(${Math.round(h)}, ${Math.round(sat)}%, 26%)`);
+    root.setProperty("--bg2", `hsl(${Math.round((h + 8) % 360)}, ${Math.round(Math.min(sat + 10, 90))}%, 50%)`);
+
+    const hasTitle = !!c.eventTitle, hasUni = !!c.uniName;
+    document.title = hasTitle ? `${c.eventTitle} — ${PUBLIC ? "E-Certificates" : "CMS"}` : "Event & Conference Management System (CMS)";
+    const typeLabel = ({ SYMPOSIUM: "Symposium", CONFERENCE: "Conference", SEMINAR: "Seminar", COLLOQUIUM: "Colloquium", WORKSHOP: "Workshop", SUMMIT: "Summit" })[c.eventType] || c.eventType;
+    const dt = c.eventDate && !isNaN(new Date(c.eventDate)) ? new Date(c.eventDate + "T00:00:00") : null, bits = [typeLabel];
+    if (dt) bits.push(fmtDate(dt)); if (c.venue) bits.push(c.venue); if (!dt && !c.venue) bits.push("Academic Gathering");
+    $("hdrEventType").textContent = bits.join(" · ") + (dt && dt.toDateString() === new Date().toDateString() ? " · LIVE TODAY" : "");
+    $("hdrTitle").textContent = hasTitle ? (PUBLIC ? c.eventTitle : `${c.eventTitle} — CMS`) : "CONFERENCE & EVENT MANAGEMENT SYSTEM (CMS)";
+    $("hdrSubtitle").textContent = hasUni ? `${c.uniName} · ${PUBLIC ? "E-Certificate Portal" : "Management & E-Certificate System"}` : "Management & E-Certificate System";
+    $("fsEventHeading").textContent = `Live ${typeLabel || "Event"} Analytics`;
+    $("fsSub").textContent = [c.eventTitle, c.uniName, bits.slice(1).join(" · ")].filter(Boolean).join(" · ");
+    [["fsLogo1", logos0(c)[0]], ["fsLogo2", logos0(c)[1]]].forEach(([id, src]) => { const el = $(id); if (src) { el.src = src; el.style.display = "block"; el.onerror = () => { el.style.display = "none"; }; } else el.style.display = "none"; });
+    $("certUniSubtitle").textContent = hasUni ? `${c.uniName} — self-service digital certificates` : "Self-service digital certificate distribution";
+
+    const logos = [c.logo1 || "", c.logo2 || ""];
+    [["hdrLogo1", logos[0]], ["hdrLogo2", logos[1]]].forEach(([id, src]) => {
+        const el = $(id); if (src) { el.src = src; el.style.display = "inline-block"; el.onerror = () => { el.style.display = "none"; syncPlaceholder(); }; } else el.style.display = "none";
+    });
+    syncPlaceholder();
+
+    const exp = expiryDate();
+    $("certExpiryText").textContent = !c.expiryDate ? "" : (isExpired() ? `This portal expired on ${fmtDate(exp) || c.expiryDate}.` : `This certificate portal will expire on ${fmtDate(exp) || c.expiryDate}`);
+
+    const year = new Date().getFullYear(), parts = [];
+    if (hasUni) parts.push(c.uniUrl ? `<a href="${esc(c.uniUrl)}" target="_blank" rel="noopener">${esc(c.uniName)}</a>` : `<strong>${esc(c.uniName)}</strong>`);
+    if (c.uniAddress) parts.push(esc(c.uniAddress));
+    parts.push(`Copyright © ${c.adminEmail ? `<a href="mailto:${esc(c.adminEmail)}">${esc(c.adminEmail)}</a> ` : ""}${year}`);
+    $("dynamicFooter").innerHTML = hasUni || c.adminEmail ? parts.join(" · ") : `Universal Academic & Institutional Event Management System © ${year}`;
+
+    renderMainQr(); setupAutoSync(); updateBadge(); resetIdle(); renderPlanUI();
+}
+const logos0 = c => [c.logo1 || "", c.logo2 || ""];
+function syncPlaceholder() {
+    const any = ["hdrLogo1", "hdrLogo2"].some(id => $(id).style.display !== "none");
+    $("logoPlaceholder").style.display = any ? "none" : "flex";
+}
+
+/* ============================ status pill ============================ */
+function updateBadge(forced) {
+    const dot = $("statusDot"), txt = $("statusText");
+    if (forced === "sync") { dot.className = "dot dot-sync"; txt.textContent = "SYNCING…"; return; }
+    if (forced === "err") { dot.className = "dot dot-offline"; txt.textContent = "SYNC ERROR"; return; }
+    if (attendees.length) { dot.className = "dot dot-online"; txt.textContent = `SYNCED (${attendees.length})`; }
+    else { dot.className = "dot dot-idle"; txt.textContent = "NO RECORDS"; }
+    $("statusPill").title = lastSync ? "Last live sync: " + lastSync.toLocaleTimeString() : "No live sync yet";
+}
+function setupAutoSync() {
+    clearInterval(autoSyncTimer);
+    const want = parseInt(eventConfig.autoSyncSec, 10) || 0, sec = want ? Math.max(want, currentPlan().minRefresh) : 0;
+    if (!PUBLIC && (!LIVE || liveStandalone) && sec >= 10) autoSyncTimer = setInterval(() => { if (!document.hidden) syncAllSources(true); }, sec * 1000);
+}
+
+/* ============================ views ============================ */
+function switchView(view) {
+    const certs = view === "certs";
+    $("cmsView").classList.toggle("hidden", certs); $("certView").classList.toggle("hidden", !certs);
+    $("tabCms").classList.toggle("active", !certs); $("tabCerts").classList.toggle("active", certs);
+    if (certs) prepareCertificatePortal();
+}
+function publicUrl() { const u = new URL(location.href); u.search = ""; u.hash = ""; u.searchParams.set("mode", "certs"); return u.toString(); }
+function openPublicPortal() { window.open(publicUrl(), "_blank"); }
+function copyPublicLink() {
+    const u = publicUrl();
+    (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => toast("Public portal link copied:\n" + u, "ok"), () => prompt("Copy this link:", u));
+}
+
+/* ====================== URL → fetchable data URL ====================== */
+function buildCandidateDataUrls(rawUrl) {
+    const url = String(rawUrl || "").trim(); if (!url) return [];
+    if (/docs\.google\.com\/forms|forms\.gle|forms\.office\.com|typeform\.com|surveymonkey\.com\/r\//i.test(url))
+        throw new Error("That is a form link (it only fills the form). Use the response SHEET: Form → Responses → Link to Sheets → share as “Anyone with the link: Viewer”.");
+    if (/docs\.google\.com\/spreadsheets\/d\/e\//i.test(url)) {                         // "Publish to web" links
+        if (/output=csv/i.test(url)) return [url];
+        return [url.replace(/\/pub(html)?(\?.*)?$/i, "/pub?output=csv")];
+    }
+    const m = url.match(/docs\.google\.com\/spreadsheets\/d\/([\w-]+)/i);
+    if (m) {
+        const g = url.match(/[?&#]gid=(\d+)/), q = g ? `&gid=${g[1]}` : "";
+        return [`https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv${q}`, `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${q}`];
+    }
+    const gh = url.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/i);
+    if (gh) return [`https://raw.githubusercontent.com/${gh[1]}/${gh[2]}/${gh[3]}`];
+    if (/dropbox\.com/i.test(url)) return [url.replace(/[?&]dl=0/, "").replace(/\?$/, "") + (url.includes("?") ? "&dl=1" : "?dl=1")];
+    return [url];
+}
+
+/* ====================== parsing ====================== */
+function bufferToRows(buf) {
+    const u8 = new Uint8Array(buf); let wb;
+    if (u8[0] === 0x50 && u8[1] === 0x4B) wb = XLSX.read(u8, { type: "array" });          // .xlsx (zip)
+    else {                                                                                // CSV — decode as UTF-8 so Arabic etc. survive
+        let txt = new TextDecoder("utf-8").decode(u8); if (txt.charCodeAt(0) === 0xFEFF) txt = txt.slice(1);
+        if (/^\s*<(!doctype|html)/i.test(txt)) throw new Error("Received a web page, not data — the sheet is private. Share it as “Anyone with the link: Viewer”.");
+        wb = XLSX.read(txt, { type: "string", raw: true });
+    }
+    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "", raw: false });
+}
+function rowsToRecords(rows) {
+    const out = [];
+    rows.forEach(row => {
+        const keys = Object.keys(row), find = (re, ex) => keys.find(k => re.test(k.trim()) && !(ex && ex.test(k)));
+        const emailKey = find(/^email\s*address$|^e-?mail$/i) || find(/e-?mail/i);
+        const titleKey = find(/^(title|salutation|honorific|prefix)$/i);
+        const nameKey  = find(/^(full\s*)?name$|^(participant|attendee|speaker)\s*name$/i) || find(/name/i, /user|file|institu|universit|organi|school|father|company/i);
+        const instKey  = find(/institut|organi[sz]ation|universit|college|school|affiliat|company|employer|department/i);
+        const ctryKey  = find(/country|^state|region|^city|location/i);
+        const contKey  = find(/contact|phone|mobile|whatsapp|\btel\b/i);
+        const roleKey  = find(/^(role|category|column\s*2|participant\s*type|type)$/i);
+
+        let name = nameKey ? String(row[nameKey]).trim() : "";
+        if (!name) { const v = Object.values(row); if (v.length > 4 && !nameKey) name = String(v[4]).trim(); }
+        if (!name || /^(full\s*)?name$/i.test(name)) return;
+        const prefix = titleKey ? String(row[titleKey]).trim() : "";
+        const full = prefix && !name.toLowerCase().startsWith(prefix.toLowerCase()) ? `${prefix} ${name}` : name;
+
+        let roleHint = "";
+        if (roleKey && row[roleKey]) {
+            const v = String(row[roleKey]);
+            roleHint = /speaker/i.test(v) ? "Speaker" : /organi[sz]/i.test(v) ? "Organiser" : /guest|vip/i.test(v) ? "Guest" : /staff/i.test(v) ? "Staff" : /student/i.test(v) ? "Student" : /on-?site|new/i.test(v) ? "Participant (New)" : "";
+        }
+        const get = k => (k && row[k] !== "" && row[k] != null) ? String(row[k]).trim() : "";
+        out.push({ name: full.replace(/\s+/g, " "), email: get(emailKey).toLowerCase(), institute: get(instKey), country: get(ctryKey), contact: get(contKey), roleHint });
+    });
+    return out;
+}
+
+/* ====================== merging ====================== */
+function pickPrimary(roles) { for (const r of ["Speaker", "Organiser"]) if (roles.includes(r)) return r; return roles.includes("Participant") ? "Participant" : roles[0]; }
+function findExisting(rec) {
+    const nm = rec.name.toLowerCase();
+    return attendees.find(a => (rec.email && a.email) ? a.email === rec.email : a.name.toLowerCase() === nm);
+}
+function mergeRecord(rec, src) {
+    const role = rec.roleHint || src.role || "Participant";
+    const present = !!src.present || /new/i.test(role);
+    let a = findExisting(rec);
+    if (!a) {
+        if (attendees.length >= currentPlan().attendees) { syncDropped++; return; }          // plan attendee limit
+        attendees.push({ id: newId(), name: rec.name, email: rec.email, institute: rec.institute || "-", country: rec.country || "-", contact: rec.contact || "-", role, roles: [role], status: present ? PRESENT : PENDING, nameByRole: { [role]: rec.name }, ...(present ? { checkedAt: new Date().toISOString(), checkedVia: "sheet" } : {}) });
+        return;
+    }
+    if (rec.email && !a.email) a.email = rec.email;
+    const fill = (k, v) => { if (v && (!a[k] || a[k] === "-")) a[k] = v; };
+    fill("institute", rec.institute); fill("country", rec.country); fill("contact", rec.contact);
+    if (!a.roles.includes(role)) a.roles.push(role);
+    (a.nameByRole = a.nameByRole || {})[role] = rec.name;      // keeps "Dr." vs "Mr." per sheet for certificates
+    a.role = pickPrimary(a.roles);
+    if (present && !a.manual) { if (!isPresent(a)) { a.checkedAt = new Date().toISOString(); a.checkedVia = "sheet"; } a.status = PRESENT; }   // a manual Mark/Un-mark always wins over sheets
+}
+
+/* ====================== live sync ====================== */
+async function loadSource(src) {
+    let lastErr = "";
+    if (src.url) {
+        let cands = [];
+        try { cands = buildCandidateDataUrls(src.url); } catch (e) { lastErr = e.message; }
+        for (const u of cands) {
+            try {
+                const res = await fetch(u, { cache: "no-store" });
+                if (!res.ok) { lastErr = `HTTP ${res.status}` + ((res.status === 403 || res.status === 404) ? " — check the link / sharing" : ""); continue; }
+                const recs = rowsToRecords(bufferToRows(await res.arrayBuffer()));
+                recs.forEach(r => mergeRecord(r, src));
+                return { state: "ok", n: recs.length, via: "URL" };
+            } catch (e) { lastErr = (e && e.message && e.message !== "Failed to fetch") ? e.message : "Could not reach the link (private sheet, wrong URL, or blocked by the browser)"; }
+        }
+    }
+    if (src.fallback && src.fallback.length) {
+        const hit = await probeFirstAvailableFile(src.fallback);
+        if (hit) { try { const recs = rowsToRecords(bufferToRows(await hit.response.arrayBuffer())); recs.forEach(r => mergeRecord(r, src)); return { state: "ok", n: recs.length, via: "folder: " + hit.path }; } catch (e) { lastErr = e.message; } }
+    }
+    return { state: "err", msg: lastErr || "No URL set / file not found" };
+}
+async function syncAllSources(silent = false) {
+    if (syncing) return; syncing = true; updateBadge("sync");
+    let ok = 0, fail = 0, total = 0; const failures = [];
+    syncDropped = 0; const srcCap = currentPlan().sources; let si = 0;
+    for (const src of eventConfig.sources) {
+        if (++si > srcCap) { sourceState[src.id] = { state: "skip", msg: "Not included in your plan — upgrade to read more sources" }; continue; }
+        if (!src.url && !(src.fallback && src.fallback.length)) { sourceState[src.id] = { state: "skip", msg: "No URL set" }; continue; }
+        const r = await loadSource(src); sourceState[src.id] = r;
+        if (r.state === "ok") { ok++; total += r.n; } else { fail++; failures.push(`• ${src.label || "Source"}: ${r.msg}`); }
+    }
+    lastSync = new Date(); syncing = false;
+    if (syncDropped && !silent) toast(`${syncDropped} registration(s) were not loaded: your plan allows ${currentPlan().attendees} attendees. Upgrade to see everyone.`, "err", 9000);
+    persist(); refreshUI();
+    if (!ok && fail) updateBadge("err");
+    if ($("settingsModal").style.display === "flex") renderSourceRows();
+    if (!silent) {
+        if (ok && !fail) toast(`Sync complete — ${ok} source(s), ${total} rows read, ${attendees.length} people in total.`, "ok");
+        else if (ok) toast(`Synced ${ok} source(s), ${fail} failed:\n${failures.join("\n")}`, "err", 9000);
+        else toast(`No data loaded.\n${failures.join("\n") || "Add a data source in ⚙️ Event Setup & URLs."}` + (location.protocol === "file:" ? "\n\nTip: open this page from a web server / GitHub Pages, not directly from disk." : ""), "err", 10000);
+    } else if (fail && !ok) toast("Live sync failed — open ⚙️ Event Setup & URLs to see why.", "err");
+}
+function handleFileUpload(input) {
+    Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const f = file.name.toLowerCase();
+            let role = "Participant", present = false;
+            if (f.includes("speaker")) role = "Speaker";
+            else if (/organi[sz]/.test(f)) { role = "Organiser"; present = true; }
+            else if (/on-?site/.test(f)) { role = "Participant (New)"; present = true; }
+            else if (f.includes("check")) present = true;
+            try { const recs = rowsToRecords(bufferToRows(e.target.result)); recs.forEach(r => mergeRecord(r, { role, present, label: file.name })); persist(); refreshUI(); toast(`${file.name}: ${recs.length} rows imported as “${role}”${present ? " (marked present)" : ""}.`, "ok"); }
+            catch (err) { toast(`Could not read ${file.name}: ${err.message}`, "err"); }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+    input.value = "";
+}
+
+/* ============================ charts & stats ============================ */
+const CATS = [
+    { label: "Pre-Reg",   side: "Pre-Reg Total", test: a => a.role === "Participant", color: "#10b981" },
+    { label: "On-Site",   side: "On-Site Reg",   test: a => /new/i.test(a.role),     color: "#f72585" },
+    { label: "Guests",    side: "Guests",        test: a => a.role === "Guest",      color: "#7209b7" },
+    { label: "Staff",     side: "Staff",         test: a => a.role === "Staff",      color: "#f59e0b" },
+    { label: "Students",  side: "Students",      test: a => a.role === "Student",    color: "#0ea5e9" },
+    { label: "Speakers",  side: "Speakers",      test: a => a.role === "Speaker",    color: "#1a3a82" },
+    { label: "Organisers",side: "Organisers",    test: a => a.role === "Organiser",  color: "#64748b" }
+];
+function initCharts() {
+    if (typeof Chart === "undefined") return;
+    const mk = (id, size) => new Chart($(id).getContext("2d"), {
+        type: "bar",
+        data: { labels: CATS.map(c => c.label), datasets: [
+            { label: "Present", backgroundColor: CATS.map(c => c.color), data: CATS.map(() => 0), borderRadius: 4 },
+            { label: "Pending", backgroundColor: "#ef4444", data: CATS.map(() => 0), borderRadius: 4 } ] },
+        plugins: [{ id: "barValues", afterDatasetsDraw(ch) { const x = ch.ctx; x.save(); x.font = `bold ${size + 1}px Inter, sans-serif`; x.textAlign = "center"; x.fillStyle = "#334155";
+            ch.data.datasets.forEach((d, i) => ch.getDatasetMeta(i).data.forEach((bar, j) => { if (d.data[j] > 0) x.fillText(d.data[j], bar.x, bar.y - 5); })); x.restore(); } }],
+        options: { maintainAspectRatio: false, layout: { padding: { top: 18 } }, plugins: { legend: { display: false } }, datasets: { bar: { categoryPercentage: .82, barPercentage: .92 } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false }, ticks: { font: { size, weight: "bold" } } } } }
+    });
+    myChart = mk("statChart", 10); fsChart = mk("fsStatChart", 13);
+    tlChart = new Chart($("fsTimeline").getContext("2d"), { type: "line",
+        data: { labels: [], datasets: [{ label: "Cumulative check-ins", data: [], borderColor: "#7209b7", backgroundColor: "rgba(114,9,183,.12)", fill: true, tension: .25, pointRadius: 3, pointBackgroundColor: "#7209b7", borderWidth: 3 }] },
+        options: { maintainAspectRatio: false, layout: { padding: { right: 14, top: 8 } }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "People checked in" } }, x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } } } } });
+}
+function updateStats() {
+    const st = CATS.map(c => { const g = attendees.filter(c.test), p = g.filter(isPresent).length; return { ...c, total: g.length, present: p, pending: g.length - p }; });
+    const totalIn = attendees.filter(isPresent).length;
+    const rate = (attendees.length ? (totalIn / attendees.length * 100).toFixed(1) : "0") + "%";
+    $("fsCalculationLabel").innerHTML = `Total Present: <b>${totalIn} / ${attendees.length}</b> (ATTENDANCE RATE: <b>${rate}</b>)`;
+    $("sidebarStatsList").innerHTML = st.map(s => `<p><span>${s.side}:</span><span><b>${s.total}</b>${s.pending && s.total ? ` <span class="pend">(Pending: ${s.pending})</span>` : ""}</span></p>`).join("")
+        + `<hr style="border:0;border-top:1px solid var(--line);margin:6px 0;"><p><span>Total Check-ins:</span><b style="color:var(--success)">${totalIn}</b></p>`;
+    [myChart, fsChart].forEach(c => { if (!c) return; c.data.datasets[0].data = st.map(s => s.present); c.data.datasets[1].data = st.map(s => s.pending); c.update(); });
+    const set = (id, v) => $(id).textContent = v;
+    set("fsPreReg", st[0].total); set("fsCheckIn", totalIn); set("fsOnsite", st[1].total); set("fsGuestStat", st[2].total);
+    set("fsStaffStat", st[3].total); set("fsStudentStat", st[4].total); set("fsSpeakerStat", st[5].total); set("fsOrgStat", st[6].total);
+    set("statTotalPerc", rate);
+    renderKpis(totalIn, rate); renderActivity(); renderTimeline(); renderPlanUI();
+}
+
+/* ============================ attendees UI ============================ */
+function refreshUI() { renderDropdown(); updateStats(); updateBadge(); if (currentId) selectUser(currentId); if (!$("certView").classList.contains("hidden")) refreshCertCounts(); }
+function toggleGuestPanel() { const p = $("guestPanel"); p.style.display = p.style.display === "grid" ? "none" : "grid"; }
+function addManual(name, role, institute) {
+    if (attendees.length >= currentPlan().attendees) return planLock(`Your plan allows ${currentPlan().attendees} attendees.`);
+    const a = { id: newId(), name, email: "", institute, country: "-", contact: "-", role, roles: [role], status: PRESENT, manual: true, checkedAt: new Date().toISOString(), checkedVia: "desk" };
+    attendees.push(a); persist(); refreshUI(); selectUser(a.id);
+}
+function quickAddGuest(label, role) {
+    const n = attendees.filter(a => a.name.startsWith(label)).length + 1;
+    addManual(`${label} ${String(n).padStart(2, "0")}`, role, eventConfig.uniName || "Guest");
+}
+function customGuest() { const n = prompt("Enter custom guest / delegate name:"); if (n && n.trim()) addManual(n.trim(), "Guest", "External Guest"); }
+function clearSessionRecords() {
+    if (!confirm("Reset session data?\nThis clears all attendees and manual check-ins stored in this browser. Press “Fetch Live URLs” afterwards to reload from your sources.")) return;
+    attendees = []; persist(); clearSelection(); refreshUI(); toast("Session data cleared.", "ok");
+}
+function clearSelection() {
+    currentId = null; $("displayName").textContent = "No Selection";
+    ["valStatus", "valCategory", "valInstitution", "valCountry", "valContact", "valEmail"].forEach(id => $(id).textContent = "-");
+    $("valStatus").style.color = "var(--danger)"; $("btnMarkPresent").textContent = "☑ Mark Present"; $("btnMarkPresent").className = "btn btn-success";
+}
+function selectUser(id) {
+    const p = attendees.find(a => a.id === id); if (!p) { clearSelection(); return; }
+    currentId = id; const pres = isPresent(p);
+    $("displayName").textContent = p.name; $("displayName").title = p.name;
+    $("valStatus").textContent = p.status; $("valStatus").style.color = pres ? "#059669" : "var(--danger)";
+    $("btnMarkPresent").textContent = pres ? "☒ Un-Present" : "☑ Mark Present"; $("btnMarkPresent").className = pres ? "btn btn-danger" : "btn btn-success";
+    $("valInstitution").textContent = p.institute || "-"; $("valCountry").textContent = p.country || "-"; $("valContact").textContent = p.contact || "-";
+    $("valCategory").textContent = p.roles && p.roles.length > 1 ? `${p.role} (+ ${p.roles.filter(r => r !== p.role).join(", ")})` : p.role || "-";
+    $("valEmail").textContent = p.email || "-";
+    if ([...$("combinedDropdown").options].some(o => o.value === id)) $("combinedDropdown").value = id;
+}
+function togglePresence() {
+    const p = attendees.find(a => a.id === currentId); if (!p) return toast("Select a participant first.", "err");
+    if (isPresent(p)) { p.status = PENDING; p.manual = true; delete p.checkedAt; delete p.checkedVia; persist(); updateStats(); selectUser(p.id); }
+    else markPresent(p, "desk");
+}
+function markPresent(p, via) { p.status = PRESENT; p.manual = true; p.checkedAt = new Date().toISOString(); p.checkedVia = via; persist(); updateStats(); selectUser(p.id); }
+function visibleList() {
+    const q = $("searchBox").value.toLowerCase().trim();
+    return attendees.filter(a => (currentFilter === "All" || a.role.includes(currentFilter)) &&
+        (!q || [a.name, a.email, a.institute, a.country].some(v => String(v || "").toLowerCase().includes(q)))).sort(byName);
+}
+function renderDropdown() {
+    const dd = $("combinedDropdown"), list = visibleList();
+    dd.innerHTML = (attendees.length ? `<option value="">Select Participant… (${list.length})</option>` : `<option value="">No records loaded yet...</option>`)
+        + list.map(a => `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.role)})</option>`).join("");
+    if (currentId && list.some(a => a.id === currentId)) dd.value = currentId;
+}
+function filterRole(role) {
+    currentFilter = role;
+    document.querySelectorAll("[data-filter]").forEach(b => b.classList.toggle("active", b.dataset.filter === role));
+    renderDropdown();
+}
+function handleSearch() { renderDropdown(); const l = visibleList(); if ($("searchBox").value.trim() && l.length) selectUser(l[0].id); }
+$("combinedDropdown").onchange = e => selectUser(e.target.value);
+
+/* (reports: see openReports / exportCsv / exportXlsx in the paid-layer block below) */
+
+/* ============================ QR codes (local, multi-colour gradients) ============================ */
+function makeQr(data, style, size) {
+    return new QRCodeStyling({
+        width: size, height: size, type: "canvas", data, margin: 6, qrOptions: { errorCorrectionLevel: "M" },
+        dotsOptions: { type: "rounded", gradient: { type: "linear", rotation: Math.PI / 4, colorStops: style.stops.map((c, i) => ({ offset: i / (style.stops.length - 1), color: c })) } },
+        backgroundOptions: { color: "#ffffff" },
+        cornersSquareOptions: { type: "extra-rounded", color: style.eye }, cornersDotOptions: { type: "dot", color: style.eyeDot }
+    });
+}
+function fillTemplate(url, rec) {
+    const hasPh = /\{(name|email)\}/.test(url);
+    if (hasPh) return url.replace(/\{name\}/g, encodeURIComponent(rec ? rec.name : "")).replace(/\{email\}/g, encodeURIComponent(rec ? rec.email : ""));
+    if (!rec) return url;
+    return url + (url.includes("?") ? "&" : "?") + "id=" + encodeURIComponent(rec.name);
+}
+async function renderMainQr() {
+    const box = $("mainCheckinQR"), target = eventConfig.formPreReg || eventConfig.formOnSite;
+    box.innerHTML = "";
+    if (target && window.QRCodeStyling) { makeQr(fillTemplate(target, null), QR_STYLES["CHECK-IN"], 214).append(box); return; }
+    box.innerHTML = `<div class="qr-empty">No check-in QR yet.<br>Add a registration form link in <b>⚙️ Event Setup & URLs</b>.</div>`;
+}
+async function showGradientQR(key) {
+    const st = QR_STYLES[key], p = attendees.find(a => a.id === currentId), link = eventConfig[st.key] || "";
+    if (key === "PRE-REG" && link && !p) return toast("Select a participant from the dropdown first.", "err");
+    currentQrKey = key; $("regModal").style.display = "flex";
+    $("modalBadge").textContent = st.badge; $("modalTitle").textContent = st.title;
+    $("modalAttendee").textContent = key === "PRE-REG" && p ? p.name : (eventConfig.eventTitle || (key === "FEEDBACK" ? "Scan to give feedback" : "Walk-in registration"));
+    $("modalUrlSetupLabel").textContent = st.label; $("modalUrlInput").value = "";
+    $("qrMonkeyExternalLink").href = link ? `https://www.qrcode-monkey.com/` : "https://www.qrcode-monkey.com/";
+    await drawModalQr(key, link, p);
+    clearInterval(qrExpiryInterval);
+    const timed = key !== "FEEDBACK" && link;
+    $("timerBox").style.display = timed ? "block" : "none";
+    if (timed) {
+        let t = 120; $("expiryTimer").textContent = "2:00";
+        qrExpiryInterval = setInterval(() => { t--; $("expiryTimer").textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; if (t <= 0) closeModal(); }, 1000);
+    }
+}
+async function drawModalQr(key, link, p) {
+    const st = QR_STYLES[key], box = $("regModalQR"); box.innerHTML = ""; currentQr = null; currentQrImage = ""; currentQrUrl = "";
+    if (link && window.QRCodeStyling) {
+        currentQrUrl = key === "PRE-REG" ? fillTemplate(link, p) : link;
+        currentQr = makeQr(currentQrUrl, st, 310); currentQr.append(box);
+        $("modalUrlSetup").style.display = "none"; $("modalUrlPreview").textContent = currentQrUrl; return;
+    }
+    box.innerHTML = `<div class="qr-empty">No link set yet for <b>${esc(st.title)}</b>.<br>Paste the form link above to create the QR code.</div>`;
+    $("modalUrlPreview").textContent = ""; $("modalUrlSetup").style.display = "block"; $("modalUrlInput").focus();
+}
+function saveModalUrl() {
+    const u = $("modalUrlInput").value.trim();
+    if (!/^https?:\/\//i.test(u)) return toast("Please paste a full link starting with https://", "err");
+    eventConfig[QR_STYLES[currentQrKey].key] = u; safeSet("prod_cms_config", eventConfig);
+    renderMainQr(); showGradientQR(currentQrKey);
+}
+function downloadCurrentModalQR() {
+    const name = (QR_STYLES[currentQrKey]?.title || "QR_Code").replace(/\s+/g, "_");
+    if (currentQr) return currentQr.download({ name, extension: "png" });
+    if (currentQrImage) { const a = document.createElement("a"); a.href = encodeURI(currentQrImage); a.download = name + ".png"; a.click(); return; }
+    toast("No QR image available to save yet.", "err");
+}
+function copyModalLink() {
+    if (!currentQrUrl) return toast("No link to copy.", "err");
+    (navigator.clipboard ? navigator.clipboard.writeText(currentQrUrl) : Promise.reject()).then(() => toast("Link copied.", "ok"), () => prompt("Copy this link:", currentQrUrl));
+}
+function closeModal() { $("regModal").style.display = "none"; clearInterval(qrExpiryInterval); }
+
+/* ============================ certificates ============================ */
+function expiryDate() { const e = eventConfig.expiryDate; if (!e) return null; const d = /^\d{4}-\d{2}-\d{2}$/.test(e) ? new Date(e + "T23:59:59") : new Date(e); return isNaN(d) ? null : d; }
+function isExpired() { const d = expiryDate(); return !!d && new Date() > d; }
+function fmtDate(d) { return d ? d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""; }
+const bytesToHex = b => Array.from(b.slice(0, 4)).map(x => x.toString(16).padStart(2, "0")).join("");
+const isPdfBytes = b => bytesToHex(b) === "25504446", isPngBytes = b => bytesToHex(b) === "89504e47";
+
+async function loadTemplate(t) {
+    if (templateCache[t.key]) return templateCache[t.key];
+    try { const up = await idb.get("tpl_" + t.key); if (up) { templateInfo[t.key] = "uploaded file"; return templateCache[t.key] = new Uint8Array(up); } } catch (_) {}
+    const url = eventConfig[t.cfg];
+    if (url) { try { const r = await fetch(url, { cache: "no-store" }); if (r.ok) { templateInfo[t.key] = "URL"; return templateCache[t.key] = new Uint8Array(await r.arrayBuffer()); } } catch (_) {} }
+    return null;
+}
+function certName(a, t) { const r = (a.roles || [a.role]).find(t.match); return (a.nameByRole && a.nameByRole[r]) || a.name; }
+function recordsAll(t) { return attendees.filter(a => (a.roles || [a.role]).some(r => t.match(r))); }
+function recordsFor(t) { const all = recordsAll(t); return eventConfig.certAttendedOnly !== false ? all.filter(isPresent) : all; }
+
+function renderCertHome() {
+    $("certPortalBody").innerHTML = CERT_TYPES.map(t => `
+        <div class="role-section">
+            <div class="role-name">${t.label}</div>
+            <div class="status-msg" id="tplStat-${t.key}">Checking template…</div>
+            <div class="status-msg" id="recStat-${t.key}">0 Records</div>
+            <button class="btn btn-primary" id="certBtn-${t.key}" onclick="openRoleDownloader('${t.key}')" disabled>${t.label} PORTAL</button>
+            <button class="btn admin-only" onclick="previewCert('${t.key}')" title="Download a sample certificate to check the name position">Test</button>
+        </div>`).join("");
+}
+function refreshCertCounts() {
+    CERT_TYPES.forEach(t => {
+        const n = recordsFor(t).length, tot = recordsAll(t).length, only = eventConfig.certAttendedOnly !== false, el = $("recStat-" + t.key), btn = $("certBtn-" + t.key); if (!el) return;
+        el.innerHTML = n ? `<span class="ok">✓ ${n} ${only ? "Attended" : "Records"}</span>` : `<span class="bad">${only && tot ? `0 attended (of ${tot} registered)` : "0 Records"}</span>`;
+        btn.disabled = !templateCache[t.key] || !n || (PUBLIC && isExpired());
+    });
+}
+async function prepareCertificatePortal() {
+    renderCertHome();
+    await Promise.all(CERT_TYPES.map(async t => {
+        const b = await loadTemplate(t), el = $("tplStat-" + t.key); if (!el) return;
+        el.innerHTML = b ? `<span class="ok">✓ Template ready</span> <small>(${esc(templateInfo[t.key])})</small>` : `<span class="bad">× No template found</span>`;
+    }));
+    refreshCertCounts();
+}
+function hexToRgb01(h) { h = String(h || "#14204a").replace("#", ""); const n = parseInt(h.length === 3 ? h.split("").map(x => x + x).join("") : h, 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
+
+async function buildCertificate(t, name) {
+    const tpl = await loadTemplate(t); if (!tpl) throw new Error("Certificate template is not available.");
+    const { PDFDocument, StandardFonts, rgb } = PDFLib; let doc;
+    if (isPdfBytes(tpl)) doc = await PDFDocument.load(tpl);
+    else { doc = await PDFDocument.create(); const img = isPngBytes(tpl) ? await doc.embedPng(tpl) : await doc.embedJpg(tpl); const pg = doc.addPage([img.width, img.height]); pg.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height }); }
+    const font = await doc.embedFont(StandardFonts.TimesRomanBoldItalic), page = doc.getPages()[0], { width } = page.getSize();
+    let size = Number(eventConfig.certSize) || 34, w;
+    try { w = font.widthOfTextAtSize(name, size); }
+    catch (e) { throw new Error("This name contains characters the certificate font cannot print (e.g. Arabic script). Please contact the organisers."); }
+    while (size > 12 && w > width * 0.8) { size -= 1; w = font.widthOfTextAtSize(name, size); }
+    const [r, g, b] = hexToRgb01(eventConfig.certColor);
+    page.drawText(name, { x: width / 2 - w / 2, y: Number(eventConfig.certY) || 322, size, font, color: rgb(r, g, b) });
+    if (currentPlan().watermark) {                                 // Starter plan: small footer line
+        const wf = await doc.embedFont(StandardFonts.Helvetica), wt = `Issued with ${VENDOR.name || "CMS"} · Starter plan`;
+        page.drawText(wt, { x: width / 2 - wf.widthOfTextAtSize(wt, 8) / 2, y: 14, size: 8, font: wf, color: rgb(.55, .58, .62) });
+    }
+    return doc.save();
+}
+function saveBlob(bytes, filename) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    a.download = filename.replace(/[\\/:*?"<>|]/g, "_"); a.click();
+}
+async function previewCert(key) {
+    const t = CERT_TYPES.find(x => x.key === key);
+    try { saveBlob(await buildCertificate(t, "Dr. Sample Name Here"), `Preview_${key}.pdf`); } catch (e) { toast(e.message, "err"); }
+}
+function openRoleDownloader(key) {
+    const t = CERT_TYPES.find(x => x.key === key), records = recordsFor(t), locked = PUBLIC && isExpired();
+    $("certPortalBody").innerHTML = `
+        <div style="text-align:center; padding:14px 10px;">
+            <span class="event-badge">${t.label.slice(0, -1)} CERTIFICATE</span>
+            <h3 style="margin:8px 0; color:var(--primary);">Download Your E-Certificate</h3>
+            <p class="hint" style="font-size:12px;">Enter the email address you used when registering (${records.length} ${eventConfig.certAttendedOnly !== false ? "attended" : "registered"}).</p>
+            <input type="email" id="certUserEmail" placeholder="name@domain.com" autocomplete="email" style="max-width:420px; text-align:center; margin:12px auto; display:block; padding:11px;">
+            <button id="btnGenerateCert" class="btn btn-primary" style="width:100%; max-width:420px; padding:12px; font-size:13px;" ${locked ? "disabled" : ""}>⬇️ GENERATE & DOWNLOAD PDF</button>
+            <p id="certStatusMsg" style="margin-top:12px; font-size:12px; font-weight:700;">${locked ? "This portal has expired." : ""}</p>
+            <button onclick="prepareCertificatePortal()" style="margin-top:12px; background:none; border:none; color:var(--primary); cursor:pointer; text-decoration:underline; font-weight:600;">← Back to selection</button>
+        </div>`;
+    const go = async () => {
+        const email = $("certUserEmail").value.toLowerCase().trim(), msg = $("certStatusMsg");
+        const user = records.find(u => u.email && u.email === email);
+        if (!user) {
+            msg.style.color = "var(--danger)";
+            const reg = recordsAll(t).some(u => u.email && u.email === email);
+            msg.textContent = reg && eventConfig.certAttendedOnly !== false ? "You are registered, but we have no record of your attendance at the venue, so a certificate cannot be issued. Please contact the organisers if you believe this is a mistake." : "Email not found for this category. Please use the email you registered with.";
+            return;
+        }
+        msg.style.color = "#d97706"; msg.textContent = "Rendering your certificate…";
+        try {
+            const nm = certName(user, t), bytes = await buildCertificate(t, nm);
+            downloadLog.push({ name: user.name, email: user.email, role: key, event: eventConfig.eventTitle || "Event", time: new Date().toLocaleString() });
+            safeSet("prod_cert_logs", downloadLog.slice(-2000));
+            saveBlob(bytes, `${nm}_Certificate.pdf`);
+            msg.style.color = "#059669"; msg.textContent = "Success! Your certificate download has started.";
+        } catch (e) { msg.style.color = "var(--danger)"; msg.textContent = e.message || "Error generating the certificate."; }
+    };
+    $("btnGenerateCert").onclick = go; $("certUserEmail").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+    $("certUserEmail").focus();
+}
+function showCertLog() {
+    const rows = downloadLog.slice().reverse().map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.email)}</td><td>${esc(l.role)}</td><td>${esc(l.time)}</td></tr>`).join("");
+    $("certPortalBody").innerHTML = `<h3 style="color:var(--primary); margin-top:0;">Certificate Download Log</h3>
+        <p class="hint">Recorded in <b>this browser</b> only (downloads made on participants’ own devices are not collected here).</p>
+        <div style="max-height:320px; overflow-y:auto;"><table class="report-table"><thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Downloaded</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4" style="text-align:center;">No certificates downloaded yet.</td></tr>'}</tbody></table></div>
+        <div style="display:flex; gap:8px; margin-top:14px;"><button class="btn" style="flex:1;" onclick="exportCertLog()">⬇ Export CSV</button><button class="btn btn-primary" style="flex:1;" onclick="prepareCertificatePortal()">← Back to portal</button></div>`;
+}
+function exportCertLog() {
+    const q = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+    const csv = "Name,Email,Type,Time\n" + downloadLog.map(l => [l.name, l.email, l.role, l.time].map(q).join(",")).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "certificate_downloads.csv"; a.click();
+}
+
+/* ============================ setup modal ============================ */
+let draftSources = [];
+function srcStatusHtml(s) {
+    const st = sourceState[s.id]; if (!st) return `<span style="color:#94a3b8;">not synced yet</span>`;
+    if (st.state === "ok") return `<span class="ok">✓ ${st.n} row${st.n === 1 ? "" : "s"} read</span> <small style="color:var(--gray)">(${esc(st.via)})</small>`;
+    if (st.state === "skip") return `<span style="color:#94a3b8;">${esc(st.msg)}</span>`;
+    return `<span class="bad">× ${esc(st.msg)}</span>`;
+}
+function renderSourceRows() {
+    $("srcRows").innerHTML = draftSources.map((s, i) => `
+        <div class="src-row">
+            <input type="text" value="${esc(s.label)}" placeholder="Label (e.g. Workshop registrations)" oninput="draftSources[${i}].label=this.value">
+            <select onchange="draftSources[${i}].role=this.value">${ROLE_OPTS.map(r => `<option ${r === s.role ? "selected" : ""}>${r}</option>`).join("")}</select>
+            <label class="chk"><input type="checkbox" ${s.present ? "checked" : ""} onchange="draftSources[${i}].present=this.checked"> Present</label>
+            <button class="btn btn-danger" style="padding:6px 0;" onclick="removeSourceRow(${i})" title="Remove">✖</button>
+            <input type="url" class="s-url" value="${esc(s.url)}" placeholder="Google Sheet (form responses) / CSV / XLSX link" oninput="draftSources[${i}].url=this.value">
+            <div class="src-status">${srcStatusHtml(s)}</div>
+        </div>`).join("") || `<div class="hint" style="text-align:center; padding:14px;">No sources yet — click “Add data source”.</div>`;
+}
+function addSourceRow() { draftSources.push({ id: newId(), label: "", role: "Participant", present: false, url: "" }); renderSourceRows(); const sc = $("srcRows"); sc.scrollTop = sc.scrollHeight; }
+function removeSourceRow(i) { draftSources.splice(i, 1); renderSourceRows(); }
+
+async function refreshUploadNotes() {
+    for (const t of CERT_TYPES) {
+        let has = false; try { has = !!(await idb.get("tpl_" + t.key)); } catch (_) {}
+        $("upl-" + t.key).innerHTML = has ? `✓ Uploaded file in use · <a href="#" onclick="removeUploadedTemplate('${t.key}');return false;">remove</a>` : "";
+    }
+}
+function openSettingsModal() {
+    refreshFlowNote(); $("flowExtract").innerHTML = "";
+    const c = eventConfig, set = (id, v) => $(id).value = v == null ? "" : v;
+    set("cfgOrgSector", c.orgSector); set("cfgEventType", c.eventType); set("cfgEventTitle", c.eventTitle); set("cfgEventDate", c.eventDate); set("cfgVenue", c.venue); set("cfgUniName", c.uniName); set("cfgUniUrl", c.uniUrl); set("cfgUniAddress", c.uniAddress);
+    set("cfgLogo1", c.logo1); set("cfgLogo2", c.logo2); set("cfgPrimaryColor", c.primaryColor); set("cfgAccentColor", c.accentColor); set("cfgSecondaryColor", c.secondaryColor || "#7209b7"); set("cfgAdminEmail", c.adminEmail);
+    set("cfgAutoSync", c.autoSyncSec); set("cfgIdleFlow", c.idleFlowMin);
+    set("cfgFormPreReg", c.formPreReg); set("cfgFormOnSite", c.formOnSite); set("cfgFormFeedback", c.formFeedback); set("cfgFlowPdf", c.flowPdf);
+    set("cfgPdfParticipant", c.pdfParticipant); set("cfgPdfOrganiser", c.pdfOrganiser); set("cfgPdfSpeaker", c.pdfSpeaker);
+    set("cfgCertY", c.certY); set("cfgCertSize", c.certSize); set("cfgCertColor", c.certColor || "#14204a"); set("cfgExpiry", /^\d{4}-\d{2}-\d{2}$/.test(c.expiryDate) ? c.expiryDate : ""); $("cfgAttendedOnly").checked = c.certAttendedOnly !== false; set("cfgRepoUrl", c.repoUrl);
+    draftSources = JSON.parse(JSON.stringify(c.sources)); renderSourceRows(); refreshUploadNotes();
+    $("settingsModal").style.display = "flex";
+}
+function closeSettingsModal() { $("settingsModal").style.display = "none"; }
+function collectSettings() {
+    const v = id => $(id).value.trim(), c = eventConfig;
+    Object.assign(c, {
+        orgSector: $("cfgOrgSector").value, eventType: $("cfgEventType").value, eventTitle: v("cfgEventTitle"), eventDate: $("cfgEventDate").value, venue: v("cfgVenue"), uniName: v("cfgUniName"), uniUrl: v("cfgUniUrl"), uniAddress: v("cfgUniAddress"),
+        logo1: v("cfgLogo1"), logo2: v("cfgLogo2"), primaryColor: $("cfgPrimaryColor").value, accentColor: $("cfgAccentColor").value, secondaryColor: $("cfgSecondaryColor").value, adminEmail: v("cfgAdminEmail"),
+        autoSyncSec: parseInt($("cfgAutoSync").value, 10) || 0, idleFlowMin: parseInt($("cfgIdleFlow").value, 10) || 0,
+        formPreReg: v("cfgFormPreReg"), formOnSite: v("cfgFormOnSite"), formFeedback: v("cfgFormFeedback"), flowPdf: v("cfgFlowPdf"),
+        pdfParticipant: v("cfgPdfParticipant"), pdfOrganiser: v("cfgPdfOrganiser"), pdfSpeaker: v("cfgPdfSpeaker"),
+        certY: parseInt($("cfgCertY").value, 10) || 322, certSize: parseInt($("cfgCertSize").value, 10) || 34, certColor: $("cfgCertColor").value, expiryDate: $("cfgExpiry").value, certAttendedOnly: $("cfgAttendedOnly").checked, repoUrl: v("cfgRepoUrl"),
+        sources: draftSources.map(s => ({ ...s, label: (s.label || "").trim(), url: (s.url || "").trim() }))
+    });
+    Object.keys(templateCache).forEach(k => delete templateCache[k]);
+    safeSet("prod_cms_config", eventConfig);
+}
+async function saveSettings() {
+    collectSettings(); closeSettingsModal(); activeFlowSource = "";
+    await detectLocalAssets(); await syncAllSources(true);
+    toast("Settings saved and applied.", "ok", 2500);
+}
+/* ---------- Program-flow PDF: upload + read title / date / venue ---------- */
+let flowUploaded = false, flowBlobUrl = "", pdfjsReady = null, flowInfo = {};
+const PDFJS_BASE = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+async function refreshFlowNote() {
+    let name = ""; try { name = (await idb.get("flow_name")) || ((await idb.get("flow_pdf")) ? "uploaded file" : ""); } catch (_) {}
+    flowUploaded = !!name; const el = $("flowNote");
+    if (el) el.innerHTML = name ? `<span class="ok">✓ Using uploaded file: ${esc(name)}</span> · <a href="#" onclick="removeFlowPdf(); return false;" style="color:var(--danger);">remove</a>` : "Upload a PDF, or paste a link. The app can read the event title, date and venue from it.";
+}
+async function removeFlowPdf() { try { await idb.del("flow_pdf"); await idb.del("flow_name"); } catch (_) {} if (flowBlobUrl) URL.revokeObjectURL(flowBlobUrl); flowBlobUrl = ""; resetFlowView(); await refreshFlowNote(); }
+function loadPdfJs() {
+    return pdfjsReady || (pdfjsReady = (async () => {
+        if (!window.pdfjsLib) await new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = PDFJS_BASE + "pdf.min.js"; sc.onload = res; sc.onerror = () => rej(new Error("Could not load the PDF reader (are you offline?)")); document.head.appendChild(sc); });
+        const w = await (await fetch(PDFJS_BASE + "pdf.worker.min.js")).text();
+        pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([w], { type: "text/javascript" })); return pdfjsLib;
+    })().catch(e => { pdfjsReady = null; throw e; }));
+}
+const MONTHS = "jan feb mar apr may jun jul aug sep oct nov dec".split(" "), MON_RE = "(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
+function findDate(text) {
+    const iso = (y, m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`, mi = n => MONTHS.indexOf(n.slice(0, 3).toLowerCase()) + 1; let m;
+    if ((m = text.match(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?(?:\\s*(?:-|–|—|to|&)\\s*\\d{1,2}(?:st|nd|rd|th)?)?\\s+${MON_RE}\\.?,?\\s+(20\\d{2})\\b`, "i")))) return iso(m[3], mi(m[2]), m[1]);
+    if ((m = text.match(new RegExp(`\\b${MON_RE}\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:\\s*(?:-|–|—|to)\\s*\\d{1,2})?,?\\s+(20\\d{2})\\b`, "i")))) return iso(m[3], mi(m[1]), m[2]);
+    if ((m = text.match(/\b(20\d{2})-(\d{2})-(\d{2})\b/))) return m[0];
+    if ((m = text.match(/\b(\d{1,2})[\/.](\d{1,2})[\/.](20\d{2})\b/)) && +m[2] <= 12 && +m[1] <= 31) return iso(m[3], m[2], m[1]);   // day/month/year
+    return "";
+}
+async function extractFlowInfo(buf) {
+    const lib = await loadPdfJs(), doc = await lib.getDocument({ data: new Uint8Array(buf) }).promise, lines = [];
+    let meta = {}; try { meta = (await doc.getMetadata()).info || {}; } catch (_) {}
+    for (let p = 1; p <= Math.min(doc.numPages, 2); p++) {
+        const tc = await (await doc.getPage(p)).getTextContent(), rows = [];
+        tc.items.forEach(it => { if (!it.str || !it.str.trim()) return; const y = it.transform[5], size = Math.abs(it.transform[3]) || it.height || 0; let r = rows.find(r => Math.abs(r.y - y) <= 2); if (!r) rows.push(r = { y, size: 0, parts: [] }); r.size = Math.max(r.size, size); r.parts.push({ x: it.transform[4], w: it.width || 0, s: it.str, size }); });
+        rows.sort((a, b) => b.y - a.y).forEach(r => { r.parts.sort((a, b) => a.x - b.x); let t = "", prev = null; r.parts.forEach(pt => { if (prev && pt.x - (prev.x + prev.w) > prev.size * 0.18 && !/\s$/.test(prev.s) && !/^\s/.test(pt.s)) t += " "; t += pt.s; prev = pt; }); lines.push({ page: p, size: r.size, text: t.replace(/\s+/g, " ").trim() }); });
+    }
+    const generic = /^(program(me)?(\s+flow)?|schedule|agenda|timetable|day\s*\d+|table of contents|contents|page\s*\d+|\d+)$/i, EV = /symposium|conference|seminar|colloquium|workshop|summit|forum|congress|meeting|convention/i;
+    const first = lines.filter(l => l.page === 1 && l.text.length >= 4 && !generic.test(l.text));
+    const maxSize = Math.max(0, ...first.map(l => l.size)), runs = [];
+    first.forEach(l => { const last = runs[runs.length - 1]; if (last && Math.abs(last.size - l.size) <= last.size * 0.08 && lines.indexOf(l) - last.endIdx === 1) { last.text += " " + l.text; last.endIdx = lines.indexOf(l); } else runs.push({ size: l.size, text: l.text, endIdx: lines.indexOf(l) }); });
+    const big = runs.filter(r => r.size >= maxSize * 0.7);
+    let title = (big.find(r => EV.test(r.text)) || big.sort((a, b) => b.size - a.size)[0] || {}).text || "";
+    title = title.replace(/^(program(me)?\s*flow|schedule|agenda)\s*(of|for|[-–:])?\s*/i, "").replace(/\s+/g, " ").trim().slice(0, 160) || (meta.Title && !generic.test(meta.Title) ? String(meta.Title).trim() : "");
+    const all = lines.map(l => l.text), grab = re => { for (const t of all) { const m = t.match(re); if (m && m[1].trim().length > 1) return m[1].trim().slice(0, 140); } return ""; };
+    const tm = (title + " " + all.join(" ")).match(EV), type = tm ? (tm[0].toLowerCase() === "forum" ? "SUMMIT" : /congress|meeting|convention/i.test(tm[0]) ? "CONFERENCE" : tm[0].toUpperCase()) : "";
+    return { title, date: findDate(all.join("\n")), venue: grab(/^(?:venue|location|place)\s*[:\-–]\s*(.+)$/i), org: grab(/^(?:organi[sz]ed by|hosted by|host institution)\s*[:\-–]?\s*(.+)$/i), type, hasText: all.length > 0 };
+}
+function applyFlowInfo(info) {
+    const map = [["cfgEventTitle", info.title, "Event title"], ["cfgEventDate", info.date, "Date"], ["cfgVenue", info.venue, "Venue"], ["cfgUniName", info.org, "Organiser"]], rows = []; flowInfo = {}; let titleFilled = false;
+    map.forEach(([id, val, lab]) => { if (!val) return; const el = $(id); flowInfo[id] = val;
+        if (!el.value.trim()) { el.value = val; rows.push(`<b>${lab}:</b> ${esc(val)} <span class="ok">✓ filled</span>`); if (id === "cfgEventTitle") titleFilled = true; }
+        else if (el.value.trim() !== val) rows.push(`<b>${lab}:</b> ${esc(val)} <span style="color:#94a3b8;">(kept your “${esc(el.value.trim().slice(0, 40))}”)</span> <a href="#" onclick="useFlowField('${id}'); return false;">use this</a>`);
+        else rows.push(`<b>${lab}:</b> ${esc(val)} <span style="color:#94a3b8;">(already set)</span>`); });
+    if (info.type) { flowInfo.cfgEventType = info.type; if (titleFilled) { $("cfgEventType").value = info.type; rows.push(`<b>Type:</b> ${esc(info.type.toLowerCase())} <span class="ok">✓ set</span>`); } else if ($("cfgEventType").value !== info.type) rows.push(`<b>Type:</b> ${esc(info.type.toLowerCase())} <a href="#" onclick="useFlowField('cfgEventType'); return false;">use this</a>`); }
+    return rows;
+}
+function useFlowField(id) { if (flowInfo[id]) { $(id).value = flowInfo[id]; collectSettings(); applyBranding(); updateStats(); toast("Updated from the PDF.", "ok"); openSettingsModal(); } }
+async function readFlowBuffer(buf, label) {
+    const out = $("flowExtract"); out.innerHTML = `<span style="color:#d97706;">Reading ${esc(label)}…</span>`;
+    try {
+        const info = await extractFlowInfo(buf);
+        if (!info.hasText) { out.innerHTML = `<span class="bad">× No readable text in this PDF (it may be a scanned picture). Type the title manually.</span>`; return null; }
+        if (!info.title && !info.date && !info.venue) { out.innerHTML = `<span class="bad">× Could not find a title in this PDF. Type it manually.</span>`; return null; }
+        const rows = applyFlowInfo(info); collectSettings(); applyBranding(); updateStats();
+        out.innerHTML = `<div style="color:#059669; font-weight:700;">✓ Read from ${esc(label)}</div>` + rows.map(r => `<div>${r}</div>`).join(""); return info;
+    } catch (e) { out.innerHTML = `<span class="bad">× ${esc(e.message || "Could not read the PDF")}</span>`; return null; }
+}
+async function uploadFlowPdf(input) {
+    const f = input.files[0]; if (!f) return; input.value = "";
+    if (!/pdf$/i.test(f.name) && f.type !== "application/pdf") return toast("Please choose a PDF file.", "err");
+    const buf = await f.arrayBuffer();
+    try { await idb.set("flow_pdf", buf.slice(0)); await idb.set("flow_name", f.name); if (flowBlobUrl) URL.revokeObjectURL(flowBlobUrl); flowBlobUrl = ""; resetFlowView(); await refreshFlowNote(); toast(`Program flow loaded (${f.name}).`, "ok"); }
+    catch (_) { toast("Could not store the file in this browser — host it next to this page and use its URL instead.", "err"); }
+    await readFlowBuffer(buf.slice(0), f.name);
+}
+async function readFlowFromField() {
+    try {
+        let buf = await idb.get("flow_pdf"), label = await idb.get("flow_name") || "uploaded file";
+        if (!buf) { let u = $("cfgFlowPdf").value.trim(); if (!u) return toast("Upload a Program Flow PDF or paste its URL first.", "err"); const g = u.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/i); if (g) u = `https://raw.githubusercontent.com/${g[1]}/${g[2]}/${g[3]}/${g[4]}`; const r = await fetch(u); if (!r.ok) throw new Error("Could not download the PDF (" + r.status + ")"); buf = await r.arrayBuffer(); label = decodeURIComponent(u.split("/").pop().split("?")[0]); }
+        await readFlowBuffer(buf, label);
+    } catch (e) { $("flowExtract").innerHTML = `<span class="bad">× ${esc(e.message || "Failed")}</span>`; }
+}
+/* ---------- auto-detect files from a GitHub repository / folder ---------- */
+function parseGithubUrl(u) {
+    const m = String(u || "").trim().match(/^https?:\/\/(?:www\.)?github\.com\/([^\/\s]+)\/([^\/\s#?]+?)(?:\.git)?(?:\/(tree|blob)\/([^\/\s#?]+)(?:\/([^\s#?]*))?)?\/?(?:[#?].*)?$/i);
+    if (!m) return null;
+    let path = (m[5] || "").replace(/\/+$/, ""); if (m[3] === "blob") path = path.split("/").slice(0, -1).join("/");   // a file link → its folder
+    return { owner: m[1], repo: m[2], branch: m[4] || "", path };
+}
+async function listRepoFiles(g) {
+    const enc = p => p.split("/").filter(Boolean).map(encodeURIComponent).join("/");
+    try {
+        const r = await fetch(`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${enc(g.path)}${g.branch ? "?ref=" + encodeURIComponent(g.branch) : ""}`, { headers: { Accept: "application/vnd.github+json" } });
+        if (r.ok) { const j = await r.json(); if (Array.isArray(j)) return { via: "GitHub", files: j.filter(x => x.type === "file" && x.download_url).map(x => ({ name: x.name, url: x.download_url })) }; }
+    } catch (_) {}
+    for (const br of g.branch ? [g.branch] : ["main", "master"]) {                  // fallback (GitHub API rate-limited / blocked)
+        try {
+            const r = await fetch(`https://data.jsdelivr.com/v1/packages/gh/${g.owner}/${g.repo}@${encodeURIComponent(br)}?structure=flat`); if (!r.ok) continue;
+            const j = await r.json(), pre = g.path ? "/" + g.path + "/" : "/";
+            const files = (j.files || []).filter(f => f.name.startsWith(pre) && !f.name.slice(pre.length).includes("/")).map(f => ({ name: f.name.slice(pre.length), url: `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${encodeURIComponent(br)}/${enc(f.name)}` }));
+            if (files.length) return { via: "jsDelivr", files };
+        } catch (_) {}
+    }
+    return null;
+}
+function classifyRepoFiles(files) {
+    const R = { sources: [], pdf: {}, flow: null, images: [], used: [], skipped: [], title: "", type: "" };
+    const ext = n => ((n.match(/\.([a-z0-9]+)$/i) || [])[1] || "").toLowerCase(), baseOf = n => n.replace(/\.[^.]+$/, "");
+    const roleWords = /\b(participants?|attendees?|delegates?|organi[sz]ers?|speakers?|guests?|staff|students?|check-?in|on-?site|pre-?reg\w*|registrations?|responses)\b.*$/i, titles = {};
+    const skip = (f, why) => R.skipped.push({ name: f.name, why });
+    for (const f of files) {
+        const e = ext(f.name), b = baseOf(f.name), low = b.toLowerCase();
+        if (/\bqr\b|[-_ ]qr|qr[-_ ]/i.test(low)) { skip(f, "QR picture — the app draws its own gradient QR from your form links"); continue; }
+        if (["csv", "xlsx", "xls"].includes(e)) {
+            let role, present = false;
+            if (/on[-_ ]?site/.test(low)) { role = "Participant (New)"; present = true; }
+            else if (/check[-_ ]?in/.test(low)) { role = "Participant"; present = true; }
+            else if (/organi[sz]er/.test(low)) { role = "Organiser"; present = true; }
+            else if (/speaker/.test(low)) role = "Speaker";
+            else if (/guest|vip/.test(low)) { role = "Guest"; present = true; }
+            else if (/staff/.test(low)) role = "Staff";
+            else if (/student/.test(low)) role = "Student";
+            else if (/particip|attendee|delegate|regist|pre[-_ ]?reg|response/.test(low)) role = "Participant";
+            else { skip(f, "data file not recognised by name"); continue; }
+            R.sources.push({ label: b.trim(), role, present, url: f.url }); const t = b.replace(roleWords, "").trim(); if (t) titles[t] = (titles[t] || 0) + 1;
+        } else if (e === "pdf") {
+            const slot = /flow|programme?|schedule|agenda|timetable/.test(low) ? "flow" : /organi[sz]er/.test(low) ? "pdfOrganiser" : /speaker/.test(low) ? "pdfSpeaker" : /particip|attend|delegate/.test(low) ? "pdfParticipant" : "";
+            if (!slot) { skip(f, "PDF not recognised by name"); continue; }
+            if (slot === "flow") { if (R.flow) skip(f, "second programme file"); else R.flow = f; }
+            else if (R.pdf[slot]) skip(f, "second template for the same role"); else R.pdf[slot] = f;
+        } else if (["png", "jpg", "jpeg", "svg", "webp", "gif"].includes(e)) R.images.push(f);
+        else skip(f, "not used by the app");
+    }
+    const imgs = R.images.slice(), take = re => { const i = imgs.findIndex(f => re.test(f.name)); return i >= 0 ? imgs.splice(i, 1)[0] : null; };
+    R.logo1 = take(/univ|college|institut|school|faculty|asu|cfs/i) || take(/logo/i) || imgs.shift() || null;
+    R.logo2 = take(/banner|event|symposium|conference|seminar|workshop/i) || take(/logo/i) || imgs.shift() || null;
+    imgs.forEach(f => skip(f, "extra image (not used)"));
+    const best = Object.entries(titles).sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)[0]; if (best) R.title = best[0];
+    const tm = files.map(f => f.name).join(" ").match(/symposium|conference|seminar|colloquium|workshop|summit|forum/i); if (tm) R.type = ({ forum: "SUMMIT" })[tm[0].toLowerCase()] || tm[0].toUpperCase();
+    return R;
+}
+async function autoDetectRepo() {
+    const out = $("repoResult"), g = parseGithubUrl($("cfgRepoUrl").value);
+    if (!g) { out.innerHTML = `<span class="bad">× Paste a GitHub link like https://github.com/owner/repository (public repositories only).</span>`; return; }
+    const btn = $("btnRepo"); btn.disabled = true; out.innerHTML = `<span style="color:#d97706;">Reading ${esc(g.owner)}/${esc(g.repo)}…</span>`;
+    try {
+        const L = await listRepoFiles(g);
+        if (!L) { out.innerHTML = `<span class="bad">× Could not list the files. Check the link is a <b>public</b> repository (or wait a few minutes if GitHub's request limit was hit).</span>`; return; }
+        const R = classifyRepoFiles(L.files);
+        let flowRows = ""; if (R.flow) { try { const r = await fetch(R.flow.url); if (r.ok) { const info = await readFlowBuffer(await r.arrayBuffer(), R.flow.name); if (info && info.title) flowRows = info.title; } } catch (_) {} }
+        const line = (k, v, cls = "") => `<b>${k}</b><span class="${cls}">${v}</span>`, rows = [], set = (id, v, force) => { const el = $(id); if (v && (force || !el.value.trim())) { el.value = v; return true; } return false; };
+        if (flowRows) rows.push(line("Title from flow PDF", esc(flowRows)));
+        if (R.title && set("cfgEventTitle", R.title)) rows.push(line("Event title", esc(R.title)));
+        if (R.type) { $("cfgEventType").value = R.type; rows.push(line("Event type", esc(R.type.toLowerCase()))); }
+        let added = 0; R.sources.forEach(s => { if (!draftSources.some(d => d.url === s.url)) { draftSources.push({ id: newId(), ...s }); added++; } });
+        if (R.sources.length) { renderSourceRows(); rows.push(line("Data sources", `${added} added: ` + R.sources.map(s => `${esc(s.label)} <small>(${esc(s.role)}${s.present ? ", present" : ""})</small>`).join(" · "))); }
+        [["pdfParticipant", "cfgPdfParticipant", "Participant certificate"], ["pdfOrganiser", "cfgPdfOrganiser", "Organiser certificate"], ["pdfSpeaker", "cfgPdfSpeaker", "Speaker certificate"]].forEach(([k, id, lab]) => { const f = R.pdf[k]; if (f) rows.push(line(lab, set(id, f.url) ? esc(f.name) : `kept your existing template <small>(${esc(f.name)} ignored)</small>`)); });
+        if (R.flow) rows.push(line("Programme flow", set("cfgFlowPdf", R.flow.url) ? esc(R.flow.name) : `kept your existing link <small>(${esc(R.flow.name)} ignored)</small>`));
+        if (R.logo1) rows.push(line("Logo 1", set("cfgLogo1", R.logo1.url) ? esc(R.logo1.name) : `kept your existing <small>(${esc(R.logo1.name)} ignored)</small>`));
+        if (R.logo2) rows.push(line("Logo 2 / banner", set("cfgLogo2", R.logo2.url) ? esc(R.logo2.name) : `kept your existing <small>(${esc(R.logo2.name)} ignored)</small>`));
+        if (R.skipped.length) rows.push(line("Not used", R.skipped.map(x => `${esc(x.name)} <small>— ${esc(x.why)}</small>`).join("<br>"), "skip"));
+        out.innerHTML = `<div style="color:#059669; font-weight:700; margin-bottom:4px;">✓ ${L.files.length} files found (via ${L.via}) — matched ${R.sources.length} data sheet(s), ${Object.keys(R.pdf).length} certificate template(s)${R.flow ? ", programme flow" : ""}. Loading data…</div><div class="repo-list">${rows.join("")}</div><div class="hint" style="margin-top:6px;">Review the fields below, change anything you like, then press <b>Save</b>.</div>`;
+        if (R.sources.length) await testSources();
+    } catch (e) { out.innerHTML = `<span class="bad">× ${esc(e.message || "Auto-detect failed")}</span>`; }
+    finally { btn.disabled = false; }
+}
+async function testSources() { collectSettings(); await syncAllSources(true); }
+
+function uploadLocalImage(input, targetId) {
+    const f = input.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = e => {                                           // shrink so it fits in browser storage
+        const img = new Image();
+        img.onload = () => { const k = Math.min(1, 300 / img.height), cv = document.createElement("canvas"); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k); cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); $(targetId).value = cv.toDataURL("image/png"); };
+        img.onerror = () => { $(targetId).value = e.target.result; }; img.src = e.target.result;
+    };
+    r.readAsDataURL(f);
+}
+async function uploadTemplate(input, key) {
+    const f = input.files[0]; if (!f) return;
+    try { await idb.set("tpl_" + key, await f.arrayBuffer()); delete templateCache[key]; refreshUploadNotes(); toast(`${key} template loaded (${f.name}).`, "ok"); }
+    catch (e) { toast("Could not store the file in this browser. Host it next to this page or use a URL instead.", "err"); }
+    input.value = "";
+}
+async function removeUploadedTemplate(key) { try { await idb.del("tpl_" + key); } catch (_) {} delete templateCache[key]; refreshUploadNotes(); }
+
+function exportConfigJson() {
+    collectSettings();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(eventConfig, null, 2)], { type: "application/json" }));
+    a.download = "event-config.json"; a.click();
+    toast("Saved as event-config.json — upload it next to this page so every device uses these settings.", "ok", 7000);
+}
+function importConfigJson(input) {
+    const f = input.files[0]; if (!f) return; const r = new FileReader();
+    r.onload = e => { try { eventConfig = normalizeConfig(JSON.parse(e.target.result)); safeSet("prod_cms_config", eventConfig); openSettingsModal(); applyBranding(); toast("Profile imported.", "ok"); } catch (_) { toast("Invalid JSON file.", "err"); } };
+    r.readAsText(f); input.value = "";
+}
+function newBlankEvent() {
+    if (!confirm("Start a blank event?\nThis clears the current settings and attendee data in this browser (your Google Sheets are not touched).")) return;
+    eventConfig = normalizeConfig(BLANK_PROFILE); eventConfig.sources = JSON.parse(JSON.stringify(BLANK_PROFILE.sources)).map(s => ({ ...s, id: newId() }));
+    safeSet("prod_cms_config", eventConfig); attendees = []; persist(); clearSelection(); activeFlowSource = "";
+    openSettingsModal(); applyBranding(); refreshUI();
+}
+async function resetToDefaults() {
+    if (!confirm("Reset everything to the built-in / hosted defaults?\nThis removes saved settings, attendee data and uploaded templates from this browser.")) return;
+    ["prod_cms_config", "prod_cms_attendees", "prod_cert_logs"].forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+    for (const t of CERT_TYPES) { try { await idb.del("tpl_" + t.key); } catch (_) {} }
+    try { await idb.del("flow_pdf"); await idb.del("flow_name"); } catch (_) {} flowUploaded = false; flowBlobUrl = "";
+    location.reload();
+}
+
+/* ============================ fullscreen, stats overlay, program flow ============================ */
+function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+function showFullscreenStats() { $("statsOverlay").style.display = "flex"; updateStats(); if (fsChart) fsChart.resize(); if (tlChart) tlChart.resize(); }
+function publicDisplayUrl() { return location.href.split("#")[0].split("?")[0] + "?mode=live"; }
+function openPublicDisplay() {
+    const u = publicDisplayUrl(); try { navigator.clipboard && navigator.clipboard.writeText(u).catch(() => {}); } catch (_) {}
+    const w = window.open(u, "cms_public_display", `popup=yes,width=${Math.round(screen.availWidth * .94)},height=${Math.round(screen.availHeight * .92)},left=${Math.round(screen.availWidth * .03)},top=${Math.round(screen.availHeight * .03)}`);
+    toast(w ? "Public display opened — drag it to the projector / second screen and press F11. Link copied: " + u : "Pop-up blocked — allow pop-ups, or open this link on the audience screen: " + u, w ? "ok" : "err", 9000);
+}
+function liveStorage(e) {
+    if (e.key === "prod_cms_attendees" && !liveStandalone) { attendees = loadAttendees(); updateStats(); }
+    if (e.key === "prod_cms_config") { const c = safeGet("prod_cms_config", null); if (c) { eventConfig = normalizeConfig(c); planMemo = null; applyBranding(); updateStats(); } }
+}
+function closeStats() { $("statsOverlay").style.display = "none"; }
+let flowRun = 0, flowPauseUntil = 0;
+function resetFlowView() { const fp = $("flowPages"); if (fp) { fp.innerHTML = ""; delete fp.dataset.t; } const f = $("flowIframe"); if (f) { f.removeAttribute("src"); f.style.display = "none"; } }
+async function flowBuffer(target) {
+    if (target === "__uploaded__") return await idb.get("flow_pdf");
+    let u = target; const g = u.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/i); if (g) u = `https://raw.githubusercontent.com/${g[1]}/${g[2]}/${g[3]}/${g[4]}`;
+    const r = await fetch(/^https?:/i.test(u) ? u : encodeURI(u)); if (!r.ok) throw new Error("download " + r.status); return await r.arrayBuffer();
+}
+async function renderFlowPages(target) {
+    const fp = $("flowPages"), ifr = $("flowIframe"), sc = $("flowScroll"), my = ++flowRun;
+    fp.innerHTML = `<div class="flow-msg">Loading programme…</div>`; ifr.style.display = "none"; sc.style.display = "block";
+    try {
+        const lib = await loadPdfJs(), buf = await flowBuffer(target), doc = await lib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+        const cssW = Math.min(window.innerWidth * 0.92, 1000), dpr = Math.min(window.devicePixelRatio || 1, 2), pages = Math.min(doc.numPages, 60); fp.innerHTML = "";
+        for (let n = 1; n <= pages; n++) {
+            if (my !== flowRun) return;
+            const pg = await doc.getPage(n), v0 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: (cssW * dpr) / v0.width }), cv = document.createElement("canvas");
+            cv.width = Math.round(vp.width); cv.height = Math.round(vp.height); fp.appendChild(cv); await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+        }
+        fp.dataset.t = target;
+    } catch (_) {                                                   // cannot draw it (e.g. link blocks cross-site reading) → plain full-height viewer, one scroller only
+        if (my !== flowRun) return; fp.innerHTML = ""; sc.style.display = "none"; ifr.style.display = "block";
+        ifr.src = target === "__uploaded__" ? (flowBlobUrl || "") : `${/^(https?|blob):/i.test(target) ? target : encodeURI(target)}#toolbar=0&navpanes=0`; fp.dataset.t = target;
+    }
+}
+async function startFlow(auto) {
+    const target = flowUploaded ? "__uploaded__" : (eventConfig.flowPdf || activeFlowSource);
+    if (!target) { if (!auto) toast("No Program Flow PDF set. Upload one or add its URL in ⚙️ Event Setup & URLs.", "err"); return; }
+    if (flowUploaded && !flowBlobUrl) { try { const buf = await idb.get("flow_pdf"); if (buf) flowBlobUrl = URL.createObjectURL(new Blob([buf], { type: "application/pdf" })); } catch (_) {} }
+    $("flowOverlay").style.display = "block"; cancelAnimationFrame(animId);
+    const sc = $("flowScroll"); if ($("flowPages").dataset.t !== target) { sc.scrollTop = 0; await renderFlowPages(target); }
+    flowPauseUntil = 0; let holdUntil = performance.now() + 1500, atEnd = false;
+    (function move(now) {
+        if ($("flowOverlay").style.display !== "block") return;
+        if (sc.style.display !== "none" && now > flowPauseUntil && now > holdUntil) {
+            if (atEnd) { sc.scrollTop = 0; atEnd = false; holdUntil = now + 1500; }                      // loop back to the top
+            else if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2) { atEnd = true; holdUntil = now + 3000; }   // linger on the last page
+            else sc.scrollTop += 0.9;
+        }
+        animId = requestAnimationFrame(move);
+    })(performance.now());
+}
+["wheel", "touchstart", "mousedown", "keydown"].forEach(ev => document.addEventListener(ev, e => { if (e.target && e.target.closest && e.target.closest("#flowOverlay")) flowPauseUntil = performance.now() + 8000; }, { passive: true }));
+function stopFlow() { $("flowOverlay").style.display = "none"; cancelAnimationFrame(animId); resetIdle(); }
+function anyOverlayOpen() { return ["regModal", "settingsModal", "reportModal", "plansModal"].some(id => $(id).style.display === "flex") || $("statsOverlay").style.display === "flex" || $("flowOverlay").style.display === "block"; }
+function resetIdle() {
+    clearTimeout(idleTimer); const m = Number(eventConfig.idleFlowMin) || 0;
+    if (!m || PUBLIC || !(eventConfig.flowPdf || activeFlowSource || flowUploaded)) return;
+    idleTimer = setTimeout(() => { if (!anyOverlayOpen()) startFlow(true); }, m * 60000);
+}
+["mousemove", "keydown", "click", "touchstart"].forEach(ev => document.addEventListener(ev, () => { if ($("flowOverlay").style.display !== "block") resetIdle(); }, { passive: true }));
+document.addEventListener("keydown", e => { if (LIVE) return; if (e.key === "Escape") { stopFlow(); closeStats(); closeModal(); closeSettingsModal(); closeReports(); closePlans(); } });
+
+
+/* ============================ LICENCE & PLANS ============================ */
+let tlChart, syncDropped = 0, planMemo = null, planCurrency = VENDOR.defaultCurrency === "USD" ? "USD" : "OMR";
+function h32(str, seed) { let h = (0x811c9dc5 ^ seed) >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; }
+function licSig(code, ymd) { return h32(`${code}|${ymd}|${LICENSE_SALT}`, 0x1234).toString(16).toUpperCase().padStart(8, "0"); }
+function parseLicense(key) {
+    key = String(key || "").trim().toUpperCase(); if (!key) return { ok: false, empty: true };
+    const m = key.match(/^CMS-(DAY|EVENT|ANNUAL)-(\d{8})-([0-9A-F]{8})$/);
+    if (!m) return { ok: false, reason: "That doesn’t look like a license key (expected CMS-EVENT-YYYYMMDD-XXXXXXXX)." };
+    if (licSig(m[1], m[2]) !== m[3]) return { ok: false, reason: "Invalid license key — please check it for typos." };
+    const until = new Date(+m[2].slice(0, 4), +m[2].slice(4, 6) - 1, +m[2].slice(6, 8), 23, 59, 59);
+    return { ok: true, plan: PLAN_CODES[m[1]], until, expired: new Date() > until };
+}
+function currentPlan() {
+    const memoKey = (eventConfig.license || "") + "|" + new Date().toDateString();
+    if (planMemo && planMemo.key === memoKey) return planMemo.val;
+    const L = parseLicense(eventConfig.license);
+    const val = L.ok && !L.expired ? { id: L.plan, ...PLAN_CATALOG[L.plan], until: L.until, licensed: true }
+                                   : { id: "free", ...PLAN_CATALOG.free, licensed: false, expiredLicense: L.ok ? L : null };
+    planMemo = { key: memoKey, val }; return val;
+}
+const money = o => o[planCurrency] === 0 ? "Free" : planCurrency === "USD" ? "$" + o.USD : "OMR " + o.OMR;
+const bigNum = n => n >= 1e5 ? "Unlimited" : n.toLocaleString();
+function planLock(msg) { toast(msg + " Upgrade to unlock more.", "err", 6000); openPlans(); }
+
+function renderPlanUI() {
+    const chip = $("planChip"); if (!chip) return;
+    const p = currentPlan(), n = attendees.length, cap = p.attendees, finite = cap < 1e5;
+    if (p.licensed) { chip.className = "plan-chip paid admin-only"; chip.textContent = `✓ ${p.name} · until ${fmtDate(p.until)}`; }
+    else { chip.className = "plan-chip admin-only"; chip.textContent = "💎 Starter · Upgrade"; }
+    let html = "", warn = false;
+    const meter = finite ? `<span class="meter"><i style="width:${Math.min(100, n / cap * 100)}%"></i></span>` : "";
+    if (p.expiredLicense) { warn = true; html = `<b>Your ${esc(PLAN_CATALOG[p.expiredLicense.plan].name)} license expired on ${fmtDate(p.expiredLicense.until)}.</b> Running with Starter limits.<button class="btn btn-primary" onclick="openPlans()">Renew</button>`; }
+    else if (finite && (n >= cap || syncDropped > 0)) { warn = true; html = `<b>Attendee limit reached (${n}/${cap}).</b> ${syncDropped ? syncDropped + " registration(s) are hidden. " : ""}Upgrade to see everyone. ${meter}<button class="btn btn-primary" onclick="openPlans()">Upgrade</button>`; }
+    else if (!p.licensed) { html = `<b>Starter plan</b> · ${n}/${cap} attendees · ${p.sources} data source · certificates carry a small watermark ${meter}<button class="btn btn-sync" onclick="openPlans()">See plans</button>`; }
+    else if (finite && n >= cap * 0.9) { warn = true; html = `<b>${n}/${cap} attendees used</b> on your ${esc(p.name)} plan — add the “+500 attendees” pack before the event.${meter}<button class="btn btn-primary" onclick="openPlans()">Add-ons</button>`; }
+    const b = $("planBanner"); b.classList.toggle("hidden", !html); b.classList.toggle("warn", warn); b.innerHTML = html;
+    const f = $("dynamicFooter"); const old = f.querySelector(".pwr"); if (old) old.remove();
+    if (VENDOR.name && !p.whiteLabel) f.insertAdjacentHTML("beforeend", ` · <span class="pwr">Powered by ${esc(VENDOR.name)}</span>`);
+}
+function planFeatures(id) {
+    const p = PLAN_CATALOG[id];
+    return [[`${bigNum(p.attendees)} attendees`, 1], [`${p.sources} live data source${p.sources === 1 ? "" : "s"} (Google Sheets / CSV)`, 1], [`Auto-refresh every ${p.minRefresh}s`, 1],
+        ["E-certificates + public participant portal", 1], [p.watermark ? "Certificates carry a small watermark" : "Clean, watermark-free certificates", !p.watermark],
+        ["Excel (XLSX) reports", p.xlsx], ["White-label (no vendor branding)", p.whiteLabel], [p.support, 1], ...(p.validity ? [[p.validity, 1]] : [])];
+}
+function planCard(id, cur) {
+    const p = PLAN_CATALOG[id], isCur = cur.id === id;
+    const cta = id === "free" ? `<button class="btn" disabled>${isCur ? "Current plan" : "Included"}</button>`
+        : isCur ? `<button class="btn btn-success" disabled>✓ Active</button>` : `<button class="btn ${p.featured ? "btn-sync" : "btn-primary"}" style="padding:10px;" onclick="buyPlan('${id}')">Get ${esc(p.name)}</button>`;
+    return `<div class="plan-card ${p.featured ? "featured" : ""} ${isCur ? "current" : ""}">${p.featured ? '<span class="ribbon">Most popular</span>' : ""}
+        <h3>${esc(p.name)}</h3><div class="tag">${esc(p.tag)}</div><div class="plan-price">${money(p.price)}</div><div class="plan-per">${esc(p.per)}</div>
+        <ul>${planFeatures(id).map(([t, ok]) => `<li class="${ok ? "" : "no"}">${esc(t)}</li>`).join("")}</ul>${cta}</div>`;
+}
+function renderPlans() {
+    const cur = currentPlan(), L = parseLicense(eventConfig.license);
+    const status = cur.licensed ? `<span class="ok">✓ Active: ${esc(cur.name)} · valid until ${fmtDate(cur.until)}</span>` : L.ok && L.expired ? `<span class="bad">× That license expired on ${fmtDate(L.until)}.</span>` : '<span style="color:var(--gray)">No license — running on the free Starter plan.</span>';
+    $("plansBody").innerHTML = `
+        <div class="plans-head"><div><h2 style="margin:0; color:var(--primary);">💎 Plans & Pricing</h2>
+            <div class="hint">Prices in ${planCurrency}${planCurrency === "OMR" ? " (≈ USD at 1 OMR = 2.60)" : ""} · taxes may apply · no hidden per-attendee fees.</div></div>
+            <div style="display:flex; gap:10px; align-items:center;"><div class="seg"><button class="${planCurrency === "OMR" ? "on" : ""}" onclick="setCurrency('OMR')">OMR</button><button class="${planCurrency === "USD" ? "on" : ""}" onclick="setCurrency('USD')">USD</button></div>
+            <button class="btn btn-danger" onclick="closePlans()">✖</button></div></div>
+        <div class="plan-grid">${["free", "day", "event", "annual"].map(id => planCard(id, cur)).join("")}</div>
+        <h3 style="margin:22px 0 0; color:var(--primary); font-size:14px;">Add-ons & services</h3>
+        <table class="addon-table">${ADDONS.map(a => `<tr><td><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></td><td><b>${money(a.price)}</b> <small style="display:inline">${esc(a.per)}</small></td><td><button class="btn" onclick="requestAddon('${a.id}')">Request</button></td></tr>`).join("")}</table>
+        <div class="lic-box"><b>🔑 Have a license key?</b>
+            <div class="row"><input type="text" id="licInput" placeholder="CMS-EVENT-20261231-XXXXXXXX" value="${esc(eventConfig.license || "")}" style="font-family:monospace;" onkeydown="if(event.key==='Enter')activateLicense()">
+            <button class="btn btn-success" onclick="activateLicense()">Activate</button>${eventConfig.license ? '<button class="btn" onclick="removeLicense()">Remove</button>' : ""}</div>
+            <div class="hint" id="licMsg" style="margin-top:6px;">${status}</div></div>`;
+}
+function openPlans() { renderPlans(); $("plansModal").style.display = "flex"; }
+function closePlans() { $("plansModal").style.display = "none"; }
+function setCurrency(c) { planCurrency = c; renderPlans(); }
+function salesLink(subject, body) {
+    if (VENDOR.whatsapp) return "https://wa.me/" + String(VENDOR.whatsapp).replace(/\D/g, "") + "?text=" + encodeURIComponent(subject + "\n" + body);
+    if (VENDOR.email) return "mailto:" + VENDOR.email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    return "";
+}
+function eventBlurb() { return `for “${eventConfig.eventTitle || "my event"}”${eventConfig.eventDate ? " on " + eventConfig.eventDate : ""}`; }
+function buyPlan(id) {
+    const p = PLAN_CATALOG[id]; if (VENDOR.checkout[id]) return window.open(VENDOR.checkout[id], "_blank", "noopener");
+    const l = salesLink(`${p.name} plan request`, `Hello, I would like the ${p.name} plan (${money(p.price)} ${p.per}) ${eventBlurb()}.`);
+    if (l) window.open(l, "_blank", "noopener"); else toast("Sales contact not set up yet — the seller fills in VENDOR (email / WhatsApp / checkout links) at the top of the script.", "err", 8000);
+}
+function requestAddon(id) {
+    const a = ADDONS.find(x => x.id === id), l = salesLink(`Add-on request: ${a.name}`, `Hello, I would like “${a.name}” (${money(a.price)} ${a.per}) ${eventBlurb()}.`);
+    if (l) window.open(l, "_blank", "noopener"); else toast("Sales contact not set up yet — the seller fills in VENDOR at the top of the script.", "err", 8000);
+}
+function activateLicense() {
+    const key = $("licInput").value.trim().toUpperCase(), L = parseLicense(key), msg = $("licMsg");
+    if (L.empty) { msg.innerHTML = '<span class="bad">Paste your license key first.</span>'; return; }
+    if (!L.ok) { msg.innerHTML = `<span class="bad">× ${esc(L.reason)}</span>`; return; }
+    if (L.expired) { msg.innerHTML = `<span class="bad">× This license expired on ${fmtDate(L.until)}.</span>`; return; }
+    eventConfig.license = key; safeSet("prod_cms_config", eventConfig); planMemo = null;
+    renderPlans(); renderPlanUI(); refreshUI(); toast(`License activated: ${currentPlan().name} until ${fmtDate(L.until)}.`, "ok");
+}
+function removeLicense() { eventConfig.license = ""; safeSet("prod_cms_config", eventConfig); planMemo = null; renderPlans(); renderPlanUI(); refreshUI(); }
+
+/* ============================ KPIs, activity, timeline ============================ */
+function hhmm(iso) { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
+function renderKpis(totalIn, rate) {
+    const n = attendees.length, set = (id, v) => $(id).textContent = v;
+    set("kpiTotal", n); set("kpiPresent", totalIn); set("kpiPending", n - totalIn); set("kpiRate", rate);
+    $("kpiBar").style.width = (n ? totalIn / n * 100 : 0) + "%";
+    const last = attendees.filter(a => a.checkedAt && isPresent(a)).map(a => a.checkedAt).sort().pop();
+    set("kpiLast", last ? "last " + hhmm(last) : "");
+}
+function renderActivity() {
+    const all = attendees.filter(a => a.checkedAt && isPresent(a)).sort((a, b) => b.checkedAt.localeCompare(a.checkedAt)), list = all.slice(0, 8), el = $("activityList");
+    $("actCount").textContent = all.length ? `${all.length} timed check-in${all.length === 1 ? "" : "s"}` : "";
+    el.innerHTML = list.length ? list.map(a => `<div class="act-item" onclick="selectUser('${esc(a.id)}')"><span class="dot dot-online"></span><b>${esc(a.name)}</b><small>${esc(a.role)}</small><span class="via ${a.checkedVia === "sheet" ? "sheet" : ""}">${a.checkedVia === "sheet" ? "form" : "desk"}</span><span class="act-time">${hhmm(a.checkedAt)}</span></div>`).join("")
+        : `<div class="hint" style="padding:6px;">No check-ins yet — they appear here live (desk check-ins and check-in form submissions).</div>`;
+}
+function renderTimeline() {
+    if (!tlChart) return; const lock = $("tlLock"); if (lock) lock.style.display = "none"; $("tlWrap").style.display = "block";
+    const ts = attendees.filter(a => a.checkedAt && isPresent(a)).map(a => Date.parse(a.checkedAt)).filter(x => !isNaN(x)).sort((x, y) => x - y);
+    const note = $("tlNote");
+    if (!ts.length) { tlChart.data.labels = ["—"]; tlChart.data.datasets[0].data = [0]; tlChart.update(); if (note) note.textContent = "No check-ins yet — the line rises as people arrive."; return; }
+    const now = Date.now(), end = Math.max(ts[ts.length - 1], Math.min(now, ts[ts.length - 1] + 6 * 3600e3)), span = Math.max(end - ts[0], 60000);
+    const step = [1, 2, 5, 10, 15, 30, 60, 120, 360, 720, 1440].map(m => m * 60000).find(x => span / x <= 36) || 86400000;
+    const start = Math.floor(ts[0] / step) * step - step, multiDay = new Date(start).toDateString() !== new Date(end).toDateString();
+    const fmt = t => new Date(t).toLocaleString([], multiDay ? { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
+    const labels = [], data = []; let i = 0;
+    for (let t = start; t <= end + step; t += step) { while (i < ts.length && ts[i] < t) i++; labels.push(fmt(t)); data.push(i); }
+    tlChart.data.labels = labels; tlChart.data.datasets[0].data = data; tlChart.update();
+    if (note) note.textContent = `${ts.length} people checked in · first ${fmt(ts[0])} · latest ${fmt(ts[ts.length - 1])} · one point per ${step / 60000 >= 60 ? step / 3600000 + " h" : step / 60000 + " min"}`;
+}
+
+/* ============================ quick check-in (desk / barcode scanner) ============================ */
+function beep(ok) {
+    try { const AC = window.AudioContext || window.webkitAudioContext, c = beep.ctx || (beep.ctx = new AC()), o = c.createOscillator(), g = c.createGain();
+        o.frequency.value = ok ? 880 : 220; g.gain.value = .08; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + (ok ? .12 : .3)); } catch (_) {}
+}
+function quickCheckin(e) {
+    if (e.key !== "Enter") return; const inp = $("quickInput"), q = inp.value.trim().toLowerCase(); if (!q) return; inp.value = "";
+    let m = attendees.filter(a => a.email === q); if (!m.length) m = attendees.filter(a => a.name.toLowerCase() === q); if (!m.length) m = attendees.filter(a => a.name.toLowerCase().includes(q));
+    if (m.length !== 1) { beep(false); toast(m.length ? `${m.length} people match “${q}” — type more of the name or pick from the list.` : `No match for “${q}”.`, "err"); return; }
+    const a = m[0]; selectUser(a.id);
+    if (isPresent(a)) { beep(false); toast(`${a.name} is already checked in${a.checkedAt ? " (" + hhmm(a.checkedAt) + ")" : ""}.`, "info"); return; }
+    markPresent(a, "desk"); beep(true); toast(`✓ ${a.name} checked in.`, "ok", 2500);
+}
+
+/* ============================ reports ============================ */
+function exportAttendanceFile() {
+    const present = attendees.filter(a => isPresent(a) && a.email).map(a => a.email.toLowerCase());
+    if (!present.length) return toast("Nobody is checked in yet.", "err");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify({ event: eventConfig.eventTitle || "", generated: new Date().toISOString(), present: [...new Set(present)] }, null, 2)], { type: "application/json" }));
+    a.download = "attendance.json"; a.click();
+    toast(`attendance.json saved (${new Set(present).size} people). Upload it next to this page (with event-config.json) so the public certificate portal only serves people who attended.`, "ok", 9000);
+}
+async function applyAttendanceFile() {
+    try { const r = await fetch("attendance.json", { cache: "no-store" }); if (!r.ok) return; const j = await r.json(), set = new Set((j.present || []).map(e => String(e).toLowerCase()));
+        attendees.forEach(a => { if (a.email && set.has(a.email)) { a.status = "✅ Present"; a.checkedVia = a.checkedVia || "file"; } }); } catch (_) {}
+}
+function openReports() {
+    if (!attendees.length) return toast("No attendance data to export yet.", "err");
+    const pr = attendees.filter(isPresent).length;
+    $("reportCounts").textContent = `${attendees.length} people · ${pr} checked in · ${attendees.length - pr} pending`;
+    $("xlsxLock").textContent = currentPlan().xlsx ? "" : "🔒 paid plans"; $("reportModal").style.display = "flex";
+}
+function closeReports() { $("reportModal").style.display = "none"; }
+const listFor = k => attendees.filter(a => k === "present" ? isPresent(a) : k === "pending" ? !isPresent(a) : true).slice().sort(byName);
+const recRow = p => ({ "Full Name": p.name, "Email": p.email, "Category": (p.roles || [p.role]).join(" + "), "Institute/Organization": p.institute, "Country/State": p.country, "Contact Number": p.contact,
+    "Status": p.status.replace(/[✅❌]/g, "").trim(), "Checked-in at": p.checkedAt ? new Date(p.checkedAt).toLocaleString() : "", "Via": p.checkedVia === "sheet" ? "form" : p.checkedVia || "" });
+const fileBase = () => (eventConfig.eventTitle || "Event").replace(/\W+/g, "_");
+function exportCsv(kind) {
+    const list = listFor(kind); if (!list.length) return toast("Nothing to export for this list yet.", "err");
+    const q = v => { v = String(v == null ? "" : v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return `"${v.replace(/"/g, '""')}"`; };   // blocks CSV formula injection
+    const rows = list.map(recRow), head = Object.keys(rows[0]);
+    const csv = head.map(q).join(",") + "\n" + rows.map(r => head.map(h => q(r[h])).join(",")).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" })); a.download = `${fileBase()}_${kind}.csv`; a.click();
+}
+function exportXlsx() {
+    if (!currentPlan().xlsx) return planLock("Excel reports are part of the paid plans.");
+    const wb = XLSX.utils.book_new(), tot = attendees.filter(isPresent).length;
+    const summary = CATS.map(c => { const g = attendees.filter(c.test), p = g.filter(isPresent).length; return { Category: c.side, Registered: g.length, "Checked-in": p, Pending: g.length - p }; });
+    summary.push({ Category: "TOTAL", Registered: attendees.length, "Checked-in": tot, Pending: attendees.length - tot });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), "Summary");
+    [["All", "all"], ["Present", "present"], ["Pending", "pending"]].forEach(([n, k]) => { const rows = listFor(k).map(recRow); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows : [{ "Full Name": "(none)" }]), n); });
+    XLSX.writeFile(wb, `${fileBase()}_attendance.xlsx`);
+}
+
+/* ============================ boot ============================ */
+async function fetchHostedProfile() {
+    try { const r = await fetch("event-config.json", { cache: "no-store" }); if (!r.ok) return null; return await r.json(); } catch (_) { return null; }
+}
+window.onload = async () => {
+    refreshFlowNote();
+    if (PUBLIC) document.body.classList.add("public-mode");
+    if (LIVE) document.body.classList.add("live-mode");
+    const tick = () => { const el = $("fsClock"); if (el) el.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }; tick(); setInterval(tick, 1000);
+    const local = safeGet("prod_cms_config", null);
+    eventConfig = normalizeConfig(local || await fetchHostedProfile() || {});
+    attendees = PUBLIC ? [] : loadAttendees();
+    initCharts(); filterRole("All"); updateStats(); applyBranding();
+    await detectLocalAssets();
+    if (LIVE) {
+        liveStandalone = !attendees.length; $("statsOverlay").style.display = "flex"; showFullscreenStats();
+        window.addEventListener("storage", liveStorage);
+        if (liveStandalone) { await syncAllSources(true); } setupAutoSync(); updateStats(); return;
+    }
+    if (PUBLIC) { switchView("certs"); await syncAllSources(true); await applyAttendanceFile(); refreshCertCounts(); return; }
+    if (!local && !eventConfig.sources.length && !eventConfig.eventTitle) { openSettingsModal(); toast("Welcome! Start by entering your event details and adding a data source (Google Sheet / CSV link).", "info", 8000); return; }
+    if (!attendees.length) await syncAllSources(true); else syncAllSources(true);
+};
+</script>
+</body>
+</html>
