@@ -10,6 +10,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<!-- Firebase (hosted multi-event mode; the app still works without it) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 
@@ -174,14 +178,18 @@ input:focus, select:focus { outline: 2px solid color-mix(in srgb, var(--primary)
 .flow-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 64px 0 48px; scrollbar-width: thin; }
 .flow-pages { width: min(92%, 1000px); margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .flow-pages canvas { width: 100%; height: auto; background: #fff; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.45); display: block; }
+.flow-bar { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 10001; display: none; align-items: center; gap: 6px; background: rgba(15,23,42,.92); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 6px 12px; color: #e2e8f0; font-size: 12px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+.flow-bar button { background: rgba(255,255,255,.12); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 15px; font-weight: 800; }
+.flow-bar button:hover { background: rgba(255,255,255,.28); } .flow-bar span { min-width: 56px; text-align: center; }
+.flow-notice { display: none; position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 10001; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; border-radius: 12px; padding: 10px 16px; font-size: 12.5px; max-width: min(92vw, 720px); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
 .flow-msg { color: #cbd5e1; text-align: center; padding: 40px; font-size: 15px; }
 .flow-fallback { display: none; position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: #fff; }
 #toasts { position: fixed; right: 18px; bottom: 18px; z-index: 20000; display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
 .toast { background: #0f172a; color: #fff; padding: 11px 15px; border-radius: 10px; font-size: 12px; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,.3); border-left: 4px solid var(--accent); }
 .toast.ok { border-left-color: var(--success); } .toast.err { border-left-color: var(--pending); }
 
-footer { padding: 9px 20px; text-align: center; font-size: 11.5px; color: var(--gray); border-top: 1px solid var(--line); background: #f8fafc; flex-shrink: 0; }
-footer a { color: var(--primary); font-weight: 700; text-decoration: none; }
+footer { padding: 9px 20px; text-align: center; font-size: 12.5px; color: #475569; border-top: 1px solid #e5e4eb; background: #f8fafc; flex-shrink: 0; }
+footer a, footer strong { color: #155dfc; font-weight: 700; text-decoration: none; }
 
 /* ---------- PAID-EDITION LAYER ---------- */
 .plan-chip { border: 1px solid #fde68a; background: linear-gradient(135deg,#fffbeb,#fef3c7); color: #92400e; font: 800 10.5px 'Inter',sans-serif; padding: 7px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap; }
@@ -193,7 +201,7 @@ footer a { color: var(--primary); font-weight: 700; text-decoration: none; }
 .plan-banner .meter i { display: block; height: 100%; background: #f59e0b; }
 .plan-banner.warn .meter { background: #fecdd3; } .plan-banner.warn .meter i { background: #e11d48; }
 .plan-banner .btn { padding: 4px 12px; margin-left: auto; }
-.kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 12px 22px 0; }
+.kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; padding: 12px 22px 0; }
 .kpi { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px 10px 18px; position: relative; overflow: hidden; box-shadow: 0 4px 14px rgba(15,23,42,.04); }
 .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--kc, var(--primary)); }
 .kpi b { display: block; font-size: 9.5px; letter-spacing: .6px; text-transform: uppercase; color: var(--gray); }
@@ -269,6 +277,22 @@ body.public-mode .header-actions, body.public-mode .admin-only { display: none !
     .fs-grid { grid-template-columns: repeat(4, 1fr); }
     .app-shell { width: 100vw; height: 100vh; border-radius: 0; }
 }
+#cloudGate { position: fixed; inset: 0; z-index: 5000; background: linear-gradient(135deg, #eef2ff, #f8fafc); display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+.cg-card { background: #fff; border-radius: 16px; box-shadow: 0 20px 50px rgba(15,23,42,.18); padding: 28px; max-width: 460px; width: 100%; text-align: center; }
+.cg-card h2 { margin: 0 0 8px; color: var(--primary); } .cg-card p { color: #475569; font-size: 14px; line-height: 1.5; }
+.cg-btn { width: 100%; padding: 12px; margin-top: 6px; } .cg-or { margin: 14px 0 8px; font-size: 12px; color: #94a3b8; }
+.cg-row { display: flex; gap: 8px; flex-wrap: wrap; } .cg-row input { flex: 1 1 200px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.cg-msg { margin-top: 10px; font-size: 13px; text-align: left; } .cg-msg .ok, #ocMsg .ok { color: #047857; } .cg-msg .bad, #ocMsg .bad, #ocList .bad { color: #b91c1c; }
+.cg-links { margin-top: 18px; font-size: 13px; }
+.cm-box { max-width: 1020px; } .cm-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; } .cm-head h2 { margin: 0; color: var(--primary); }
+.cm-role { background: #eef2ff; color: var(--primary); border-radius: 99px; padding: 2px 10px; font-size: 12px; font-weight: 700; }
+.cm-link { display: flex; gap: 8px; align-items: center; margin: 6px 0; flex-wrap: wrap; } .cm-link b { flex: 0 0 190px; font-size: 13px; } .cm-link input { flex: 1 1 260px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font: 12px monospace; }
+.oc-new, .oc-row { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #f8fafc; }
+.oc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 8px; align-items: end; }
+.oc-grid label { display: flex; flex-direction: column; font-size: 11.5px; color: #475569; gap: 3px; } .oc-grid input, .oc-grid select { padding: 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; background: #fff; }
+.oc-top { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; } .oc-top code { background: #e2e8f0; padding: 1px 6px; border-radius: 6px; font-size: 12px; } .oc-links { margin-left: auto; font-size: 12.5px; }
+#acctBtn { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 </style>
 </head>
 <body>
@@ -280,6 +304,13 @@ body.public-mode .header-actions, body.public-mode .admin-only { display: none !
     <button class="close-flow" onclick="stopFlow()">✖ Close (Esc)</button>
     <div id="flowScroll" class="flow-scroll"><div id="flowPages" class="flow-pages"></div></div>
     <iframe id="flowIframe" class="flow-fallback" src=""></iframe>
+    <div id="flowBar" class="flow-bar">
+        <button onclick="flowToggle()" id="flowPlayBtn" title="Play / pause (Space)">⏸</button>
+        <button onclick="flowSpeed(-1)" title="Slower">−</button><span id="flowSpeedLbl">Medium</span><button onclick="flowSpeed(1)" title="Faster">+</button>
+        <button onclick="flowTop()" title="Back to the first page">⤒</button>
+    </div>
+    <div id="flowNotice" class="flow-notice"><b>Auto-scroll is off for this link.</b> The website that hosts the PDF does not allow the app to read it, so it is shown in a normal viewer — scroll it with the mouse. To enable auto-scroll, upload the PDF:
+        <label class="btn btn-mini" style="cursor:pointer; margin:0 0 0 6px;">⬆ Upload PDF<input type="file" accept="application/pdf,.pdf" hidden onchange="flowUploadHere(this)"></label></div>
 </div>
 
 <!-- FULLSCREEN ANALYTICS OVERLAY -->
@@ -331,6 +362,8 @@ body.public-mode .header-actions, body.public-mode .admin-only { display: none !
             <button class="btn btn-dark" onclick="openSettingsModal()">⚙️ Event Setup & URLs</button>
             <button class="btn btn-flow" onclick="startFlow()">▶ Flow</button>
             <button class="btn btn-slate" onclick="toggleFullScreen()">⛶ Screen</button>
+            <button class="btn btn-slate admin-only" id="acctBtn" onclick="cloudAcctClick()" title="Sign in / account / owner console">☁ Sign in</button>
+            <button class="btn btn-dark admin-only hidden" id="ownerBtn" onclick="openOwnerConsole()" title="Create events, set plans, add clients">🛠 Owner console</button>
             <button class="plan-chip admin-only" id="planChip" onclick="openPlans()" title="Plans & license"></button>
             <div class="status-indicator" id="statusPill" title=""><span class="dot dot-idle" id="statusDot"></span><span id="statusText">READY</span></div>
         </div>
@@ -395,6 +428,7 @@ body.public-mode .header-actions, body.public-mode .admin-only { display: none !
             <div class="kpi" style="--kc:var(--primary)"><b>Registered</b><span id="kpiTotal">0</span></div>
             <div class="kpi" style="--kc:var(--success)"><b>Checked-in</b><span id="kpiPresent">0</span><div class="bar"><i id="kpiBar"></i></div></div>
             <div class="kpi" style="--kc:var(--pending)"><b>Pending</b><span id="kpiPending">0</span></div>
+            <div class="kpi" id="kpiFbBox" style="--kc:#0891b2; display:none;"><b>💬 Feedback</b><span id="kpiFb">0</span><small>responses</small></div>
             <div class="kpi" style="--kc:var(--secondary)"><b>Attendance rate</b><span id="kpiRate">0%</span><small id="kpiLast"></small></div>
         </div>
 
@@ -546,6 +580,19 @@ body.public-mode .header-actions, body.public-mode .admin-only { display: none !
             <div class="hint" style="margin:0 0 8px;">Paste a <b>public</b> GitHub repository or folder link. The app lists the files and matches them by name: <i>Participants / Organisers / Speakers / Check-in / On-Site</i> sheets, certificate PDFs (<i>Participant, Organizer, Speakers</i>), <i>Program Flow</i> PDF, logos &amp; banner, and the event title.</div>
             <div style="display:flex; gap:6px;"><input type="url" id="cfgRepoUrl" placeholder="https://github.com/owner/repository   (or …/tree/main/folder)" style="flex:1;"><button class="btn btn-sync" id="btnRepo" onclick="autoDetectRepo()">🔎 Auto-detect &amp; load</button></div>
             <div id="repoResult" style="margin-top:8px;"></div>
+            <div style="margin-top:10px; padding-top:10px; border-top: 1px dashed #c7d2fe;">
+                <div style="font-weight:800; color:var(--primary); margin-bottom:4px;">📋 Form links (for the QR codes)</div>
+                <div class="hint" style="margin:0 0 8px;">Reads the folder <b>“Google Form Links”</b> — Feedback, Pre-registration, Check-in and On-Site Registration links — and fills the form fields below. Works with .txt, .url, .webloc, .json or .md files (one file with lines like <i>“Feedback form link: https://…”</i>, or one file per form). GitHub detection above also reads this folder.</div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="btn btn-mini" type="button" onclick="loadFormLinksFromAppFolder()" title="Hosted copy: reads “Google Form Links/” next to this page">📂 Same folder as the app</button>
+                    <label class="btn btn-mini" style="cursor:pointer; margin:0; display:inline-flex; align-items:center;" title="Pick the folder that contains the app (or the “Google Form Links” folder itself)">📁 Pick folder…<input type="file" id="formsDirInput" webkitdirectory directory multiple hidden onchange="loadFormLinksFromPicked(this)"></label>
+                    <label class="btn btn-mini" style="cursor:pointer; margin:0; display:inline-flex; align-items:center;">📄 Pick file(s)…<input type="file" id="formsFilesInput" multiple accept=".txt,.url,.webloc,.json,.md,.csv,.html,.htm" hidden onchange="loadFormLinksFromPicked(this)"></label>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:8px;"><input type="url" id="cfgFormsRepoUrl" placeholder="GitHub link to the folder, e.g. https://github.com/owner/repo/tree/main/Google Form Links" style="flex:1;"><button class="btn btn-mini" type="button" onclick="loadFormLinksFromGithub()">🔗 Load from GitHub link</button></div>
+                <div style="margin-top:8px;"><textarea id="formsPaste" rows="3" placeholder="…or paste the links here, one per line:&#10;Pre-Registered Participants: https://docs.google.com/spreadsheets/d/…&#10;Feedback form link: https://forms.gle/…" style="width:100%; box-sizing:border-box; font:12px ui-monospace,Consolas,monospace; padding:8px; border:1px solid #cbd5e1; border-radius:7px;"></textarea>
+                    <button class="btn btn-mini" type="button" style="margin-top:4px;" onclick="loadFormLinksFromPaste()">➕ Add from pasted links</button></div>
+                <div id="formsResult" style="margin-top:8px;"></div>
+            </div>
         </div>
         <div class="settings-grid">
             <!-- 1. Identity -->
@@ -568,7 +615,9 @@ body.public-mode .header-actions, body.public-mode .admin-only { display: none !
                 <div class="row2"><div class="field-row"><label>Event date</label><input type="date" id="cfgEventDate"></div><div class="field-row"><label>Venue / city</label><input type="text" id="cfgVenue" placeholder="e.g. Main Auditorium, Muscat"></div></div>
                 <div class="field-row"><label>Institution name</label><input type="text" id="cfgUniName" placeholder="University, school or office name"></div>
                 <div class="field-row"><label>Website (optional)</label><input type="url" id="cfgUniUrl" placeholder="https://www.university.edu"></div>
-                <div class="field-row"><label>Department / address line</label><input type="text" id="cfgUniAddress" placeholder="Department · P.O Box · City, Country"></div>
+                <div class="field-row"><label>Address line (footer)</label><input type="text" id="cfgUniAddress" placeholder="P.O Box 42, Postal Code: 400 Ibra, Sultanate of Oman"></div>
+                <div class="field-row"><label>Department / centre (footer, optional)</label><input type="text" id="cfgUniDept" placeholder="Center for Foundation Studies"></div>
+                <div class="field-row"><label>Copyright holder (footer)</label><input type="text" id="cfgCopyrightBy" placeholder="Name shown after “Copyright ©”"></div>
                 <div class="field-row"><label>Primary logo (URL or upload)</label>
                     <div style="display:flex; gap:5px;"><input type="text" id="cfgLogo1" placeholder="Logo image URL, or use Choose File"><input type="file" accept="image/*" class="file-in" onchange="uploadLocalImage(this,'cfgLogo1')"></div></div>
                 <div class="field-row"><label>Secondary / co-host logo (optional)</label>
@@ -604,6 +653,7 @@ body.public-mode .header-actions, body.public-mode .admin-only { display: none !
                 <h4>3. Form Links (QR codes are generated from these)</h4>
                 <div class="field-row"><label>Pre-registration / check-in form</label><input type="url" id="cfgFormPreReg" placeholder="https://forms.gle/…">
                     <div class="hint">Optional prefill: put <code>{name}</code> or <code>{email}</code> in the link (e.g. …viewform?entry.123={name}). Otherwise <code>?id=name</code> is appended.</div></div>
+                <div class="field-row"><label>✅ Check-in form <span style="text-transform:none; font-weight:500;">(optional — blank = use the pre-registration form)</span></label><input type="url" id="cfgFormCheckin" placeholder="https://forms.gle/…"></div>
                 <div class="field-row"><label>On-site (walk-in) registration form</label><input type="url" id="cfgFormOnSite" placeholder="https://forms.gle/…"></div>
                 <div class="field-row"><label>💬 Feedback form</label><input type="url" id="cfgFormFeedback" placeholder="https://forms.gle/…"></div>
                 <div class="field-row"><label>Program-flow PDF — upload or URL</label>
@@ -658,7 +708,7 @@ body.public-mode .header-actions, body.public-mode .admin-only { display: none !
    exported "event-config.json" next to this file (used by every device that
    has no local settings, e.g. participants opening the public portal).
    ========================================================================== */
-const ROLE_OPTS = ["Participant", "Participant (New)", "Organiser", "Speaker", "Guest", "Staff", "Student"];
+const ROLE_OPTS = ["Participant", "Participant (New)", "Organiser", "Speaker", "Guest", "Staff", "Student", "Feedback"];   // “Feedback” = count responses only, never added as attendees
 
 /* ==========================================================================
    VENDOR & LICENSING  — the seller fills this block in before distributing.
@@ -668,7 +718,7 @@ const ROLE_OPTS = ["Participant", "Participant (New)", "Organiser", "Speaker", "
    ========================================================================== */
 const VENDOR = {
     name: "",                    // shown as "Powered by …" on Starter (free) plans; blank = hidden
-    email: "", whatsapp: "96878243835",     // "Get plan" buttons open a pre-filled message here (WhatsApp in international format, digits only)
+    email: "hrk.mathtech@gmail.com", whatsapp: "",     // "Get plan" requests go to this e-mail; clients are asked for their own WhatsApp number + country
     checkout: { day: "", event: "", annual: "" },    // optional direct payment links (Stripe / PayPal / Thawani Pay …) per plan
     defaultCurrency: "OMR"       // "OMR" or "USD"
 };
@@ -677,7 +727,7 @@ const PLAN_CODES = { DAY: "day", EVENT: "event", ANNUAL: "annual" };
 const PLAN_CATALOG = {
     free:   { name: "Starter", tag: "Try it on a small event", price: { OMR: 0, USD: 0 }, per: "free · no card needed", attendees: 50, sources: 1, minRefresh: 60, watermark: true, xlsx: false, timeline: true, whiteLabel: false, support: "Community support", validity: "" },
     day:    { name: "Event Day Pass", tag: "One event, one day", price: { OMR: 15, USD: 39 }, per: "per event day", attendees: 300, sources: 3, minRefresh: 30, watermark: false, xlsx: true, timeline: true, whiteLabel: false, support: "Email support", validity: "Valid for 1 event day" },
-    event:  { name: "Event Pro", tag: "Multi-day conferences", price: { OMR: 45, USD: 119 }, per: "per event · up to 7 days", attendees: 1500, sources: 10, minRefresh: 10, watermark: false, xlsx: true, timeline: true, whiteLabel: false, support: "Email + WhatsApp, 24h reply", validity: "Valid for up to 7 days", featured: true },
+    event:  { name: "Event Pro", tag: "Multi-day conferences", price: { OMR: 45, USD: 119 }, per: "per event · up to 7 days", attendees: 1500, sources: 10, minRefresh: 10, watermark: false, xlsx: true, timeline: true, whiteLabel: false, support: "Email support, 24h reply", validity: "Valid for up to 7 days", featured: true },
     annual: { name: "Institution Annual", tag: "Unlimited events for a year", price: { OMR: 289, USD: 749 }, per: "per year · all your events", attendees: 1e9, sources: 50, minRefresh: 10, watermark: false, xlsx: true, timeline: true, whiteLabel: true, support: "Priority support + onboarding call", validity: "Valid for 12 months" }
 };
 const ADDONS = [
@@ -692,14 +742,14 @@ const ADDONS = [
    Fill everything in via ⚙️ Event Setup & URLs (or import an event-config.json). */
 const DEFAULT_PROFILE = {
     orgSector: "UNIVERSITY", eventType: "SYMPOSIUM",
-    eventTitle: "", eventDate: "", venue: "", license: "", uniName: "", uniUrl: "", uniAddress: "", adminEmail: "",
+    eventTitle: "", eventDate: "", venue: "", license: "", uniName: "", uniUrl: "", uniAddress: "", uniDept: "", copyrightBy: "", adminEmail: "",
     logo1: "", logo2: "",
     primaryColor: "#1a3a82", accentColor: "#f5a623", secondaryColor: "#7209b7",     /* theme colours only */
     expiryDate: "",
     certAttendedOnly: true,
     repoUrl: "",
     sources: [],
-    formPreReg: "", formOnSite: "", formFeedback: "", flowPdf: "",
+    formPreReg: "", formOnSite: "", formFeedback: "", formCheckin: "", flowPdf: "",
     pdfParticipant: "", pdfOrganiser: "", pdfSpeaker: "",
     certY: 322, certSize: 34, certColor: "#14204a",
     autoSyncSec: 60, idleFlowMin: 0
@@ -723,6 +773,7 @@ const QR_STYLES = {
 /* ============================ helpers ============================ */
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const EVENT_ID = (new URLSearchParams(location.search).get("e") || "").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 60), NS = EVENT_ID ? "ev_" + EVENT_ID + "_" : "";   /* ?e=<event> → hosted multi-event mode; settings/attendees are kept per event */
 const MODE = new URLSearchParams(location.search).get("mode"), PUBLIC = MODE === "certs", LIVE = MODE === "live";
 let liveStandalone = false;
 const PRESENT = "✅ Present", PENDING = "❌ Pending";
@@ -730,8 +781,8 @@ const isPresent = a => String(a.status).includes("✅");
 const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
 let _uid = 0; const newId = () => "a" + Date.now().toString(36) + (++_uid).toString(36);
 
-function safeGet(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
-function safeSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { toast("Browser storage is full or blocked — changes may not be saved.", "err"); return false; } }
+function safeGet(key, fallback) { try { const v = localStorage.getItem(NS + key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
+function safeSet(key, val) { try { localStorage.setItem(NS + key, JSON.stringify(val)); if (key === "prod_cms_config" && window.cloudSaveConfig) cloudSaveConfig(); return true; } catch (e) { toast("Browser storage is full or blocked — changes may not be saved.", "err"); return false; } }
 function toast(msg, type = "info", ms = 5200) {
     const t = document.createElement("div"); t.className = "toast " + type; t.textContent = msg;
     $("toasts").appendChild(t); setTimeout(() => t.remove(), ms);
@@ -750,7 +801,7 @@ function hexToHsl(hex) {
 /* --- IndexedDB for uploaded certificate templates (too big for localStorage) --- */
 const idb = {
     db: null,
-    open() { return this.db || (this.db = new Promise((res, rej) => { const r = indexedDB.open("cms_assets", 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); })); },
+    open() { return this.db || (this.db = new Promise((res, rej) => { const r = indexedDB.open("cms_assets" + (EVENT_ID ? "_" + EVENT_ID : ""), 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); })); },
     async op(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction("files", mode); const rq = fn(tx.objectStore("files")); tx.oncomplete = () => res(rq && rq.result); tx.onerror = () => rej(tx.error); }); },
     get(k) { return this.op("readonly", s => s.get(k)); }, set(k, v) { return this.op("readwrite", s => s.put(v, k)); }, del(k) { return this.op("readwrite", s => s.delete(k)); }
 };
@@ -823,11 +874,14 @@ function applyBranding() {
     const exp = expiryDate();
     $("certExpiryText").textContent = !c.expiryDate ? "" : (isExpired() ? `This portal expired on ${fmtDate(exp) || c.expiryDate}.` : `This certificate portal will expire on ${fmtDate(exp) || c.expiryDate}`);
 
-    const year = new Date().getFullYear(), parts = [];
-    if (hasUni) parts.push(c.uniUrl ? `<a href="${esc(c.uniUrl)}" target="_blank" rel="noopener">${esc(c.uniName)}</a>` : `<strong>${esc(c.uniName)}</strong>`);
-    if (c.uniAddress) parts.push(esc(c.uniAddress));
-    parts.push(`Copyright © ${c.adminEmail ? `<a href="mailto:${esc(c.adminEmail)}">${esc(c.adminEmail)}</a> ` : ""}${year}`);
-    $("dynamicFooter").innerHTML = hasUni || c.adminEmail ? parts.join(" · ") : `Universal Academic & Institutional Event Management System © ${year}`;
+    // Footer, fixed wording:  <University> : <address>. <Department>. Copyright © <Holder> <year>.
+    const year = new Date().getFullYear(), dot = t => (/[.!?]$/.test(t) ? "" : "."), blue = t => `<strong>${esc(t)}</strong>`;
+    let f = "";
+    if (hasUni) f += c.uniUrl ? `<a href="${esc(c.uniUrl)}" target="_blank" rel="noopener">${esc(c.uniName)}</a>` : blue(c.uniName);
+    if (c.uniAddress) f += (hasUni ? " : " : "") + esc(c.uniAddress) + dot(c.uniAddress);
+    if (c.uniDept) f += (f ? " " : "") + blue(c.uniDept) + dot(c.uniDept);
+    const holder = c.copyrightBy ? blue(c.copyrightBy) : (c.adminEmail ? `<a href="mailto:${esc(c.adminEmail)}">${esc(c.adminEmail)}</a>` : "");
+    $("dynamicFooter").innerHTML = f || holder ? `${f}${f ? " " : ""}Copyright © ${holder ? holder + " " : ""}${year}.` : `Universal Academic & Institutional Event Management System © ${year}`;
 
     renderMainQr(); setupAutoSync(); updateBadge(); resetIdle(); renderPlanUI();
 }
@@ -960,7 +1014,9 @@ async function loadSource(src) {
             try {
                 const res = await fetch(u, { cache: "no-store" });
                 if (!res.ok) { lastErr = `HTTP ${res.status}` + ((res.status === 403 || res.status === 404) ? " — check the link / sharing" : ""); continue; }
-                const recs = rowsToRecords(bufferToRows(await res.arrayBuffer()));
+                const rows = bufferToRows(await res.arrayBuffer());
+                if (src.role === "Feedback") { const n = rows.filter(r => Object.values(r).some(v => String(v).trim())).length; return { state: "ok", n, via: "URL", feedback: true }; }
+                const recs = rowsToRecords(rows);
                 recs.forEach(r => mergeRecord(r, src));
                 return { state: "ok", n: recs.length, via: "URL" };
             } catch (e) { lastErr = (e && e.message && e.message !== "Failed to fetch") ? e.message : "Could not reach the link (private sheet, wrong URL, or blocked by the browser)"; }
@@ -980,15 +1036,15 @@ async function syncAllSources(silent = false) {
         if (++si > srcCap) { sourceState[src.id] = { state: "skip", msg: "Not included in your plan — upgrade to read more sources" }; continue; }
         if (!src.url && !(src.fallback && src.fallback.length)) { sourceState[src.id] = { state: "skip", msg: "No URL set" }; continue; }
         const r = await loadSource(src); sourceState[src.id] = r;
-        if (r.state === "ok") { ok++; total += r.n; } else { fail++; failures.push(`• ${src.label || "Source"}: ${r.msg}`); }
+        if (r.state === "ok") { ok++; if (!r.feedback) total += r.n; } else { fail++; failures.push(`• ${src.label || "Source"}: ${r.msg}`); }
     }
     lastSync = new Date(); syncing = false;
     if (syncDropped && !silent) toast(`${syncDropped} registration(s) were not loaded: your plan allows ${currentPlan().attendees} attendees. Upgrade to see everyone.`, "err", 9000);
-    persist(); refreshUI();
+    window.cloudApply && cloudApply(); persist(); refreshUI();
     if (!ok && fail) updateBadge("err");
     if ($("settingsModal").style.display === "flex") renderSourceRows();
     if (!silent) {
-        if (ok && !fail) toast(`Sync complete — ${ok} source(s), ${total} rows read, ${attendees.length} people in total.`, "ok");
+        if (ok && !fail) toast(`Sync complete — ${ok} source(s), ${total} rows read, ${attendees.length} people in total${feedbackTotal() ? ", " + feedbackTotal() + " feedback response(s)" : ""}.`, "ok");
         else if (ok) toast(`Synced ${ok} source(s), ${fail} failed:\n${failures.join("\n")}`, "err", 9000);
         else toast(`No data loaded.\n${failures.join("\n") || "Add a data source in ⚙️ Event Setup & URLs."}` + (location.protocol === "file:" ? "\n\nTip: open this page from a web server / GitHub Pages, not directly from disk." : ""), "err", 10000);
     } else if (fail && !ok) toast("Live sync failed — open ⚙️ Event Setup & URLs to see why.", "err");
@@ -1058,8 +1114,8 @@ function refreshUI() { renderDropdown(); updateStats(); updateBadge(); if (curre
 function toggleGuestPanel() { const p = $("guestPanel"); p.style.display = p.style.display === "grid" ? "none" : "grid"; }
 function addManual(name, role, institute) {
     if (attendees.length >= currentPlan().attendees) return planLock(`Your plan allows ${currentPlan().attendees} attendees.`);
-    const a = { id: newId(), name, email: "", institute, country: "-", contact: "-", role, roles: [role], status: PRESENT, manual: true, checkedAt: new Date().toISOString(), checkedVia: "desk" };
-    attendees.push(a); persist(); refreshUI(); selectUser(a.id);
+    const a = { id: newId(), name, email: "", institute, country: "-", contact: "-", role, roles: [role], status: PRESENT, manual: true, guest: true, checkedAt: new Date().toISOString(), checkedVia: "desk" };
+    attendees.push(a); persist(); window.cloudMark && cloudMark(a, true); refreshUI(); selectUser(a.id);
 }
 function quickAddGuest(label, role) {
     const n = attendees.filter(a => a.name.startsWith(label)).length + 1;
@@ -1088,10 +1144,10 @@ function selectUser(id) {
 }
 function togglePresence() {
     const p = attendees.find(a => a.id === currentId); if (!p) return toast("Select a participant first.", "err");
-    if (isPresent(p)) { p.status = PENDING; p.manual = true; delete p.checkedAt; delete p.checkedVia; persist(); updateStats(); selectUser(p.id); }
+    if (isPresent(p)) { p.status = PENDING; p.manual = true; delete p.checkedAt; delete p.checkedVia; persist(); window.cloudMark && cloudMark(p, false); updateStats(); selectUser(p.id); }
     else markPresent(p, "desk");
 }
-function markPresent(p, via) { p.status = PRESENT; p.manual = true; p.checkedAt = new Date().toISOString(); p.checkedVia = via; persist(); updateStats(); selectUser(p.id); }
+function markPresent(p, via) { p.status = PRESENT; p.manual = true; p.checkedAt = new Date().toISOString(); p.checkedVia = via; persist(); window.cloudMark && cloudMark(p, true); updateStats(); selectUser(p.id); }
 function visibleList() {
     const q = $("searchBox").value.toLowerCase().trim();
     return attendees.filter(a => (currentFilter === "All" || a.role.includes(currentFilter)) &&
@@ -1129,7 +1185,7 @@ function fillTemplate(url, rec) {
     return url + (url.includes("?") ? "&" : "?") + "id=" + encodeURIComponent(rec.name);
 }
 async function renderMainQr() {
-    const box = $("mainCheckinQR"), target = eventConfig.formPreReg || eventConfig.formOnSite;
+    const box = $("mainCheckinQR"), target = eventConfig.formCheckin || eventConfig.formPreReg || eventConfig.formOnSite;
     box.innerHTML = "";
     if (target && window.QRCodeStyling) { makeQr(fillTemplate(target, null), QR_STYLES["CHECK-IN"], 214).append(box); return; }
     box.innerHTML = `<div class="qr-empty">No check-in QR yet.<br>Add a registration form link in <b>⚙️ Event Setup & URLs</b>.</div>`;
@@ -1299,8 +1355,10 @@ function exportCertLog() {
 
 /* ============================ setup modal ============================ */
 let draftSources = [];
+function feedbackTotal() { return Object.entries(sourceState).reduce((n, [id, st]) => n + (st && st.feedback && st.state === "ok" && eventConfig.sources.some(s => s.id === id) ? st.n : 0), 0); }
 function srcStatusHtml(s) {
     const st = sourceState[s.id]; if (!st) return `<span style="color:#94a3b8;">not synced yet</span>`;
+    if (st.state === "ok" && st.feedback) return `<span class="ok">✓ ${st.n} feedback response${st.n === 1 ? "" : "s"}</span> <small style="color:var(--gray)">(counted only — not added to attendees)</small>`;
     if (st.state === "ok") return `<span class="ok">✓ ${st.n} row${st.n === 1 ? "" : "s"} read</span> <small style="color:var(--gray)">(${esc(st.via)})</small>`;
     if (st.state === "skip") return `<span style="color:#94a3b8;">${esc(st.msg)}</span>`;
     return `<span class="bad">× ${esc(st.msg)}</span>`;
@@ -1328,10 +1386,10 @@ async function refreshUploadNotes() {
 function openSettingsModal() {
     refreshFlowNote(); $("flowExtract").innerHTML = "";
     const c = eventConfig, set = (id, v) => $(id).value = v == null ? "" : v;
-    set("cfgOrgSector", c.orgSector); set("cfgEventType", c.eventType); set("cfgEventTitle", c.eventTitle); set("cfgEventDate", c.eventDate); set("cfgVenue", c.venue); set("cfgUniName", c.uniName); set("cfgUniUrl", c.uniUrl); set("cfgUniAddress", c.uniAddress);
+    set("cfgOrgSector", c.orgSector); set("cfgEventType", c.eventType); set("cfgEventTitle", c.eventTitle); set("cfgEventDate", c.eventDate); set("cfgVenue", c.venue); set("cfgUniName", c.uniName); set("cfgUniUrl", c.uniUrl); set("cfgUniAddress", c.uniAddress); set("cfgUniDept", c.uniDept); set("cfgCopyrightBy", c.copyrightBy);
     set("cfgLogo1", c.logo1); set("cfgLogo2", c.logo2); set("cfgPrimaryColor", c.primaryColor); set("cfgAccentColor", c.accentColor); set("cfgSecondaryColor", c.secondaryColor || "#7209b7"); set("cfgAdminEmail", c.adminEmail);
     set("cfgAutoSync", c.autoSyncSec); set("cfgIdleFlow", c.idleFlowMin);
-    set("cfgFormPreReg", c.formPreReg); set("cfgFormOnSite", c.formOnSite); set("cfgFormFeedback", c.formFeedback); set("cfgFlowPdf", c.flowPdf);
+    set("cfgFormPreReg", c.formPreReg); set("cfgFormCheckin", c.formCheckin); set("cfgFormOnSite", c.formOnSite); set("cfgFormFeedback", c.formFeedback); set("cfgFlowPdf", c.flowPdf);
     set("cfgPdfParticipant", c.pdfParticipant); set("cfgPdfOrganiser", c.pdfOrganiser); set("cfgPdfSpeaker", c.pdfSpeaker);
     set("cfgCertY", c.certY); set("cfgCertSize", c.certSize); set("cfgCertColor", c.certColor || "#14204a"); set("cfgExpiry", /^\d{4}-\d{2}-\d{2}$/.test(c.expiryDate) ? c.expiryDate : ""); $("cfgAttendedOnly").checked = c.certAttendedOnly !== false; set("cfgRepoUrl", c.repoUrl);
     draftSources = JSON.parse(JSON.stringify(c.sources)); renderSourceRows(); refreshUploadNotes();
@@ -1341,10 +1399,10 @@ function closeSettingsModal() { $("settingsModal").style.display = "none"; }
 function collectSettings() {
     const v = id => $(id).value.trim(), c = eventConfig;
     Object.assign(c, {
-        orgSector: $("cfgOrgSector").value, eventType: $("cfgEventType").value, eventTitle: v("cfgEventTitle"), eventDate: $("cfgEventDate").value, venue: v("cfgVenue"), uniName: v("cfgUniName"), uniUrl: v("cfgUniUrl"), uniAddress: v("cfgUniAddress"),
+        orgSector: $("cfgOrgSector").value, eventType: $("cfgEventType").value, eventTitle: v("cfgEventTitle"), eventDate: $("cfgEventDate").value, venue: v("cfgVenue"), uniName: v("cfgUniName"), uniUrl: v("cfgUniUrl"), uniAddress: v("cfgUniAddress"), uniDept: v("cfgUniDept"), copyrightBy: v("cfgCopyrightBy"),
         logo1: v("cfgLogo1"), logo2: v("cfgLogo2"), primaryColor: $("cfgPrimaryColor").value, accentColor: $("cfgAccentColor").value, secondaryColor: $("cfgSecondaryColor").value, adminEmail: v("cfgAdminEmail"),
         autoSyncSec: parseInt($("cfgAutoSync").value, 10) || 0, idleFlowMin: parseInt($("cfgIdleFlow").value, 10) || 0,
-        formPreReg: v("cfgFormPreReg"), formOnSite: v("cfgFormOnSite"), formFeedback: v("cfgFormFeedback"), flowPdf: v("cfgFlowPdf"),
+        formPreReg: v("cfgFormPreReg"), formCheckin: v("cfgFormCheckin"), formOnSite: v("cfgFormOnSite"), formFeedback: v("cfgFormFeedback"), flowPdf: v("cfgFlowPdf"),
         pdfParticipant: v("cfgPdfParticipant"), pdfOrganiser: v("cfgPdfOrganiser"), pdfSpeaker: v("cfgPdfSpeaker"),
         certY: parseInt($("cfgCertY").value, 10) || 322, certSize: parseInt($("cfgCertSize").value, 10) || 34, certColor: $("cfgCertColor").value, expiryDate: $("cfgExpiry").value, certAttendedOnly: $("cfgAttendedOnly").checked, repoUrl: v("cfgRepoUrl"),
         sources: draftSources.map(s => ({ ...s, label: (s.label || "").trim(), url: (s.url || "").trim() }))
@@ -1436,25 +1494,138 @@ async function readFlowFromField() {
         await readFlowBuffer(buf, label);
     } catch (e) { $("flowExtract").innerHTML = `<span class="bad">× ${esc(e.message || "Failed")}</span>`; }
 }
+/* ---------- form links from a “Google Form Links” folder (GitHub, app folder, or picked folder) ---------- */
+const FORM_FIELDS = { prereg: ["cfgFormPreReg", "Pre-registration"], checkin: ["cfgFormCheckin", "Check-in"], onsite: ["cfgFormOnSite", "On-Site registration"], feedback: ["cfgFormFeedback", "Feedback"] };
+const FORM_FOLDER_RE = /(form|sheet|data|source|registration).*links?|links?.*(form|sheet)|google.*(form|sheet)/i, FORM_EXT_RE = /\.(txt|url|webloc|json|md|csv|html?|desktop)$/i;
+function classifyFormLabel(t) {
+    t = String(t || "").toLowerCase();
+    if (/on[-_ ]?site|walk[-_ ]?in/.test(t)) return "onsite";
+    if (/check[-_ ]?in/.test(t)) return "checkin";
+    if (/feedback|evaluation|survey|review/.test(t)) return "feedback";
+    if (/pre[-_ ]?reg|regist|enrol/.test(t)) return "prereg";
+    return "";
+}
+const SHEET_URL_RE = /docs\.google\.com\/spreadsheets|\.(csv|xlsx|xls)(\?|#|$)|sharepoint\.com|1drv\.ms|onedrive\.live\.com|dropbox\.com|airtable\.com|output=csv|format=csv/i;
+const sheetId = u => ((String(u).match(/\/d\/(?:e\/)?([\w-]{10,})/) || [])[1]) || String(u).trim();
+function sheetRole(key) { return ({ prereg: { role: "Participant", present: false }, checkin: { role: "Participant", present: true }, onsite: { role: "Participant (New)", present: true }, feedback: { role: "Feedback", present: false } })[key] || { role: "Participant", present: false }; }
+function parseFormLinks(files) {                                   // files: [{name, text}] → { found (forms), sheets (data sources), unmatched }
+    const found = {}, from = {}, sheets = [], unmatched = [], urlRe = /https?:\/\/[^\s"'<>\])}]+/gi, clean = u => u.replace(/[.,;:]+$/, "");
+    const take = (key, url, src, label) => {
+        if (!/^https?:\/\//i.test(url)) return;
+        if (SHEET_URL_RE.test(url)) { if (!sheets.some(x => sheetId(x.url) === sheetId(url))) sheets.push({ key: key || (/particip|attendee|regist/i.test(label || src) ? "prereg" : ""), label: String(label || "").replace(/[\s:–-]+$/, "").trim() || src.replace(/\.[^.]+$/, ""), url, src }); return; }
+        if (key && !found[key]) { found[key] = url; from[key] = src; }
+    };
+    for (const f of files) {
+        let text = String(f.text || "").replace(/^\uFEFF/, ""), base = f.name.replace(/\.[^.]+$/, "");
+        if (/\.json$/i.test(f.name)) { try { const parsed = JSON.parse(text); let nUrl = 0; JSON.stringify(parsed, (k, v) => { if (typeof v === "string" && /^https?:/i.test(v)) nUrl++; return v; });
+            const walk = (o, k) => { if (typeof o === "string") { const key = classifyFormLabel(k) || (nUrl === 1 ? classifyFormLabel(base) : ""); if (/^https?:/i.test(o)) { if (key || SHEET_URL_RE.test(o)) take(key, o.trim(), f.name, k || base); else unmatched.push({ name: f.name + (k ? " · " + k : ""), url: o.trim() }); } } else if (o && typeof o === "object") Object.entries(o).forEach(([kk, vv]) => walk(vv, kk)); }; walk(parsed, ""); continue; } catch (_) {} }
+        const lines = text.split(/\r?\n/), urlsInFile = (text.match(urlRe) || []).length;
+        for (const line of lines) {
+            const m = line.match(urlRe); if (!m) continue;
+            for (const raw of m) {
+                const url = clean(raw), label = line.slice(0, line.indexOf(raw)).replace(/<[^>]*>/g, " ").replace(/^\s*URL\s*=?\s*$/i, ""), key = classifyFormLabel(label) || (urlsInFile === 1 ? classifyFormLabel(base) : "");
+                if (key || SHEET_URL_RE.test(url)) take(key, url, f.name, label.trim() || (urlsInFile === 1 ? base : "")); else unmatched.push({ name: f.name + (label.trim() ? " · " + label.trim().slice(0, 30) : ""), url });
+            }
+        }
+    }
+    return { found, from, sheets, unmatched: unmatched.filter(u => !Object.values(found).includes(u.url) && !sheets.some(x => x.url === u.url)) };
+}
+async function fetchTextFiles(list) {                              // [{name,url}] → [{name,text}]
+    const out = []; await Promise.all(list.filter(f => FORM_EXT_RE.test(f.name) || !/\.[a-z0-9]{2,5}$/i.test(f.name)).slice(0, 40).map(async f => { try { const r = await fetch(f.url); if (!r.ok) return; const t = await r.text(); if (t.length < 200000) out.push({ name: f.name, text: t }); } catch (_) {} }));
+    return out;
+}
+function applyFormLinks(res, where) {
+    const out = $("formsResult"), keys = Object.keys(res.found), rows = [], newSheets = (res.sheets || []).filter(x => x.key || /particip|attendee|regist/i.test(x.label));
+    if (!keys.length && !newSheets.length) { out.innerHTML = `<span class="bad">× No form links found${where ? " in " + esc(where) : ""}. Use lines like “Feedback form link: https://forms.gle/…” or files named Feedback / Pre-registration / Check-in / On-Site Registration.</span>` + (res.unmatched.length ? `<div class="hint">Links seen but not recognised: ${res.unmatched.slice(0, 4).map(u => esc(u.name)).join(", ")}</div>` : ""); return false; }
+    let added = 0, have = 0; newSheets.forEach(sh => { const meta = sheetRole(sh.key); if (draftSources.some(d => sheetId(d.url) === sheetId(sh.url))) { have++; rows.push(`<b>Data source</b><span>${esc(sh.label)} <small style="color:#94a3b8;">(already added)</small></span>`); return; }
+        draftSources.push({ id: newId(), label: sh.label, role: meta.role, present: meta.present, url: sh.url }); added++; rows.push(`<b>Data source</b><span>${esc(sh.label)} <small>— ${meta.role === "Feedback" ? "feedback responses (counted only)" : esc(meta.role) + (meta.present ? ", counts as present" : ", registered")}</small> <span class="ok">✓ added</span></span>`); });
+    if (added) renderSourceRows();
+    window.__formFound = {}; let changed = false;
+    ["prereg", "checkin", "onsite", "feedback"].forEach(k => { const url = res.found[k]; if (!url) return; const [id, lab] = FORM_FIELDS[k], el = $(id); window.__formFound[id] = url;
+        if (!el.value.trim()) { el.value = url; changed = true; rows.push(`<b>${lab}</b><span>${esc(url)} <span class="ok">✓ filled</span> <small>(${esc(res.from[k])})</small></span>`); }
+        else if (el.value.trim() !== url) rows.push(`<b>${lab}</b><span>${esc(url)} <small style="color:#94a3b8;">(kept your existing link)</small> <a href="#" onclick="useFormLink('${id}'); return false;">use this</a></span>`);
+        else rows.push(`<b>${lab}</b><span>${esc(url)} <small style="color:#94a3b8;">(already set)</small></span>`); });
+    const missing = ["prereg", "checkin", "onsite", "feedback"].filter(k => !res.found[k]).map(k => FORM_FIELDS[k][1]);
+    const dup = res.found.prereg && res.found.prereg === res.found.checkin ? `<div class="hint" style="margin-top:4px;">ℹ The Pre-registration and Check-in links are the same form — both QR codes will open the same page.</div>` : "";
+    out.innerHTML = `<div style="color:#059669; font-weight:700; margin-bottom:4px;">✓ ${keys.length} form link(s)${newSheets.length ? " and " + newSheets.length + " data sheet(s)" : ""} read${where ? " from " + esc(where) : ""}</div><div class="repo-list">${rows.join("")}</div>${dup}${missing.length ? `<div class="hint" style="margin-top:4px;">Not found: ${missing.join(", ")}.</div>` : ""}${res.unmatched.length ? `<div class="hint">Other links ignored: ${res.unmatched.slice(0, 3).map(u => esc(u.name)).join(", ")}</div>` : ""}`;
+    collectSettings(); renderMainQr(); if (added) { out.insertAdjacentHTML("beforeend", `<div class="hint" style="margin-top:4px;">Loading the sheets…</div>`); testSources(); } return true;
+}
+function useFormLink(id) { if (window.__formFound && window.__formFound[id]) { $(id).value = window.__formFound[id]; collectSettings(); renderMainQr(); toast("Link updated.", "ok"); } }
+async function loadFormLinksFromAppFolder() {
+    const out = $("formsResult"); out.innerHTML = `<span style="color:#d97706;">Looking for “Google Form Links/” next to the app…</span>`;
+    if (location.protocol === "file:") { out.innerHTML = `<span class="bad">× A page opened straight from your computer cannot read neighbouring files (browser rule). Use <b>📁 Pick folder…</b> and choose the folder that contains the app.</span>`; return; }
+    const base = new URL("Google%20Form%20Links/", location.href).href; let files = [];
+    try { const r = await fetch(base); if (r.ok && /html|text/.test(r.headers.get("content-type") || "")) { const doc = new DOMParser().parseFromString(await r.text(), "text/html"); files = [...doc.querySelectorAll("a[href]")].map(a => a.getAttribute("href")).filter(h => h && !/^(\?|#|\.\.|\/$|https?:)/.test(h) && !h.endsWith("/")).map(h => ({ name: decodeURIComponent(h.split("/").pop()), url: new URL(h, base).href })); } } catch (_) {}
+    if (!files.length) {                                          // folder listing not available → try the usual names
+        const names = ["Feedback", "Pre-registration", "Check-in", "On-Site Registration", "links", "Links", "Google Form Links", "forms"], exts = ["txt", "url", "webloc", "json", "md"];
+        await Promise.all(names.flatMap(n => exts.map(async e => { const u = base + encodeURIComponent(n) + "." + e; try { const r = await fetch(u); if (r.ok && !/html/.test(r.headers.get("content-type") || "")) files.push({ name: n + "." + e, url: u }); } catch (_) {} })));
+    }
+    if (!files.length) { out.innerHTML = `<span class="bad">× Could not read a “Google Form Links” folder next to the app (hosts such as GitHub Pages do not list folders). Use <b>📁 Pick folder…</b>, or the GitHub box above.</span>`; return; }
+    applyFormLinks(parseFormLinks(await fetchTextFiles(files)), "the app folder");
+}
+async function loadFormLinksFromGithub(urlArg) {
+    const out = $("formsResult"), url = (urlArg || $("cfgFormsRepoUrl").value || "").trim(), g = parseGithubUrl(url);
+    if (!g) { out.innerHTML = `<span class="bad">× Paste a GitHub link like https://github.com/owner/repository/tree/main/Google Form Links (public repositories only).</span>`; return; }
+    out.innerHTML = `<span style="color:#d97706;">Reading ${esc(g.owner)}/${esc(g.repo)}${g.full ? "/" + esc(g.full) : ""}…</span>`;
+    const enc = p => p.split("/").filter(Boolean).map(encodeURIComponent).join("/"), ref = g.branch ? "?ref=" + encodeURIComponent(g.branch) : "", api = p => `https://api.github.com/repos/${g.owner}/${g.repo}/contents/${enc(p)}${ref}`, H = { headers: { Accept: "application/vnd.github+json" } };
+    let files = null, label = g.full || "repository";
+    try {                                                           // 1) GitHub API: the exact path may be a folder, a single file, or the repo root
+        const r = await fetch(api(g.full), H);
+        if (r.ok) {
+            let j = await r.json();
+            if (Array.isArray(j) && !g.full) { const d = j.find(x => x.type === "dir" && FORM_FOLDER_RE.test(x.name)); if (d) { label = d.name; const r2 = await fetch(api(d.path || d.name), H); j = r2.ok ? await r2.json() : []; } }
+            files = (Array.isArray(j) ? j : [j]).filter(x => x && x.type === "file" && x.download_url).map(x => ({ name: x.name, url: x.download_url }));
+        }
+    } catch (_) {}
+    if (!files || !files.length) {                                  // 2) fallback: jsDelivr file index (no rate limit)
+        for (const br of g.branch ? [g.branch] : ["main", "master"]) {
+            try {
+                const r = await fetch(`https://data.jsdelivr.com/v1/packages/gh/${g.owner}/${g.repo}@${encodeURIComponent(br)}?structure=flat`); if (!r.ok) continue;
+                const all = (await r.json()).files || [], raw = n => `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${encodeURIComponent(br)}/${enc(n)}`;
+                let prefix = "/" + g.full; const exact = all.find(f => f.name === prefix);
+                if (exact) files = [{ name: exact.name.split("/").pop(), url: raw(exact.name.slice(1)) }];
+                else {
+                    if (!g.full) { const hit = all.find(f => FORM_FOLDER_RE.test(f.name.split("/")[1] || "") && f.name.split("/").length > 2); if (hit) { prefix = "/" + hit.name.split("/")[1]; label = hit.name.split("/")[1]; } }
+                    files = all.filter(f => f.name.startsWith(prefix + "/") && !f.name.slice(prefix.length + 1).includes("/")).map(f => ({ name: f.name.split("/").pop(), url: raw(f.name.slice(1)) }));
+                }
+                if (files && files.length) break;
+            } catch (_) {}
+        }
+    }
+    if (!files || !files.length) { out.innerHTML = `<span class="bad">× Could not read that GitHub location. Check that the repository is <b>public</b> and the link points to the “Google Form Links” folder (or its file). If GitHub's request limit was hit, wait a few minutes.</span>`; return; }
+    applyFormLinks(parseFormLinks(await fetchTextFiles(files)), `GitHub “${label}”`);
+}
+function loadFormLinksFromPaste() { const t = $("formsPaste").value; if (!t.trim()) return toast("Paste at least one link first.", "err"); if (applyFormLinks(parseFormLinks([{ name: "pasted links", text: t }]), "the pasted text")) $("formsPaste").value = ""; }
+async function loadFormLinksFromPicked(input) {
+    const all = [...input.files]; input.value = ""; if (!all.length) return;
+    const rel = f => f.webkitRelativePath || f.name, inForm = all.filter(f => rel(f).split("/").slice(0, -1).some(seg => FORM_FOLDER_RE.test(seg)));
+    let pick = inForm.length ? inForm : all.filter(f => f.size < 60000 && /\.(txt|url|webloc|json|md)$/i.test(f.name) && !/^(event-config|attendance)\.json$/i.test(f.name) && rel(f).split("/").length <= 3);
+    if (!pick.length && all.length) pick = all.filter(f => FORM_EXT_RE.test(f.name) && !/\.html?$/i.test(f.name) || all.length <= 6).slice(0, 10);
+    const files = []; for (const f of pick.filter(f => f.size < 200000).slice(0, 40)) { try { files.push({ name: f.name, text: await f.text() }); } catch (_) {} }
+    applyFormLinks(parseFormLinks(files), inForm.length ? "the “Google Form Links” folder" : "the selected files");
+}
 /* ---------- auto-detect files from a GitHub repository / folder ---------- */
 function parseGithubUrl(u) {
-    const m = String(u || "").trim().match(/^https?:\/\/(?:www\.)?github\.com\/([^\/\s]+)\/([^\/\s#?]+?)(?:\.git)?(?:\/(tree|blob)\/([^\/\s#?]+)(?:\/([^\s#?]*))?)?\/?(?:[#?].*)?$/i);
+    const m = String(u || "").trim().match(/^https?:\/\/(?:www\.)?github\.com\/([^\/\s]+)\/([^\/\s#?]+?)(?:\.git)?(?:\/(tree|blob)\/([^\/\s#?]+)(?:\/([^#?]*))?)?\/?(?:[#?].*)?$/i);
     if (!m) return null;
-    let path = (m[5] || "").replace(/\/+$/, ""); if (m[3] === "blob") path = path.split("/").slice(0, -1).join("/");   // a file link → its folder
-    return { owner: m[1], repo: m[2], branch: m[4] || "", path };
+    const dec = t => { try { return decodeURIComponent(t); } catch (_) { return t; } };
+    let path = dec((m[5] || "").trim()).replace(/\/+$/, ""); if (m[3] === "blob") path = path.split("/").slice(0, -1).join("/");   // a file link → its folder
+    return { owner: m[1], repo: m[2], branch: m[4] || "", path, full: dec((m[5] || "").trim()).replace(/\/+$/, ""), kind: m[3] || "" };
 }
 async function listRepoFiles(g) {
     const enc = p => p.split("/").filter(Boolean).map(encodeURIComponent).join("/");
     try {
         const r = await fetch(`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${enc(g.path)}${g.branch ? "?ref=" + encodeURIComponent(g.branch) : ""}`, { headers: { Accept: "application/vnd.github+json" } });
-        if (r.ok) { const j = await r.json(); if (Array.isArray(j)) return { via: "GitHub", files: j.filter(x => x.type === "file" && x.download_url).map(x => ({ name: x.name, url: x.download_url })) }; }
+        if (r.ok) { const j = await r.json(); if (Array.isArray(j)) return { via: "GitHub", files: j.filter(x => x.type === "file" && x.download_url).map(x => ({ name: x.name, url: x.download_url })), dirs: j.filter(x => x.type === "dir").map(x => x.name),
+            listDir: async name => { try { const r2 = await fetch(`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${enc((g.path ? g.path + "/" : "") + name)}${g.branch ? "?ref=" + encodeURIComponent(g.branch) : ""}`, { headers: { Accept: "application/vnd.github+json" } }); const j2 = r2.ok ? await r2.json() : []; return (Array.isArray(j2) ? j2 : []).filter(x => x.type === "file" && x.download_url).map(x => ({ name: x.name, url: x.download_url })); } catch (_) { return []; } } }; }
     } catch (_) {}
     for (const br of g.branch ? [g.branch] : ["main", "master"]) {                  // fallback (GitHub API rate-limited / blocked)
         try {
             const r = await fetch(`https://data.jsdelivr.com/v1/packages/gh/${g.owner}/${g.repo}@${encodeURIComponent(br)}?structure=flat`); if (!r.ok) continue;
             const j = await r.json(), pre = g.path ? "/" + g.path + "/" : "/";
             const files = (j.files || []).filter(f => f.name.startsWith(pre) && !f.name.slice(pre.length).includes("/")).map(f => ({ name: f.name.slice(pre.length), url: `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${encodeURIComponent(br)}/${enc(f.name)}` }));
-            if (files.length) return { via: "jsDelivr", files };
+            const rawOf = n => `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${encodeURIComponent(br)}/${enc(n)}`, under = (j.files || []).filter(f => f.name.startsWith(pre) && f.name.slice(pre.length).includes("/"));
+            if (files.length || under.length) return { via: "jsDelivr", files, dirs: [...new Set(under.map(f => f.name.slice(pre.length).split("/")[0]))], listDir: async name => under.filter(f => f.name.slice(pre.length).startsWith(name + "/") && !f.name.slice(pre.length + name.length + 1).includes("/")).map(f => ({ name: f.name.split("/").pop(), url: rawOf(f.name.slice(1)) })) };
         } catch (_) {}
     }
     return null;
@@ -1498,6 +1669,7 @@ function classifyRepoFiles(files) {
 async function autoDetectRepo() {
     const out = $("repoResult"), g = parseGithubUrl($("cfgRepoUrl").value);
     if (!g) { out.innerHTML = `<span class="bad">× Paste a GitHub link like https://github.com/owner/repository (public repositories only).</span>`; return; }
+    if (g.full && FORM_FOLDER_RE.test(g.full.split("/").pop())) { $("cfgFormsRepoUrl").value = $("cfgRepoUrl").value; out.innerHTML = `<span style="color:#475569;">That link points to the form-links folder — reading the form links.</span>`; await loadFormLinksFromGithub($("cfgRepoUrl").value); return; }
     const btn = $("btnRepo"); btn.disabled = true; out.innerHTML = `<span style="color:#d97706;">Reading ${esc(g.owner)}/${esc(g.repo)}…</span>`;
     try {
         const L = await listRepoFiles(g);
@@ -1516,6 +1688,8 @@ async function autoDetectRepo() {
         if (R.logo2) rows.push(line("Logo 2 / banner", set("cfgLogo2", R.logo2.url) ? esc(R.logo2.name) : `kept your existing <small>(${esc(R.logo2.name)} ignored)</small>`));
         if (R.skipped.length) rows.push(line("Not used", R.skipped.map(x => `${esc(x.name)} <small>— ${esc(x.why)}</small>`).join("<br>"), "skip"));
         out.innerHTML = `<div style="color:#059669; font-weight:700; margin-bottom:4px;">✓ ${L.files.length} files found (via ${L.via}) — matched ${R.sources.length} data sheet(s), ${Object.keys(R.pdf).length} certificate template(s)${R.flow ? ", programme flow" : ""}. Loading data…</div><div class="repo-list">${rows.join("")}</div><div class="hint" style="margin-top:6px;">Review the fields below, change anything you like, then press <b>Save</b>.</div>`;
+        const formDir = (L.dirs || []).find(d => FORM_FOLDER_RE.test(d));
+        if (formDir) { const ff = await fetchTextFiles(await L.listDir(formDir)); applyFormLinks(parseFormLinks(ff), `GitHub folder “${formDir}”`); } else $("formsResult").innerHTML = "";
         if (R.sources.length) await testSources();
     } catch (e) { out.innerHTML = `<span class="bad">× ${esc(e.message || "Auto-detect failed")}</span>`; }
     finally { btn.disabled = false; }
@@ -1559,7 +1733,7 @@ function newBlankEvent() {
 }
 async function resetToDefaults() {
     if (!confirm("Reset everything to the built-in / hosted defaults?\nThis removes saved settings, attendee data and uploaded templates from this browser.")) return;
-    ["prod_cms_config", "prod_cms_attendees", "prod_cert_logs"].forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+    ["prod_cms_config", "prod_cms_attendees", "prod_cert_logs"].forEach(k => { try { localStorage.removeItem(NS + k); } catch (_) {} });
     for (const t of CERT_TYPES) { try { await idb.del("tpl_" + t.key); } catch (_) {} }
     try { await idb.del("flow_pdf"); await idb.del("flow_name"); } catch (_) {} flowUploaded = false; flowBlobUrl = "";
     location.reload();
@@ -1568,18 +1742,24 @@ async function resetToDefaults() {
 /* ============================ fullscreen, stats overlay, program flow ============================ */
 function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
 function showFullscreenStats() { $("statsOverlay").style.display = "flex"; updateStats(); if (fsChart) fsChart.resize(); if (tlChart) tlChart.resize(); }
-function publicDisplayUrl() { return location.href.split("#")[0].split("?")[0] + "?mode=live"; }
+function publicDisplayUrl() { return location.href.split("#")[0].split("?")[0] + (EVENT_ID ? "?e=" + EVENT_ID + "&mode=live" : "?mode=live"); }
 function openPublicDisplay() {
     const u = publicDisplayUrl(); try { navigator.clipboard && navigator.clipboard.writeText(u).catch(() => {}); } catch (_) {}
     const w = window.open(u, "cms_public_display", `popup=yes,width=${Math.round(screen.availWidth * .94)},height=${Math.round(screen.availHeight * .92)},left=${Math.round(screen.availWidth * .03)},top=${Math.round(screen.availHeight * .03)}`);
     toast(w ? "Public display opened — drag it to the projector / second screen and press F11. Link copied: " + u : "Pop-up blocked — allow pop-ups, or open this link on the audience screen: " + u, w ? "ok" : "err", 9000);
 }
 function liveStorage(e) {
-    if (e.key === "prod_cms_attendees" && !liveStandalone) { attendees = loadAttendees(); updateStats(); }
-    if (e.key === "prod_cms_config") { const c = safeGet("prod_cms_config", null); if (c) { eventConfig = normalizeConfig(c); planMemo = null; applyBranding(); updateStats(); } }
+    if (e.key === NS + "prod_cms_attendees" && !liveStandalone) { attendees = loadAttendees(); updateStats(); }
+    if (e.key === NS + "prod_cms_config" && !window.CLOUD_EVENT) { const c = safeGet("prod_cms_config", null); if (c) { eventConfig = normalizeConfig(c); planMemo = null; applyBranding(); updateStats(); } }
 }
 function closeStats() { $("statsOverlay").style.display = "none"; }
-let flowRun = 0, flowPauseUntil = 0;
+let flowRun = 0, flowPauseUntil = 0, flowPlaying = true, flowSpeedIdx = 1, flowPos = 0;
+const FLOW_SPEEDS = [[28, "Slow"], [55, "Medium"], [95, "Fast"], [150, "Faster"]];
+function flowUi() { $("flowPlayBtn").textContent = flowPlaying ? "⏸" : "▶"; $("flowSpeedLbl").textContent = FLOW_SPEEDS[flowSpeedIdx][1]; }
+function flowToggle() { flowPlaying = !flowPlaying; flowPauseUntil = 0; flowUi(); }
+function flowSpeed(d) { flowSpeedIdx = Math.max(0, Math.min(FLOW_SPEEDS.length - 1, flowSpeedIdx + d)); flowUi(); }
+function flowTop() { const sc = $("flowScroll"); sc.scrollTop = 0; flowPos = 0; }
+async function flowUploadHere(input) { await uploadFlowPdf(input); flowRun++; resetFlowView(); stopFlow(); startFlow(false); }
 function resetFlowView() { const fp = $("flowPages"); if (fp) { fp.innerHTML = ""; delete fp.dataset.t; } const f = $("flowIframe"); if (f) { f.removeAttribute("src"); f.style.display = "none"; } }
 async function flowBuffer(target) {
     if (target === "__uploaded__") return await idb.get("flow_pdf");
@@ -1588,40 +1768,48 @@ async function flowBuffer(target) {
 }
 async function renderFlowPages(target) {
     const fp = $("flowPages"), ifr = $("flowIframe"), sc = $("flowScroll"), my = ++flowRun;
-    fp.innerHTML = `<div class="flow-msg">Loading programme…</div>`; ifr.style.display = "none"; sc.style.display = "block";
+    fp.innerHTML = `<div class="flow-msg">Loading programme…</div>`; ifr.style.display = "none"; sc.style.display = "block"; $("flowNotice").style.display = "none"; $("flowBar").style.display = "flex";
     try {
         const lib = await loadPdfJs(), buf = await flowBuffer(target), doc = await lib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
         const cssW = Math.min(window.innerWidth * 0.92, 1000), dpr = Math.min(window.devicePixelRatio || 1, 2), pages = Math.min(doc.numPages, 60); fp.innerHTML = "";
         for (let n = 1; n <= pages; n++) {
             if (my !== flowRun) return;
             const pg = await doc.getPage(n), v0 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: (cssW * dpr) / v0.width }), cv = document.createElement("canvas");
-            cv.width = Math.round(vp.width); cv.height = Math.round(vp.height); fp.appendChild(cv); await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+            cv.width = Math.round(vp.width); cv.height = Math.round(vp.height); await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+            if (my !== flowRun) return; fp.appendChild(cv);                    // only the newest run may add pages
         }
         fp.dataset.t = target;
     } catch (_) {                                                   // cannot draw it (e.g. link blocks cross-site reading) → plain full-height viewer, one scroller only
-        if (my !== flowRun) return; fp.innerHTML = ""; sc.style.display = "none"; ifr.style.display = "block";
+        if (my !== flowRun) return; fp.innerHTML = ""; sc.style.display = "none"; ifr.style.display = "block"; $("flowBar").style.display = "none"; $("flowNotice").style.display = "block";
         ifr.src = target === "__uploaded__" ? (flowBlobUrl || "") : `${/^(https?|blob):/i.test(target) ? target : encodeURI(target)}#toolbar=0&navpanes=0`; fp.dataset.t = target;
     }
 }
+let flowInFlight = null;
 async function startFlow(auto) {
+    if (flowInFlight) return flowInFlight;                                  // already opening → ignore double clicks / idle timer
+    flowInFlight = startFlowNow(auto).finally(() => { flowInFlight = null; }); return flowInFlight;
+}
+async function startFlowNow(auto) {
     const target = flowUploaded ? "__uploaded__" : (eventConfig.flowPdf || activeFlowSource);
     if (!target) { if (!auto) toast("No Program Flow PDF set. Upload one or add its URL in ⚙️ Event Setup & URLs.", "err"); return; }
     if (flowUploaded && !flowBlobUrl) { try { const buf = await idb.get("flow_pdf"); if (buf) flowBlobUrl = URL.createObjectURL(new Blob([buf], { type: "application/pdf" })); } catch (_) {} }
     $("flowOverlay").style.display = "block"; cancelAnimationFrame(animId);
-    const sc = $("flowScroll"); if ($("flowPages").dataset.t !== target) { sc.scrollTop = 0; await renderFlowPages(target); }
-    flowPauseUntil = 0; let holdUntil = performance.now() + 1500, atEnd = false;
+    const sc = $("flowScroll"); if ($("flowPages").dataset.t !== target) { sc.scrollTop = 0; await renderFlowPages(target); } else if (sc.style.display !== "none") { $("flowBar").style.display = "flex"; } else $("flowNotice").style.display = "block";
+    flowPauseUntil = 0; flowPos = sc.scrollTop; flowUi(); let holdUntil = performance.now() + 1500, atEnd = false, last = performance.now();
     (function move(now) {
         if ($("flowOverlay").style.display !== "block") return;
-        if (sc.style.display !== "none" && now > flowPauseUntil && now > holdUntil) {
-            if (atEnd) { sc.scrollTop = 0; atEnd = false; holdUntil = now + 1500; }                      // loop back to the top
-            else if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2) { atEnd = true; holdUntil = now + 3000; }   // linger on the last page
-            else sc.scrollTop += 0.9;
+        const dt = Math.min(now - last, 100); last = now;
+        if (Math.abs(sc.scrollTop - flowPos) > 2) flowPos = sc.scrollTop;                      // the user moved it by hand → continue from there
+        if (sc.style.display !== "none" && flowPlaying && now > flowPauseUntil && now > holdUntil) {
+            if (atEnd) { sc.scrollTop = 0; flowPos = 0; atEnd = false; holdUntil = now + 1500; }                         // loop back to the top
+            else if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2) { atEnd = true; holdUntil = now + 3000; }    // linger on the last page
+            else { flowPos += FLOW_SPEEDS[flowSpeedIdx][0] * dt / 1000; sc.scrollTop = flowPos; }                      // fractional position kept here, so slow speeds work on browsers that round scrollTop
         }
         animId = requestAnimationFrame(move);
     })(performance.now());
 }
-["wheel", "touchstart", "mousedown", "keydown"].forEach(ev => document.addEventListener(ev, e => { if (e.target && e.target.closest && e.target.closest("#flowOverlay")) flowPauseUntil = performance.now() + 8000; }, { passive: true }));
-function stopFlow() { $("flowOverlay").style.display = "none"; cancelAnimationFrame(animId); resetIdle(); }
+["wheel", "touchstart", "mousedown", "keydown"].forEach(ev => document.addEventListener(ev, e => { if (e.key === " ") return; if (e.target && e.target.closest && e.target.closest("#flowOverlay") && !e.target.closest("#flowBar, #flowNotice")) flowPauseUntil = performance.now() + 8000; }, { passive: true }));
+function stopFlow() { $("flowOverlay").style.display = "none"; $("flowBar").style.display = "none"; $("flowNotice").style.display = "none"; cancelAnimationFrame(animId); resetIdle(); }
 function anyOverlayOpen() { return ["regModal", "settingsModal", "reportModal", "plansModal"].some(id => $(id).style.display === "flex") || $("statsOverlay").style.display === "flex" || $("flowOverlay").style.display === "block"; }
 function resetIdle() {
     clearTimeout(idleTimer); const m = Number(eventConfig.idleFlowMin) || 0;
@@ -1629,22 +1817,24 @@ function resetIdle() {
     idleTimer = setTimeout(() => { if (!anyOverlayOpen()) startFlow(true); }, m * 60000);
 }
 ["mousemove", "keydown", "click", "touchstart"].forEach(ev => document.addEventListener(ev, () => { if ($("flowOverlay").style.display !== "block") resetIdle(); }, { passive: true }));
-document.addEventListener("keydown", e => { if (LIVE) return; if (e.key === "Escape") { stopFlow(); closeStats(); closeModal(); closeSettingsModal(); closeReports(); closePlans(); } });
+document.addEventListener("keydown", e => { if (LIVE) return; if (e.key === " " && $("flowOverlay").style.display === "block" && !/INPUT|TEXTAREA/.test((e.target || {}).tagName || "")) { e.preventDefault(); flowToggle(); return; } if (e.key === "Escape") { stopFlow(); closeStats(); closeModal(); closeSettingsModal(); closeReports(); closePlans(); } });
 
 
 /* ============================ LICENCE & PLANS ============================ */
 let tlChart, syncDropped = 0, planMemo = null, planCurrency = VENDOR.defaultCurrency === "USD" ? "USD" : "OMR";
 function h32(str, seed) { let h = (0x811c9dc5 ^ seed) >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; }
+const ENGINE_ID = () => h32("engine|" + LICENSE_SALT, 0x77).toString(16).toUpperCase().padStart(8, "0").slice(0, 4);   // short fingerprint of the secret; the generator shows the same ID
 function licSig(code, ymd) { return h32(`${code}|${ymd}|${LICENSE_SALT}`, 0x1234).toString(16).toUpperCase().padStart(8, "0"); }
 function parseLicense(key) {
     key = String(key || "").trim().toUpperCase(); if (!key) return { ok: false, empty: true };
     const m = key.match(/^CMS-(DAY|EVENT|ANNUAL)-(\d{8})-([0-9A-F]{8})$/);
     if (!m) return { ok: false, reason: "That doesn’t look like a license key (expected CMS-EVENT-YYYYMMDD-XXXXXXXX)." };
-    if (licSig(m[1], m[2]) !== m[3]) return { ok: false, reason: "Invalid license key — please check it for typos." };
+    if (licSig(m[1], m[2]) !== m[3]) return { ok: false, reason: `This key was not made for this copy of the app. Check it for typos, and make sure the generator shows Engine ID ${ENGINE_ID()} — a different ID means the generator and the app are different versions.` };
     const until = new Date(+m[2].slice(0, 4), +m[2].slice(4, 6) - 1, +m[2].slice(6, 8), 23, 59, 59);
     return { ok: true, plan: PLAN_CODES[m[1]], until, expired: new Date() > until };
 }
 function currentPlan() {
+    const cp = window.cloudPlan && cloudPlan(); if (cp) return cp;          // hosted event: the plan is held online by the owner
     const memoKey = (eventConfig.license || "") + "|" + new Date().toDateString();
     if (planMemo && planMemo.key === memoKey) return planMemo.val;
     const L = parseLicense(eventConfig.license);
@@ -1696,28 +1886,56 @@ function renderPlans() {
         <div class="plan-grid">${["free", "day", "event", "annual"].map(id => planCard(id, cur)).join("")}</div>
         <h3 style="margin:22px 0 0; color:var(--primary); font-size:14px;">Add-ons & services</h3>
         <table class="addon-table">${ADDONS.map(a => `<tr><td><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></td><td><b>${money(a.price)}</b> <small style="display:inline">${esc(a.per)}</small></td><td><button class="btn" onclick="requestAddon('${a.id}')">Request</button></td></tr>`).join("")}</table>
-        <div class="lic-box"><b>🔑 Have a license key?</b>
+        ${window.CLOUD_EVENT ? `<div class="lic-box"><b>☁️ Your plan is managed online</b><div class="hint" style="margin-top:6px;">No key is needed. The provider sets your plan for this event; it applies to every device at once. To upgrade or renew, use the buttons above or contact us.</div></div>` : ""}<div class="lic-box ${window.CLOUD_EVENT ? "hidden" : ""}"><b>🔑 Have a license key?</b>
             <div class="row"><input type="text" id="licInput" placeholder="CMS-EVENT-20261231-XXXXXXXX" value="${esc(eventConfig.license || "")}" style="font-family:monospace;" onkeydown="if(event.key==='Enter')activateLicense()">
             <button class="btn btn-success" onclick="activateLicense()">Activate</button>${eventConfig.license ? '<button class="btn" onclick="removeLicense()">Remove</button>' : ""}</div>
-            <div class="hint" id="licMsg" style="margin-top:6px;">${status}</div></div>`;
+            <div class="hint" id="licMsg" style="margin-top:6px;">${status}</div>
+            <div class="hint" style="margin-top:4px;">Engine ID of this app: <b style="font-family:monospace;">${ENGINE_ID()}</b> <span style="color:#94a3b8;">(keys must come from a generator showing the same ID)</span></div></div>`;
 }
 function openPlans() { renderPlans(); $("plansModal").style.display = "flex"; }
 function closePlans() { $("plansModal").style.display = "none"; }
 function setCurrency(c) { planCurrency = c; renderPlans(); }
-function salesLink(subject, body) {
-    if (VENDOR.whatsapp) return "https://wa.me/" + String(VENDOR.whatsapp).replace(/\D/g, "") + "?text=" + encodeURIComponent(subject + "\n" + body);
-    if (VENDOR.email) return "mailto:" + VENDOR.email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-    return "";
-}
 function eventBlurb() { return `for “${eventConfig.eventTitle || "my event"}”${eventConfig.eventDate ? " on " + eventConfig.eventDate : ""}`; }
+/* "Get plan" / add-on buttons: the client is asked for a WhatsApp number + country, then e-mails the request to VENDOR.email.
+   Real links (not pop-ups) so browsers never block them. */
+function salesDialog(subject, body) {
+    if (!VENDOR.email) return toast("Sales e-mail not set up yet — the seller fills in VENDOR.email at the top of the script.", "err", 8000);
+    window._sales = { subject, body };
+    cloudModal(`<div class="cm-head"><h2>Request this plan</h2><button class="btn btn-danger" onclick="cloudClose()">✖</button></div>
+        <p style="color:#475569; font-size:14px; margin-top:0;">Tell us how to reach you, then send the request by e-mail to <b>${esc(VENDOR.email)}</b>. We will confirm the plan for your event on WhatsApp.</p>
+        <div class="oc-grid" style="margin-bottom:10px;">
+            <label>Your name<input id="slName" autocomplete="name" oninput="salesUpdate()"></label>
+            <label>Your WhatsApp number (with country code) *<input id="slWa" placeholder="+968 …" autocomplete="tel" oninput="salesUpdate()"></label>
+            <label>Your country *<input id="slCountry" placeholder="e.g. Oman" autocomplete="country-name" oninput="salesUpdate()"></label></div>
+        <textarea id="salesText" readonly style="width:100%; min-height:130px; padding:10px; border:1px solid var(--line); border-radius:8px; font:13px/1.45 inherit;"></textarea>
+        <div class="hint" id="salesHint" style="margin:6px 0 0;"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+            <a class="btn btn-success" id="slMail" style="text-decoration:none; padding:11px 18px;" target="_blank" rel="noopener" onclick="return salesGo(event)">✉️ Open my e-mail app</a>
+            <a class="btn btn-primary" id="slGmail" style="text-decoration:none; padding:11px 18px;" target="_blank" rel="noopener" onclick="return salesGo(event)">Gmail (web)</a>
+            <button class="btn" onclick="if (salesGo()) navigator.clipboard.writeText($('salesText').value).then(() => toast('Message copied — paste it into an e-mail to ${esc(VENDOR.email)}','ok',4000), () => $('salesText').select())">Copy message</button></div>`);
+    salesUpdate();
+}
+function salesText() {
+    const n = $("slName").value.trim(), w = $("slWa").value.trim(), c = $("slCountry").value.trim(), evLine = EVENT_ID ? `\nEvent link: ${cloudBase()}?e=${EVENT_ID}` : "";
+    return `${window._sales.body}${evLine}\n\nName: ${n || "-"}\nWhatsApp: ${w || "-"}\nCountry: ${c || "-"}`;
+}
+function salesReady() { return $("slWa").value.replace(/\D/g, "").length >= 7 && $("slCountry").value.trim().length >= 2; }
+function salesUpdate() {
+    const t = salesText(), sub = window._sales.subject, ok = salesReady();
+    $("salesText").value = t;
+    $("slMail").href = "mailto:" + VENDOR.email + "?subject=" + encodeURIComponent(sub) + "&body=" + encodeURIComponent(t);
+    $("slGmail").href = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(VENDOR.email) + "&su=" + encodeURIComponent(sub) + "&body=" + encodeURIComponent(t);
+    $("salesHint").innerHTML = ok ? "" : '<span style="color:#b45309;">Please enter your WhatsApp number (with country code) and your country to continue.</span>';
+    ["slMail", "slGmail"].forEach(id => $(id).style.opacity = ok ? 1 : .5);
+}
+function salesGo(e) { if (salesReady()) return true; if (e) e.preventDefault(); toast("Enter your WhatsApp number (with country code) and your country first.", "err", 5000); $(!$("slWa").value.trim() ? "slWa" : "slCountry").focus(); return false; }
 function buyPlan(id) {
     const p = PLAN_CATALOG[id]; if (VENDOR.checkout[id]) return window.open(VENDOR.checkout[id], "_blank", "noopener");
-    const l = salesLink(`${p.name} plan request`, `Hello, I would like the ${p.name} plan (${money(p.price)} ${p.per}) ${eventBlurb()}.`);
-    if (l) window.open(l, "_blank", "noopener"); else toast("Sales contact not set up yet — the seller fills in VENDOR (email / WhatsApp / checkout links) at the top of the script.", "err", 8000);
+    salesDialog(`${p.name} plan request`, `Hello, I would like the ${p.name} plan (${money(p.price)} ${p.per}) ${eventBlurb()}.`);
 }
 function requestAddon(id) {
-    const a = ADDONS.find(x => x.id === id), l = salesLink(`Add-on request: ${a.name}`, `Hello, I would like “${a.name}” (${money(a.price)} ${a.per}) ${eventBlurb()}.`);
-    if (l) window.open(l, "_blank", "noopener"); else toast("Sales contact not set up yet — the seller fills in VENDOR at the top of the script.", "err", 8000);
+    const a = ADDONS.find(x => x.id === id);
+    salesDialog(`Add-on request: ${a.name}`, `Hello, I would like “${a.name}” (${money(a.price)} ${a.per}) ${eventBlurb()}.`);
 }
 function activateLicense() {
     const key = $("licInput").value.trim().toUpperCase(), L = parseLicense(key), msg = $("licMsg");
@@ -1737,6 +1955,7 @@ function renderKpis(totalIn, rate) {
     $("kpiBar").style.width = (n ? totalIn / n * 100 : 0) + "%";
     const last = attendees.filter(a => a.checkedAt && isPresent(a)).map(a => a.checkedAt).sort().pop();
     set("kpiLast", last ? "last " + hhmm(last) : "");
+    const fb = feedbackTotal(); $("kpiFbBox").style.display = eventConfig.sources.some(s => s.role === "Feedback") ? "" : "none"; set("kpiFb", fb);
 }
 function renderActivity() {
     const all = attendees.filter(a => a.checkedAt && isPresent(a)).sort((a, b) => b.checkedAt.localeCompare(a.checkedAt)), list = all.slice(0, 8), el = $("activityList");
@@ -1823,7 +2042,10 @@ window.onload = async () => {
     if (LIVE) document.body.classList.add("live-mode");
     const tick = () => { const el = $("fsClock"); if (el) el.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }; tick(); setInterval(tick, 1000);
     const local = safeGet("prod_cms_config", null);
-    eventConfig = normalizeConfig(local || await fetchHostedProfile() || {});
+    let cloud = null;
+    if (window.cloudBoot) { try { cloud = await cloudBoot(); } catch (e) { console.error(e); } }
+    if (cloud && cloud.halt) return;                       // sign-in gate / "event not found" screen is showing
+    eventConfig = normalizeConfig(cloud ? cloud.config : (local || await fetchHostedProfile() || {}));
     attendees = PUBLIC ? [] : loadAttendees();
     initCharts(); filterRole("All"); updateStats(); applyBranding();
     await detectLocalAssets();
@@ -1833,9 +2055,318 @@ window.onload = async () => {
         if (liveStandalone) { await syncAllSources(true); } setupAutoSync(); updateStats(); return;
     }
     if (PUBLIC) { switchView("certs"); await syncAllSources(true); await applyAttendanceFile(); refreshCertCounts(); return; }
+    if (!local && !eventConfig.sources.length && !eventConfig.eventTitle && typeof CLOUD !== "undefined" && CLOUD.isOwner && !EVENT_ID) { openOwnerConsole(); return; }   // signed-in owner: go straight to the console
     if (!local && !eventConfig.sources.length && !eventConfig.eventTitle) { openSettingsModal(); toast("Welcome! Start by entering your event details and adding a data source (Google Sheet / CSV link).", "info", 8000); return; }
     if (!attendees.length) await syncAllSources(true); else syncAllSources(true);
 };
+</script>
+<script>
+/* ============================ CLOUD LAYER (Firebase) ============================
+   Hosted multi-event mode.  Open the app as  …/index.html?e=<event-id>
+   • Public pages (?e=ID&mode=live / mode=certs) need no sign-in and read the event online.
+   • The dashboard needs sign-in: the owner, or a client e-mail listed for that event.
+   • The owner sets each event's plan online (replaces licence keys). Rules live in firestore.rules.
+   Without ?e=… the app behaves exactly as the single-user (local) version. */
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCbGuuXzqaMvK0xNn-0SZ3vOkvMNxeqrp0",
+    authDomain: "educational-events-6aced.firebaseapp.com",
+    projectId: "educational-events-6aced",
+    storageBucket: "educational-events-6aced.firebasestorage.app",
+    messagingSenderId: "608378308033",
+    appId: "1:608378308033:web:c183eb2281ca92362b9b40"
+};
+const OWNER_EMAIL = "hrk.mathtech@gmail.com";      /* must match firestore.rules */
+const CLOUD = { on: false, db: null, auth: null, user: null, isOwner: false, isEditor: false, ev: null, checkins: new Map(), unsub: [] };
+const cloudEvRef = () => CLOUD.db.collection("events").doc(EVENT_ID);
+const cloudBase = () => location.origin + location.pathname;
+const cloudLink = (id, mode) => cloudBase() + "?e=" + id + (mode ? "&mode=" + mode : "");
+const cloudHash = s => h32(s, 0x51).toString(16).padStart(8, "0") + h32(s, 0x9e).toString(16).padStart(8, "0");
+const cloudTs = () => firebase.firestore.FieldValue.serverTimestamp();
+
+function cloudInit() {
+    if (CLOUD.on) return true;
+    if (!window.firebase || location.protocol === "file:") return false;
+    try {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        CLOUD.auth = firebase.auth(); CLOUD.db = firebase.firestore();
+        CLOUD.db.settings({ experimentalAutoDetectLongPolling: true, merge: true });      // copes with strict university networks
+        CLOUD.on = true; return true;
+    } catch (e) { console.error(e); return false; }
+}
+function cloudAuthReady() {
+    return new Promise(res => {
+        let first = true;
+        CLOUD.auth.onAuthStateChanged(u => {
+            const prev = CLOUD.user && CLOUD.user.email;
+            CLOUD.user = u; CLOUD.isOwner = !!(u && u.emailVerified && (u.email || "").toLowerCase() === OWNER_EMAIL);
+            if (first) { first = false; res(); } else if ((u && u.email) !== prev) { location.reload(); return; }
+            cloudUpdateAcct();
+        });
+    });
+}
+async function cloudFinishEmailLink() {
+    if (!CLOUD.auth.isSignInWithEmailLink(location.href)) return;
+    let email = ""; try { email = localStorage.getItem("cms_signin_email") || ""; } catch (_) {}
+    if (!email) email = prompt("Confirm your e-mail address to finish signing in:") || "";
+    try { await CLOUD.auth.signInWithEmailLink(email.trim(), location.href); try { localStorage.removeItem("cms_signin_email"); } catch (_) {} }
+    catch (e) { toast("That sign-in link did not work (" + (e.code || e.message) + "). Request a new one.", "err", 9000); }
+    const u = new URL(location.href); ["apiKey", "oobCode", "mode", "lang", "continueUrl"].forEach(k => u.searchParams.delete(k)); history.replaceState(null, "", u.pathname + u.search);
+}
+async function cloudResolveEditor() {
+    CLOUD.isEditor = false; if (!CLOUD.user) return;
+    if (CLOUD.isOwner) { CLOUD.isEditor = true; return; }
+    try { const m = await cloudEvRef().collection("meta").doc("admin").get(); CLOUD.isEditor = m.exists; } catch (_) { CLOUD.isEditor = false; }
+}
+
+/* ---------- boot (called from window.onload) ---------- */
+window.cloudBoot = async function () {
+    if (!cloudInit()) {
+        if (!EVENT_ID) { const b = $("acctBtn"); if (b) b.classList.add("hidden"); return null; }
+        cloudScreen(`<h2>Can’t reach the online service</h2><p>This event link needs an internet connection and must be opened from its hosted web address (not from a file on a computer). Check the connection and reload.</p>`);
+        return { halt: true };
+    }
+    await cloudFinishEmailLink(); await cloudAuthReady(); cloudUpdateAcct();
+    if (!EVENT_ID) return null;
+    document.body.classList.add("cloud");
+    let snap;
+    try { snap = await cloudEvRef().get(); } catch (e) { cloudScreen(`<h2>Could not load this event</h2><p>${esc(e.message || e)}</p>`); return { halt: true }; }
+    if (!snap.exists) { cloudScreen(`<h2>This event link is not active</h2><p>The address may be mistyped, or the event was removed. Please check it with the organiser.</p>`); return { halt: true }; }
+    window.CLOUD_EVENT = true; CLOUD.ev = snap.data(); planMemo = null;
+    await cloudResolveEditor();
+    if (!PUBLIC && !LIVE && !CLOUD.isEditor) { cloudGate(); return { halt: true }; }
+    cloudWatch(); cloudUpdateAcct();
+    return { config: Object.assign({}, CLOUD.ev.config || {}) };
+};
+function cloudWatch() {
+    CLOUD.unsub.push(cloudEvRef().onSnapshot(s => {
+        if (!s.exists) return; CLOUD.ev = s.data(); planMemo = null;
+        if (!CLOUD.isEditor) { eventConfig = normalizeConfig(CLOUD.ev.config || {}); applyBranding(); }
+        try { renderPlanUI(); updateStats(); } catch (_) {}
+    }, e => console.warn("event watch", e)));
+    CLOUD.unsub.push(cloudEvRef().collection("checkins").onSnapshot(qs => {
+        const m = new Map(); qs.forEach(d => m.set(d.id, d.data())); CLOUD.checkins = m; cloudApply();
+        if (PUBLIC) refreshCertCounts(); else if (LIVE) updateStats(); else { refreshUI(); persist(); }
+    }, e => console.warn("check-in watch", e)));
+}
+
+/* ---------- plan (held online by the owner) ---------- */
+window.cloudPlan = function () {
+    if (!window.CLOUD_EVENT || !CLOUD.ev) return null;
+    const id = CLOUD.ev.plan && PLAN_CATALOG[CLOUD.ev.plan] ? CLOUD.ev.plan : "free", ymd = CLOUD.ev.planUntil || "";
+    const until = /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? new Date(ymd + "T23:59:59") : null;
+    if (id === "free") return { id: "free", ...PLAN_CATALOG.free, licensed: false, expiredLicense: null };
+    if (!until || new Date() > until) return { id: "free", ...PLAN_CATALOG.free, licensed: false, expiredLicense: until ? { plan: id, until } : null };
+    return { id, ...PLAN_CATALOG[id], until, licensed: true };
+};
+
+/* ---------- desk check-ins shared between devices ---------- */
+function cloudKeyOf(a) { return a.cloudK || (a.guest ? "g_" + a.id : a.email ? "p_" + cloudHash(a.email.toLowerCase()) : "n_" + cloudHash(String(a.name || "").toLowerCase())); }
+window.cloudMark = async function (p, present) {
+    if (!window.CLOUD_EVENT || !CLOUD.isEditor) return;
+    const ref = cloudEvRef().collection("checkins").doc(cloudKeyOf(p));
+    try { if (present) await ref.set({ at: p.checkedAt || new Date().toISOString(), via: String(p.checkedVia || "desk"), role: String(p.role || "Participant") }); else await ref.delete(); }
+    catch (e) { toast("Could not share this check-in online: " + (e.message || e), "err", 8000); }
+};
+window.cloudApply = function () {
+    if (!window.CLOUD_EVENT) return; const docs = CLOUD.checkins;
+    attendees = attendees.filter(a => !(a.synthetic && !docs.has(a.cloudK)));
+    const byKey = new Map(attendees.map(a => [cloudKeyOf(a), a]));
+    docs.forEach((d, k) => {
+        const a = byKey.get(k);
+        if (a) { if (!isPresent(a)) a.status = PRESENT; a.manual = true; a.fromCloud = true; a.checkedAt = a.checkedAt || d.at; a.checkedVia = a.checkedVia || d.via; }
+        else if (k.startsWith("g_")) attendees.push({ id: "c_" + k, cloudK: k, synthetic: true, guest: true, name: "Walk-in guest", email: "", institute: "-", country: "-", contact: "-", role: d.role || "Participant", roles: [d.role || "Participant"], nameByRole: {}, status: PRESENT, manual: true, checkedAt: d.at, checkedVia: "desk" });
+    });
+    attendees.forEach(a => { if (a.fromCloud && !docs.has(cloudKeyOf(a))) { a.status = PENDING; a.manual = true; a.fromCloud = false; delete a.checkedAt; delete a.checkedVia; } });
+};
+
+/* ---------- settings saved online (editors only) ---------- */
+let cfgTimer;
+window.cloudSaveConfig = function () {
+    if (!window.CLOUD_EVENT || !CLOUD.isEditor) return;
+    clearTimeout(cfgTimer);
+    cfgTimer = setTimeout(async () => {
+        const c = JSON.parse(JSON.stringify(eventConfig)); delete c.license;
+        if (JSON.stringify(c).length > 900000) return toast("Settings are too large to save online. Use links instead of pasted images.", "err", 9000);
+        try { await cloudEvRef().update({ config: c, title: c.eventTitle || "", updatedAt: cloudTs() }); const b = $("acctBtn"); if (b) b.title = "Saved online at " + new Date().toLocaleTimeString(); }
+        catch (e) { toast("Could not save online: " + (e.message || e), "err", 9000); }
+    }, 700);
+};
+
+/* ---------- uploaded files (templates, programme PDF) shared online ---------- */
+const CHUNK = 700000, MAX_CHUNKS = 10;
+const isCloudAsset = k => /^(tpl_|flow_)/.test(k) && !k.endsWith("__v");
+const assetCol = () => cloudEvRef().collection("assets");
+const buf2b64 = buf => { const u = new Uint8Array(buf); let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+const b642buf = b => { const s = atob(b), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; };
+const _idb = { get: idb.get.bind(idb), set: idb.set.bind(idb), del: idb.del.bind(idb) };
+idb.get = async function (k) {
+    const local = await _idb.get(k);
+    if (!window.CLOUD_EVENT || !isCloudAsset(k)) return local;
+    try {
+        const head = await assetCol().doc(k).get(); if (!head.exists) return local;
+        const h = head.data(), lv = await _idb.get(k + "__v"); if (local && lv === h.v) return local;
+        let val;
+        if (h.s !== undefined) val = h.s;
+        else { let b64 = ""; for (let i = 0; i < h.n; i++) b64 += (await assetCol().doc(k + "__" + i).get()).data().d; val = b642buf(b64); }
+        await _idb.set(k, val); await _idb.set(k + "__v", h.v); return val;
+    } catch (e) { console.warn("asset", k, e); return local; }
+};
+idb.set = async function (k, v) {
+    await _idb.set(k, v);
+    if (!window.CLOUD_EVENT || !CLOUD.isEditor || !isCloudAsset(k)) return;
+    try {
+        const stamp = Date.now(), col = assetCol(), old = await col.doc(k).get(), batch = CLOUD.db.batch();
+        if (typeof v === "string") batch.set(col.doc(k), { s: v, v: stamp });
+        else {
+            const b64 = buf2b64(v), n = Math.ceil(b64.length / CHUNK);
+            if (n > MAX_CHUNKS) { toast(`That file is too large to share online (about ${Math.round(b64.length * .75 / 1e6)} MB; limit ${Math.round(MAX_CHUNKS * CHUNK * .75 / 1e6)} MB). Compress it, or use a link instead.`, "err", 10000); return; }
+            for (let i = 0; i < n; i++) batch.set(col.doc(k + "__" + i), { d: b64.slice(i * CHUNK, (i + 1) * CHUNK) });
+            if (old.exists && old.data().n > n) for (let i = n; i < old.data().n; i++) batch.delete(col.doc(k + "__" + i));
+            batch.set(col.doc(k), { n, v: stamp });
+        }
+        await batch.commit(); await _idb.set(k + "__v", stamp);
+    } catch (e) { toast("Could not share the uploaded file online: " + (e.message || e), "err", 9000); }
+};
+idb.del = async function (k) {
+    await _idb.del(k); try { await _idb.del(k + "__v"); } catch (_) {}
+    if (!window.CLOUD_EVENT || !CLOUD.isEditor || !isCloudAsset(k)) return;
+    try { const col = assetCol(), h = await col.doc(k).get(); if (!h.exists) return; const batch = CLOUD.db.batch(); for (let i = 0; i < (h.data().n || 0); i++) batch.delete(col.doc(k + "__" + i)); batch.delete(col.doc(k)); await batch.commit(); } catch (e) { console.warn(e); }
+};
+
+/* ---------- screens, sign-in, account ---------- */
+function cloudScreen(html) {
+    let g = $("cloudGate"); if (!g) { g = document.createElement("div"); g.id = "cloudGate"; document.body.appendChild(g); }
+    g.innerHTML = `<div class="cg-card">${html}</div>`;
+}
+function cloudSignInHtml() {
+    return `<button class="btn btn-primary cg-btn" onclick="cloudGoogle()">Continue with Google</button>
+    <div class="cg-or">or use your e-mail (no password)</div>
+    <div class="cg-row"><input type="email" id="clEmail" placeholder="you@university.edu" autocomplete="email" onkeydown="if(event.key==='Enter')cloudEmailLink()"><button class="btn btn-sync" onclick="cloudEmailLink()">Send me a sign-in link</button></div>
+    <div class="cg-msg" id="clMsg"></div>`;
+}
+function cloudGate() {
+    const t = esc(CLOUD.ev.title || EVENT_ID), u = CLOUD.user;
+    cloudScreen(`<h2>${t}</h2>` + (u
+        ? `<p>You are signed in as <b>${esc(u.email)}</b>, but this account is not allowed to manage this event. Ask the organiser to add your e-mail, or sign in with another account.</p><button class="btn btn-danger cg-btn" onclick="CLOUD.auth.signOut()">Sign out</button>`
+        : `<p>Sign in to manage this event.</p>${cloudSignInHtml()}`)
+        + `<div class="cg-links"><a href="${esc(cloudLink(EVENT_ID, "live"))}">Live screen</a> · <a href="${esc(cloudLink(EVENT_ID, "certs"))}">Certificate portal</a></div>`);
+}
+function cloudModal(html) {
+    let m = $("cloudModal"); if (!m) { m = document.createElement("div"); m.id = "cloudModal"; m.className = "modal-overlay"; m.onclick = cloudClose; document.body.appendChild(m); }
+    m.innerHTML = `<div class="modal-content wide cm-box" onclick="event.stopPropagation()">${html}</div>`; m.style.display = "flex";
+}
+function cloudClose() { const m = $("cloudModal"); if (m) m.style.display = "none"; }
+function cloudMsg(h, bad) { const el = $("clMsg"); if (el) el.innerHTML = `<span class="${bad ? "bad" : "ok"}">${h}</span>`; }
+function cloudErr(e) {
+    const c = e.code || "";
+    if (c === "auth/unauthorized-domain") return `This web address is not approved for sign-in yet. In Firebase → Authentication → Settings → Authorized domains, add <b>${esc(location.hostname)}</b>.`;
+    if (c === "auth/operation-not-allowed") return "This sign-in method is switched off in Firebase → Authentication → Sign-in method.";
+    if (c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request") return "Sign-in window was closed.";
+    return esc(e.message || c || String(e));
+}
+async function cloudGoogle() {
+    if (!CLOUD.on) return toast("The online service is not available here.", "err");
+    const p = new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" });
+    try { await CLOUD.auth.signInWithPopup(p); }
+    catch (e) { if (/popup-blocked|operation-not-supported/.test(e.code || "")) return CLOUD.auth.signInWithRedirect(p); cloudMsg(cloudErr(e), true); }
+}
+async function cloudEmailLink() {
+    const email = ($("clEmail").value || "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return cloudMsg("Enter a valid e-mail address.", true);
+    try {
+        await CLOUD.auth.sendSignInLinkToEmail(email, { url: cloudBase() + (EVENT_ID ? "?e=" + EVENT_ID : ""), handleCodeInApp: true });
+        try { localStorage.setItem("cms_signin_email", email); } catch (_) {}
+        cloudMsg(`✓ Link sent to <b>${esc(email)}</b>. Open it <b>on this same device</b> (check Junk/Spam too).`);
+    } catch (e) { cloudMsg(cloudErr(e), true); }
+}
+function cloudUpdateAcct() {
+    const b = $("acctBtn"), o = $("ownerBtn"); if (!b) return;
+    const u = CLOUD.user; b.textContent = u ? "👤 " + (u.email || "Account") : "☁ Sign in";
+    b.title = u ? "Account" : "Sign in (owner / organiser)"; if (o) o.classList.toggle("hidden", !CLOUD.isOwner);
+}
+window.cloudAcctClick = function () {
+    if (!CLOUD.on) return toast("Online features need the hosted web address and an internet connection.", "err", 6000);
+    if (!CLOUD.user) return cloudModal(`<div class="cm-head"><h2>Sign in</h2><button class="btn btn-danger" onclick="cloudClose()">✖</button></div>${cloudSignInHtml()}`);
+    const role = CLOUD.isOwner ? "Owner" : CLOUD.isEditor ? "Organiser" : "No event access";
+    const links = EVENT_ID ? `<h3>Links for this event</h3>${[["Dashboard", ""], ["Live screen (public)", "live"], ["Certificate portal (public)", "certs"]].map(([n, m]) => `<div class="cm-link"><b>${n}</b><input readonly value="${esc(cloudLink(EVENT_ID, m))}" onclick="this.select()"><button class="btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.value);toast('Link copied','ok',1800)">Copy</button></div>`).join("")}` : "";
+    cloudModal(`<div class="cm-head"><h2>Account</h2><button class="btn btn-danger" onclick="cloudClose()">✖</button></div>
+        <p><b>${esc(CLOUD.user.email)}</b> · <span class="cm-role">${role}</span></p>${links}
+        <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">${CLOUD.isOwner ? '<button class="btn btn-dark" onclick="openOwnerConsole()">🛠 Owner console</button>' : ""}<button class="btn btn-danger" onclick="CLOUD.auth.signOut()">Sign out</button></div>`);
+};
+
+/* ---------- owner console ---------- */
+const OC_PLANS = [["free", "Starter (free)"], ["day", "Event Day Pass"], ["event", "Event Pro"], ["annual", "Institution Annual"]];
+const OC_DAYS = { day: 1, event: 7, annual: 365 };
+const ocDate = days => { const d = new Date(); d.setDate(d.getDate() + days); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const ocPlanOpts = sel => OC_PLANS.map(([v, n]) => `<option value="${v}" ${v === sel ? "selected" : ""}>${n}</option>`).join("");
+const ocClients = s => [...new Set(String(s || "").toLowerCase().split(/[\s,;]+/).filter(x => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)))];
+window.openOwnerConsole = async function () {
+    if (!CLOUD.isOwner) return toast("Sign in as the owner first.", "err");
+    cloudModal(`<div class="cm-head"><h2>🛠 Owner console</h2><button class="btn btn-danger" onclick="cloudClose()">✖</button></div>
+        <div class="oc-new"><b>New event</b>
+          <div class="oc-grid">
+            <label>Event ID (in the link)<input id="ocId" placeholder="asu-symposium-2027" maxlength="41"></label>
+            <label>Event title<input id="ocTitle" placeholder="5th International Symposium 2027"></label>
+            <label>Client e-mail(s) who may manage it<input id="ocClients" placeholder="organiser@university.edu, assistant@university.edu"></label>
+            <label>Plan<select id="ocPlan" onchange="$('ocUntil').value = OC_DAYS[this.value] ? ocDate(OC_DAYS[this.value]) : ''">${ocPlanOpts("event")}</select></label>
+            <label>Valid until<input type="date" id="ocUntil" value="${ocDate(7)}"></label>
+            <button class="btn btn-success" onclick="ocCreate()">＋ Create event</button></div>
+          <div class="hint" id="ocMsg"></div></div>
+        <h3 style="margin:16px 0 6px;">Your events</h3><div id="ocList" class="hint">Loading…</div>`);
+    ocReload();
+};
+async function ocReload() {
+    const box = $("ocList"); if (!box) return;
+    try {
+        const qs = await CLOUD.db.collection("events").orderBy("createdAt", "desc").limit(200).get();
+        const rows = await Promise.all(qs.docs.map(async d => { let adm = {}; try { adm = (await d.ref.collection("meta").doc("admin").get()).data() || {}; } catch (_) {} return { id: d.id, ...d.data(), clients: adm.clientEmails || [] }; }));
+        box.innerHTML = rows.length ? rows.map(r => `<div class="oc-row" id="oc_${r.id}">
+            <div class="oc-top"><b>${esc(r.title || r.id)}</b> <code>${esc(r.id)}</code>
+              <span class="oc-links"><a href="${esc(cloudLink(r.id, ""))}" target="_blank" rel="noopener">Dashboard</a> · <a href="${esc(cloudLink(r.id, "live"))}" target="_blank" rel="noopener">Live</a> · <a href="${esc(cloudLink(r.id, "certs"))}" target="_blank" rel="noopener">Certificates</a> · <a href="#" onclick="ocCopy('${r.id}'); return false;">Copy message for client</a></span></div>
+            <div class="oc-grid">
+              <label>Plan<select data-f="plan" onchange="this.closest('.oc-row').querySelector('[data-f=until]').value = OC_DAYS[this.value] ? ocDate(OC_DAYS[this.value]) : ''">${ocPlanOpts(r.plan || "free")}</select></label>
+              <label>Valid until<input type="date" data-f="until" value="${esc(r.planUntil || "")}"></label>
+              <label style="grid-column: span 2;">Client e-mail(s)<input data-f="clients" value="${esc(r.clients.join(", "))}"></label>
+              <span style="display:flex; gap:6px; align-items:end;"><button class="btn btn-primary" onclick="ocSave('${r.id}')">Save</button><button class="btn btn-danger" onclick="ocDelete('${r.id}')">Delete</button></span></div></div>`).join("") : "No events yet. Create the first one above.";
+    } catch (e) { box.innerHTML = `<span class="bad">Could not load events: ${esc(e.message || e)}</span>`; }
+}
+async function ocCreate() {
+    const msg = t => $("ocMsg").innerHTML = t, id = $("ocId").value.trim().toLowerCase(), title = $("ocTitle").value.trim(), plan = $("ocPlan").value, until = $("ocUntil").value, clients = ocClients($("ocClients").value);
+    if (!/^[a-z0-9][a-z0-9-]{2,40}$/.test(id)) return msg('<span class="bad">Event ID: 3–41 letters, numbers or hyphens (e.g. asu-symposium-2027).</span>');
+    if (!title) return msg('<span class="bad">Enter the event title.</span>');
+    if (plan !== "free" && !until) return msg('<span class="bad">Choose the “valid until” date for a paid plan.</span>');
+    try {
+        const ref = CLOUD.db.collection("events").doc(id); if ((await ref.get()).exists) return msg('<span class="bad">That event ID is already used.</span>');
+        const b = CLOUD.db.batch();
+        b.set(ref, { title, config: { eventTitle: title }, plan, planUntil: plan === "free" ? "" : until, createdAt: cloudTs(), updatedAt: cloudTs() });
+        b.set(ref.collection("meta").doc("admin"), { clientEmails: clients, createdBy: CLOUD.user.email });
+        await b.commit(); msg(`<span class="ok">✓ Created. Dashboard: ${esc(cloudLink(id, ""))}</span>`); ["ocId", "ocTitle", "ocClients"].forEach(x => $(x).value = ""); ocReload();
+    } catch (e) { msg(`<span class="bad">${esc(e.message || e)}</span>`); }
+}
+async function ocSave(id) {
+    const row = $("oc_" + id), f = n => row.querySelector(`[data-f=${n}]`).value, plan = f("plan"), until = f("until");
+    if (plan !== "free" && !until) return toast("Choose the “valid until” date.", "err");
+    try {
+        const ref = CLOUD.db.collection("events").doc(id), b = CLOUD.db.batch();
+        b.update(ref, { plan, planUntil: plan === "free" ? "" : until, updatedAt: cloudTs() });
+        b.set(ref.collection("meta").doc("admin"), { clientEmails: ocClients(f("clients")) }, { merge: true });
+        await b.commit(); toast("Saved — the event updates on every device within seconds.", "ok", 3500);
+    } catch (e) { toast("Save failed: " + (e.message || e), "err", 8000); }
+}
+async function ocDelete(id) {
+    if (!confirm(`Delete event “${id}” and all its online check-ins and uploaded files?\nThis cannot be undone. (Google Sheets are not touched.)`)) return;
+    try {
+        const ref = CLOUD.db.collection("events").doc(id);
+        for (const sub of ["checkins", "assets", "meta"]) { const qs = await ref.collection(sub).get(); for (let i = 0; i < qs.docs.length; i += 400) { const b = CLOUD.db.batch(); qs.docs.slice(i, i + 400).forEach(d => b.delete(d.ref)); await b.commit(); } }
+        await ref.delete(); toast("Event deleted.", "ok"); ocReload();
+    } catch (e) { toast("Delete failed: " + (e.message || e), "err", 8000); }
+}
+async function ocCopy(id) {
+    const snap = await CLOUD.db.collection("events").doc(id).get(), t = (snap.data() || {}).title || id;
+    const text = `${t}\n\nManage the event (sign in with your e-mail): ${cloudLink(id, "")}\nPublic live screen: ${cloudLink(id, "live")}\nCertificate portal for participants: ${cloudLink(id, "certs")}`;
+    try { await navigator.clipboard.writeText(text); toast("Message copied — paste it to your client.", "ok", 3000); } catch (_) { prompt("Copy this message:", text); }
+}
+
 </script>
 </body>
 </html>
